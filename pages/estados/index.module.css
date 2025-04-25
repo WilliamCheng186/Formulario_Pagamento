@@ -1,0 +1,13 @@
+.cancelButton {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.cancelButton:hover {
+  background-color: #c82333;
+} 

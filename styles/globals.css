@@ -1,0 +1,124 @@
+/* Reset global e configurações básicas */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #__next {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #ffffff;
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Garantir que links não tenham o estilo padrão */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Container principal */
+.mainContainer {
+  width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.mainContent {
+  background-color: #ffffff;
+  flex: 1;
+  min-height: 100vh;
+}
+
+/* Cores para os ícones de menu */
+.paises {
+  color: #4cd964 !important;
+}
+
+.estados {
+  color: #5ac8fa !important;
+}
+
+.cidades {
+  color: #007aff !important;
+}
+
+.clientes {
+  color: #ff9500 !important;
+}
+
+.funcionarios {
+  color: #ff2d55 !important;
+}
+
+.fornecedores {
+  color: #5856d6 !important;
+}
+
+.produtos {
+  color: #ffcc00 !important;
+}
+
+.produtosFornecedores {
+  color: #af52de !important;
+}
+
+.transportadoras {
+  color: #34c759 !important;
+}
+
+/* Estilos para os itens de menu */
+.menuLink {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  color: #f5f5f5 !important;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  margin: 12px 6px;
+  border-radius: 8px;
+}
+
+.menuIcon {
+  font-size: 26px;
+  margin-right: 25px;
+  min-width: 30px;
+  transition: all 0.3s ease;
+}
+
+.menuText {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Remover estilos específicos por item, manter apenas um padrão */
+.paisesItem, .estadosItem, .cidadesItem, 
+.clientesItem, .funcionariosItem, .fornecedoresItem, 
+.produtosItem, .prodFornItem, .transportadorasItem {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-left: none !important;
+}
+
+.paisesItem:hover, .estadosItem:hover, .cidadesItem:hover, 
+.clientesItem:hover, .funcionariosItem:hover, .fornecedoresItem:hover, 
+.produtosItem:hover, .prodFornItem:hover, .transportadorasItem:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none !important;
+}
+
+/* Estilos gerais */
+.mainSidebar {
+  background-color: #424242 !important;
+  color: #f5f5f5 !important;
+}
+
+.mainTitle {
+  color: white !important;
+  font-weight: bold !important;
+} 
