@@ -1,185 +1,355 @@
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  padding: 3rem 2rem 2rem;
+  background-color: #f4f7fa;
+  min-height: 100vh;
+}
+
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
 }
 
 .titulo {
-  color: #333;
-  text-align: center;
-  margin-bottom: 20px;
   font-size: 2rem;
-}
-
-.subtitulo {
-  color: #444;
-  margin: 20px 0;
-  font-size: 1.5rem;
+  color: #333;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid #007bff;
 }
 
 .form {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.formHeader {
+  margin-bottom: 2rem;
+}
+
+.formRow {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.formGroup {
+  flex: 1 1 200px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  max-width: 600px;
-  margin: 0 auto 30px;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.formGroupQuarter {
+  flex: 1 1 calc(25% - 20px);
+  display: flex;
+  flex-direction: column;
+}
+
+.codigo {
+  flex-grow: 0.2;
+  min-width: 100px;
+}
+
+.nomeProduto {
+  flex-grow: 2;
+}
+
+.label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #555;
+  font-size: 0.7rem !important;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .input, .select {
-  padding: 10px;
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 4px;
   font-size: 1rem;
+  transition: border-color 0.2s;
+  background-color: #fff !important;
 }
 
 .input:focus, .select:focus {
   outline: none;
-  border-color: #4a90e2;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-.formGroup {
+.input[disabled] {
+  color: #495057;
+  cursor: not-allowed;
+}
+
+.inputComBotao {
+  display: flex;
+}
+
+.inputComBotao .input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.searchButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  background-color: #007bff;
+  border: 1px solid #007bff;
+  color: white;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.searchButton:hover {
+  background-color: #0056b3;
+}
+
+.formFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.dateInfo {
+  font-size: 0.8rem;
+  color: #040b10 !important;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-}
-
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 15px;
-}
-
-.submitButton {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  font-size: 1rem;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-.submitButton:hover {
-  background-color: #45a049;
-}
-
-.submitButton:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-.cancelButton {
-  background-color: #f44336;
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  font-size: 1rem;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-.cancelButton:hover {
-  background-color: #d32f2f;
-}
-
-.cancelButton:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
+  gap: 0.5rem;
 }
 
 .buttonGroup {
   display: flex;
-  gap: 10px;
   justify-content: flex-end;
-  margin-top: 20px;
+  gap: 1rem;
+}
+
+.submitButton, .cancelButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.submitButton {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.submitButton:hover {
+  background-color: #218838;
+}
+
+.cancelButton {
+  background-color: #dc3545;
+  color: white;
+}
+
+.cancelButton:hover {
+  background-color: #c82333;
+}
+
+.submitButton:disabled, .cancelButton:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.message {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.successMessage {
+  background-color: #28a745;
+}
+
+.errorMessage {
+  background-color: #dc3545;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
-  background-color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
-  overflow: hidden;
+  margin-top: 2rem;
+  background-color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  white-space: nowrap;
 }
 
 .table th, .table td {
-  border: 1px solid #ddd;
-  padding: 12px;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
   text-align: left;
+  vertical-align: middle;
 }
 
 .table th {
-  background-color: #f2f2f2;
-  font-weight: bold;
+  background-color: #f8f9fa;
+  font-weight: 600;
 }
 
-.table tr:nth-child(even) {
-  background-color: #f9f9f9;
+.nomeProdutoTd {
+  max-width: 450px;
 }
 
-.table tr:hover {
-  background-color: #f5f5f5;
+.nomeProdutoWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.nomeProdutoText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusIndicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.statusIndicator.habilitado {
+  background-color: #28a745;
+  box-shadow: 0 0 8px rgba(40, 167, 69, 0.7);
+}
+
+.statusIndicator.desabilitado {
+  background-color: #dc3545;
+  box-shadow: 0 0 8px rgba(220, 53, 69, 0.7);
+}
+
+.acoesHeader {
+  text-align: right;
+}
+
+.acoesBotoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 .actionButton {
-  margin: 0 5px;
-  padding: 8px 12px;
+  padding: 0.5rem;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.3s;
+  background: none;
+  font-size: 1rem;
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .editButton {
-  background-color: #2196f3;
-  color: white;
-}
-
-.editButton:hover {
-  background-color: #0b7dda;
+  background-color: #007bff;
 }
 
 .deleteButton {
-  background-color: #f44336;
-  color: white;
+  background-color: #dc3545;
+}
+
+.editButton:hover {
+  background-color: #0056b3;
 }
 
 .deleteButton:hover {
-  background-color: #d32f2f;
+  background-color: #c82333;
 }
 
-.message {
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 5px;
-  text-align: center;
-}
-
-.successMessage {
-  background-color: #dff0d8;
-  color: #3c763d;
-  border: 1px solid #d6e9c6;
-}
-
-.errorMessage {
-  background-color: #f2dede;
-  color: #a94442;
-  border: 1px solid #ebccd1;
-}
-
-.actionBar {
+.statusSwitchContainer {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 20px;
+  align-items: center;
+  gap: 10px;
+}
+
+.statusLabel {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.statusHabilitado {
+  color: #28a745;
+}
+
+.statusDesabilitado {
+  color: #dc3545;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #28a745;
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
 }
 
 @media (max-width: 768px) {
@@ -195,4 +365,206 @@
     padding: 6px 10px;
     font-size: 0.8rem;
   }
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1.2rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.button:hover {
+  background-color: #218838;
+}
+
+.filtrosContainer {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.filtroItem {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.filtroIcon {
+  position: absolute;
+  left: 12px;
+  color: #888;
+}
+
+.searchInput, .selectFiltro {
+  width: 100%;
+  padding: 0.75rem 0.75rem 0.75rem 35px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: #fff;
+}
+
+.searchInput:focus, .selectFiltro:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.searchInput:focus + .slider {
+  background-color: #28a745;
+}
+
+.searchInput:focus + .slider:before {
+  transform: translateX(22px);
+}
+
+.tableContainer {
+  overflow-x: auto;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+}
+
+.nenhumResultado {
+  text-align: center !important;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+/* ESTILOS DE MODAL ADICIONADOS DE MARCAS.MODULE.CSS */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+}
+
+.subModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+
+.modalSimples {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 1000px; /* Aumentado para o formulário de produto */
+    overflow: hidden;
+    /* Adicionado para garantir que o conteúdo interno não quebre o layout */
+    display: flex;
+    flex-direction: column;
+}
+
+.modalSimples .form {
+    box-shadow: none;
+    padding: 0;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    width: 100%;
+}
+
+.modalHeader h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #333;
+}
+
+.modalBody {
+    padding: 1.5rem;
+    overflow-y: auto; /* Permite scroll se o conteúdo for muito grande */
+    max-height: 80vh;
+}
+
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
+    gap: 0.5rem;
+    background-color: #f9f9f9;
+}
+
+.modalActions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.newButton {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.newButton:hover {
+  background-color: #138496;
+}
+
+/* FIX: Remove a linha azul e ajusta o título dentro do modal */
+.modalSimples .titulo {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 1rem; /* Adiciona um espaço após o título */
+  font-size: 1.5rem; /* Um pouco menor para o modal */
+}
+
+/* FIX: Ajusta o rodapé do formulário dentro do modal */
+.modalSimples .formFooter {
+  justify-content: flex-end; /* Alinha os botões à direita */
+  background-color: #f9f9f9;
+  padding: 1rem 1.5rem; /* Adiciona espaçamento interno */
+}
+
+.modalFormContainer .formHeader {
+  display: none;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+.fullWidth {
+    flex-basis: 100%;
 }

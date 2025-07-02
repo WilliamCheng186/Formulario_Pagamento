@@ -6,83 +6,128 @@ export default async function handler(req, res) {
   switch (method) {
     case 'GET':
       try {
-        const result = await pool.query(`
+        if (req.query['next-code']) {
+          const result = await pool.query('SELECT MAX(cod_pais) as max_code FROM paises');
+          const maxCode = result.rows[0].max_code || 0;
+          return res.status(200).json({ nextCode: maxCode + 1 });
+        }
+
+        if (req.query.cod_pais) {
+          const { cod_pais } = req.query;
+          const result = await pool.query(
+            `SELECT 
+               cod_pais,
+               nome,
+               sigla,
+               ddi,
+               ativo,
+               TO_CHAR(data_criacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_criacao,
+               TO_CHAR(data_atualizacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_atualizacao
+             FROM paises 
+             WHERE cod_pais = $1`,
+            [cod_pais]
+          );
+          if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'País não encontrado' });
+          }
+          return res.status(200).json(result.rows[0]);
+        }
+
+        const query = `
           SELECT 
             cod_pais,
             nome,
             sigla,
+            ddi,
             ativo,
-            TO_CHAR(data_cadastro, 'DD/MM/YYYY') as data_cadastro,
-            TO_CHAR(data_atualizacao, 'DD/MM/YYYY') as data_atualizacao
+            TO_CHAR(data_criacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_criacao,
+            TO_CHAR(data_atualizacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_atualizacao
           FROM paises 
           ORDER BY nome
-        `);
+        `;
+        console.log('Executando query GET em /api/paises:', query);
+        const result = await pool.query(query);
+        console.log('Resultado da query (result.rows) no servidor ANTES de enviar:', JSON.stringify(result.rows, null, 2));
         res.status(200).json(result.rows);
       } catch (error) {
-        console.error('Erro ao buscar países:', error);
+        console.error('Erro ao buscar países no servidor:', error);
         res.status(500).json({ error: 'Erro ao buscar países', details: error.message });
       }
       break;
 
     case 'POST':
       try {
-        const { nome, sigla, ativo = true } = body;
-        if (!nome) return res.status(400).json({ error: 'Nome obrigatório' });
+        const { nome, sigla, ddi } = body;
+        if (!nome) {
+          return res.status(400).json({ error: 'Nome é obrigatório.' });
+        }
 
-        // Verificar se já existe uma coluna 'sigla' na tabela paises
-        const checkColumn = await pool.query(`
-          SELECT column_name 
-          FROM information_schema.columns 
-          WHERE table_name = 'paises' AND column_name = 'sigla'
-        `);
-        
-        if (checkColumn.rows.length === 0) {
-          await pool.query('ALTER TABLE paises ADD COLUMN sigla VARCHAR(3)');
-          console.log('Coluna sigla adicionada à tabela paises');
+        // E2: Verificar se o país ou a sigla já existem
+        const checkExist = await pool.query(
+          'SELECT cod_pais FROM paises WHERE LOWER(nome) = LOWER($1) OR LOWER(sigla) = LOWER($2)',
+          [nome, sigla]
+        );
+
+        if (checkExist.rows.length > 0) {
+          return res.status(409).json({ error: 'Este país ou sigla já está cadastrado.' });
         }
 
         const result = await pool.query(
-          `INSERT INTO paises (nome, sigla, ativo) 
-           VALUES ($1, $2, $3) 
-           RETURNING 
-             cod_pais,
-             nome,
-             sigla,
-             ativo,
-             TO_CHAR(data_cadastro, 'DD/MM/YYYY') as data_cadastro,
-             TO_CHAR(data_atualizacao, 'DD/MM/YYYY') as data_atualizacao`, 
-          [nome, sigla || null, ativo]
+          'INSERT INTO paises (nome, sigla, ddi, ativo) VALUES ($1, $2, $3, true) RETURNING *',
+          [nome, sigla ? sigla.toUpperCase() : null, ddi]
         );
         res.status(201).json(result.rows[0]);
-      } catch (error) {
-        console.error('Erro ao cadastrar país:', error);
-        res.status(500).json({ error: 'Erro ao cadastrar país', details: error.message });
+      } catch (err) {
+        console.error('Erro ao cadastrar país:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
       }
       break;
 
     case 'PUT':
       try {
         const { cod_pais } = req.query;
-        const { nome, sigla, ativo } = body;
+        const { nome, sigla, ddi, ativo } = body;
 
         if (!cod_pais) {
           return res.status(400).json({ error: 'Código do país não fornecido' });
         }
 
-        if (!nome) {
+        if (!nome || nome.trim() === '') {
           return res.status(400).json({ error: 'Nome é obrigatório' });
         }
 
+        // E2 - Verificar se já existe outro país com o mesmo nome (exceto o atual)
+        const existingCountry = await pool.query(
+          'SELECT nome FROM paises WHERE LOWER(TRIM(nome)) = LOWER(TRIM($1)) AND cod_pais != $2',
+          [nome, cod_pais]
+        );
+        
+        if (existingCountry.rows.length > 0) {
+          return res.status(409).json({ error: 'País já cadastrado.' });
+        }
+
         // Verificar se já existe uma coluna 'sigla' na tabela paises
-        const checkColumn = await pool.query(`
+        const checkSiglaColumn = await pool.query(`
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = 'paises' AND column_name = 'sigla'
         `);
         
-        if (checkColumn.rows.length === 0) {
+        if (checkSiglaColumn.rows.length === 0) {
           await pool.query('ALTER TABLE paises ADD COLUMN sigla VARCHAR(3)');
           console.log('Coluna sigla adicionada à tabela paises');
+        }
+        
+        // Verificar se já existe uma coluna 'ddi' na tabela paises
+        const checkDdiColumn = await pool.query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = 'paises' AND column_name = 'ddi'
+        `);
+        
+        if (checkDdiColumn.rows.length === 0) {
+          await pool.query('ALTER TABLE paises ADD COLUMN ddi VARCHAR(10)');
+          console.log('Coluna ddi adicionada à tabela paises');
         }
 
         // Verificar se o país existe
@@ -98,16 +143,17 @@ export default async function handler(req, res) {
         // Atualizar o país
         const result = await pool.query(
           `UPDATE paises 
-           SET nome = $1, sigla = $2, ativo = $3 
-           WHERE cod_pais = $4 
+           SET nome = $1, sigla = $2, ddi = $3, ativo = $4, data_atualizacao = NOW()
+           WHERE cod_pais = $5 
            RETURNING 
              cod_pais,
              nome,
              sigla,
+             ddi,
              ativo,
-             TO_CHAR(data_cadastro, 'DD/MM/YYYY') as data_cadastro,
-             TO_CHAR(data_atualizacao, 'DD/MM/YYYY') as data_atualizacao`,
-          [nome, sigla || null, ativo, cod_pais]
+             TO_CHAR(data_criacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_criacao,
+             TO_CHAR(data_atualizacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_atualizacao`,
+          [nome, sigla || null, ddi || null, ativo, cod_pais]
         );
 
         res.status(200).json(result.rows[0]);
@@ -123,7 +169,35 @@ export default async function handler(req, res) {
         await pool.query('BEGIN');
 
         const { cod_pais } = req.query;
-        const { cascade } = req.query;
+        const { cascade, desativar } = req.query;
+
+        // E3 - Se foi solicitado para desativar em vez de excluir
+        if (desativar === 'true') {
+          const result = await pool.query(
+            'UPDATE paises SET ativo = false, data_atualizacao = NOW() WHERE cod_pais = $1',
+            [cod_pais]
+          );
+          
+          if (result.rowCount === 0) {
+            await pool.query('ROLLBACK');
+            return res.status(404).json({ error: 'País não encontrado' });
+          } else {
+            await pool.query('COMMIT');
+            return res.status(200).json({ message: 'País desativado com sucesso' });
+          }
+        }
+
+        // E3 - Verificar relacionamentos antes de excluir
+        const estadosCheck = await pool.query('SELECT COUNT(*) FROM estados WHERE cod_pais = $1', [cod_pais]);
+        const hasRelationships = parseInt(estadosCheck.rows[0].count) > 0;
+
+        if (hasRelationships && cascade !== 'true') {
+          await pool.query('ROLLBACK');
+          return res.status(409).json({ 
+            error: 'Não foi possível excluir este País pois ele está relacionado a outro registro. Deseja desativar?',
+            hasRelationships: true
+          });
+        }
 
         if (cascade === 'true') {
           console.log('Exclusão em cascata para o país:', cod_pais);
@@ -152,15 +226,6 @@ export default async function handler(req, res) {
           // 3. Excluir todos os estados do país
           console.log('Excluindo estados do país:', cod_pais);
           await pool.query('DELETE FROM estados WHERE cod_pais = $1', [cod_pais]);
-        } else {
-          // Verificar se o país tem estados
-          const estadosCheck = await pool.query('SELECT COUNT(*) FROM estados WHERE cod_pais = $1', [cod_pais]);
-          if (parseInt(estadosCheck.rows[0].count) > 0) {
-            await pool.query('ROLLBACK');
-            return res.status(400).json({ 
-              error: 'Este país possui estados cadastrados. Exclua os estados primeiro ou use o parâmetro cascade=true.'
-            });
-          }
         }
         
         // Finalmente, excluir o país

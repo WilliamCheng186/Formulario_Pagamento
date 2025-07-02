@@ -9,7 +9,10 @@ export default async function handler(req, res) {
       case 'GET':
         const result = await pool.query(`
           SELECT 
-            c.*,
+            c.cod_cli, c.tipo_cliente, c.nome, c.nome_fantasia, c.sexo, c.data_nascimento,
+            c.cpf_cnpj, c.rg_ie, c.email, c.telefone, 
+            c.cep, c.endereco, c.numero, c.bairro, c.complemento, c.cidade, c.uf,
+            c.cod_pagto, c.limite_credito, c.ativo, c.data_criacao, c.data_atualizacao,
             p.nome as pais_nome,
             e.nome as estado_nome,
             e.uf as estado_uf,
@@ -31,6 +34,9 @@ export default async function handler(req, res) {
         const {
           tipo_cliente,
           nome,
+          nome_fantasia,
+          sexo,
+          data_nascimento,
           cpf_cnpj,
           rg_ie,
           email,
@@ -39,28 +45,48 @@ export default async function handler(req, res) {
           rua,
           numero,
           bairro,
-          pais,
-          estado,
+          complemento,
           cidade,
           uf,
-          ativo
+          cod_pagto,
+          ativo,
+          limite_credito
         } = req.body;
 
-        // Validação dos campos obrigatórios
-        if (!tipo_cliente || !nome || !cpf_cnpj || !email || !telefone) {
-          return res.status(400).json({ error: 'Campos obrigatórios não preenchidos' });
+        // Validação Mínima
+        if (!nome) {
+          return res.status(400).json({ error: 'O campo nome é obrigatório.' });
         }
+        
+        const desformatarMoeda = (valor) => {
+            if (valor === null || valor === undefined || valor === '') return null;
+            if (typeof valor === 'number') return valor;
+            if (typeof valor === 'string') {
+                const numero = parseFloat(valor.replace('R$', '').replace(/\\./g, '').replace(',', '.').trim());
+                return isNaN(numero) ? null : numero;
+            }
+            return null;
+        };
+        const limiteCreditoParaSalvar = desformatarMoeda(limite_credito);
+
+        const enderecoParaSalvar = rua || '';
+        const dataNascimentoParaSalvar = data_nascimento || null;
 
         const updateResult = await pool.query(
           `UPDATE clientes SET 
-            tipo_cliente = $1, nome = $2, cpf_cnpj = $3, rg_ie = $4,
-            email = $5, telefone = $6, cep = $7, rua = $8,
-            numero = $9, bairro = $10, pais = $11, estado = $12, cidade = $13,
-            uf = $14, ativo = $15
-          WHERE cod_cli = $16
+            tipo_cliente = $1, nome = $2, nome_fantasia = $3, sexo = $4, data_nascimento = $5,
+            cpf_cnpj = $6, rg_ie = $7, email = $8, telefone = $9, 
+            cep = $10, endereco = $11, numero = $12, bairro = $13, complemento = $14,
+            cidade = $15, uf = $16, cod_pagto = $17, ativo = $18, limite_credito = $19
+          WHERE cod_cli = $20
           RETURNING *`,
-          [tipo_cliente, nome, cpf_cnpj, rg_ie, email, telefone,
-           cep, rua, numero, bairro, pais, estado, cidade, uf, ativo, id]
+          [
+            tipo_cliente, nome, nome_fantasia, sexo, dataNascimentoParaSalvar,
+            cpf_cnpj, rg_ie, email, telefone,
+            cep, enderecoParaSalvar, numero, bairro, complemento,
+            cidade, uf, cod_pagto,
+            ativo, limiteCreditoParaSalvar, id
+          ]
         );
 
         if (updateResult.rows.length === 0) {
@@ -70,13 +96,13 @@ export default async function handler(req, res) {
         return res.status(200).json(updateResult.rows[0]);
 
       case 'DELETE':
-        // Atualiza o status do cliente para inativo (soft delete)
+        // Deleta o cliente fisicamente do banco de dados
         const deleteResult = await pool.query(
-          'UPDATE clientes SET ativo = false WHERE cod_cli = $1 RETURNING *',
+          'DELETE FROM clientes WHERE cod_cli = $1 RETURNING *',
           [id]
         );
 
-        if (deleteResult.rows.length === 0) {
+        if (deleteResult.rowCount === 0) { // Verifica se alguma linha foi afetada
           return res.status(404).json({ error: 'Cliente não encontrado' });
         }
 

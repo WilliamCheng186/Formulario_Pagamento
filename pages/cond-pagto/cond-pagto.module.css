@@ -1,127 +1,208 @@
-/* Estilos para páginas de condições de pagamento */
 .container {
-  padding: 20px;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  min-height: 100vh;
 }
 
 .headerContainer {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 2rem;
 }
 
 .titulo {
-  font-size: 24px;
-  margin: 0 0 0 15px;
+  font-size: 2rem;
+  color: #333;
 }
 
-.voltarButton {
-  background-color: #f0f0f0;
+.form {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.formHeader {
+  margin-bottom: 2rem;
+}
+
+.formRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 1.5rem;
+}
+
+.formGroup {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroupQuarter {
+  flex: 1 1 calc(25% - 20px);
+  display: flex;
+  flex-direction: column;
+}
+
+.codigo {
+  flex-grow: 0.2;
+  min-width: 100px;
+}
+
+.nomeProduto {
+  flex-grow: 2;
+}
+
+.label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #555;
+  font-size: 0.7rem !important;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.input, .select {
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #ccc;
-  padding: 8px 15px;
   border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  background-color: #fff !important;
+}
+
+.input:focus, .select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.input[disabled] {
+  color: #495057;
+  cursor: not-allowed;
+}
+
+.inputComBotao {
+  display: flex;
+}
+
+.inputComBotao .input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.searchButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  background-color: #007bff;
+  border: 1px solid #007bff;
+  color: white;
+  border-radius: 0 4px 4px 0;
   cursor: pointer;
-  font-size: 14px;
+  transition: background-color 0.2s;
 }
 
-.voltarButton:hover {
-  background-color: #e0e0e0;
+.searchButton:hover {
+  background-color: #0056b3;
 }
 
-.subtitulo {
-  font-size: 1.3rem;
-  color: #444;
-  margin-top: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-/* Filtros */
-.filtrosContainer {
+.formFooter {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
   align-items: center;
+  margin-top: 2rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.filtrosEsquerda {
+.dateInfo {
+  font-size: 0.8rem;
+  color: #040b10 !important;
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.filtrosDireita {
+.buttonGroup {
   display: flex;
-  gap: 10px;
+  justify-content: flex-end;
+  gap: 1rem;
 }
 
-.inputPesquisa {
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid #ced4da;
-  min-width: 250px;
-}
-
-.inputPesquisa:focus {
-  outline: none;
-  border-color: #0070f3;
-}
-
-.selectFiltro {
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid #ced4da;
-  background-color: white;
-}
-
-.selectFiltro:focus {
-  outline: none;
-  border-color: #0070f3;
-}
-
-/* Ações */
-.actionBar {
-  display: flex;
-  justify-content: flex-start;
-  margin-bottom: 1rem;
-}
-
-.btnPrimary {
-  background-color: #007bff;
-  color: white;
+.submitButton, .cancelButton {
+  padding: 0.6rem 1.2rem;
   border: none;
-  padding: 10px 15px;
   border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 14px;
+  transition: background-color 0.2s, transform 0.1s;
 }
 
-.btnPrimary:hover {
-  background-color: #0069d9;
+.submitButton {
+  background-color: #28a745;
+  color: #fff;
 }
 
-.btnPrimary:disabled {
+.submitButton:hover {
+  background-color: #218838;
+}
+
+.cancelButton {
+  background-color: #dc3545;
+  color: white;
+}
+
+.cancelButton:hover {
+  background-color: #c82333;
+}
+
+.submitButton:disabled, .cancelButton:disabled {
   background-color: #6c757d;
   cursor: not-allowed;
 }
 
-/* Tabela */
-.tableContainer {
-  overflow-x: auto;
-  width: 100%;
+.message {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.successMessage {
+  background-color: #28a745;
+}
+
+.errorMessage {
+  background-color: #dc3545;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  margin-top: 2rem;
+  background-color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  white-space: nowrap;
 }
 
-.table th,
-.table td {
-  padding: 12px 15px;
+.table th, .table td {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
   text-align: left;
-  border-bottom: 1px solid #dee2e6;
+  vertical-align: middle;
 }
 
 .table th {
@@ -129,255 +210,114 @@
   font-weight: 600;
 }
 
-.table tbody tr:hover {
-  background-color: #f8f9fa;
+.nomeProdutoTd {
+  max-width: 450px;
 }
 
-/* Botões de ação */
-.btnEdit,
-.btnDelete,
-.btnView {
-  padding: 6px 12px;
-  border-radius: 4px;
+.nomeProdutoWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.nomeProdutoText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusIndicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.statusIndicator.habilitado {
+  background-color: #28a745;
+  box-shadow: 0 0 8px rgba(40, 167, 69, 0.7);
+}
+
+.statusIndicator.desabilitado {
+  background-color: #dc3545;
+  box-shadow: 0 0 8px rgba(220, 53, 69, 0.7);
+}
+
+.acoesHeader {
+  text-align: right !important;
+}
+
+.acoesBotoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  background: none;
+  border: none;
+  padding: 0.5rem;
   cursor: pointer;
-  font-size: 14px;
-  margin-right: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
 }
 
-.btnEdit {
-  background-color: #007bff;
+.editButton {
+  background-color: #007bff; /* Azul */
   color: white;
 }
 
-.btnEdit:hover {
+.deleteButton {
+  background-color: #dc3545; /* Vermelho */
+  color: white;
+}
+
+.editButton:hover {
   background-color: #0069d9;
 }
 
-.btnView {
-  background-color: #ffc107;
-  color: #212529;
-}
-
-.btnView:hover {
-  background-color: #e0a800;
-}
-
-.btnDelete {
-  background-color: #dc3545;
-  color: white;
-}
-
-.btnDelete:hover {
+.deleteButton:hover {
   background-color: #c82333;
 }
 
-/* Mensagens */
-.message {
-  padding: 12px;
-  margin-bottom: 20px;
-  border-radius: 4px;
-}
-
-.successMessage {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.errorMessage {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-/* Formulário */
-.form {
-  background-color: #fff;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.statusSwitchContainer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
   margin-bottom: 2rem;
 }
 
-.formRow {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 15px;
+.statusLabel {
+  margin-right: 10px;
+  font-weight: 600;
 }
 
-.formLabel {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
+.statusHabilitado {
+  color: #28a745;
 }
 
-.formControl {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 4px;
-  border: 1px solid #ced4da;
-  font-size: 16px;
+.statusDesabilitado {
+  color: #dc3545;
 }
 
-.input {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 4px;
-  border: 1px solid #ced4da;
-  font-size: 16px;
-}
-
-.formActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.buttonGroup {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-  gap: 1rem;
-}
-
-.btnSecondary {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.btnSecondary:hover {
-  background-color: #5a6268;
-}
-
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100px;
-  font-size: 1.1rem;
-  color: #666;
-}
-
-/* Situação */
-.situacaoAtivo,
-.situacaoInativo {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.situacaoAtivo {
-  background-color: #28a745;
-  color: white;
-}
-
-.situacaoInativo {
-  background-color: #dc3545;
-  color: white;
-}
-
-/* Tooltip */
-.tooltipContainer {
-  position: relative;
-}
-
-.tooltip {
-  visibility: hidden;
-  position: absolute;
-  background-color: #333;
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 4px;
-  z-index: 1;
-  bottom: 125%;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.tooltipContainer:hover .tooltip {
-  visibility: visible;
-  opacity: 1;
-}
-
-.tooltip::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: #333 transparent transparent transparent;
-}
-
-/* Botões de formulário */
-.submitButton {
-  padding: 0.75rem 1.5rem;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  margin-right: 1rem;
-}
-
-.submitButton:hover {
-  background-color: #388e3c;
-}
-
-.submitButton:disabled {
-  background-color: #a5d6a7;
-  cursor: not-allowed;
-}
-
-.cancelButton {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.75rem 1.5rem;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.cancelButton:hover {
-  background-color: #c82333;
-}
-
-/* Switch para ativo/inativo */
-.switchLabel {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.switchContainer {
+.switch {
   position: relative;
   display: inline-block;
-  width: 48px;
+  width: 50px;
   height: 24px;
-  margin: 0 10px;
 }
 
-.switchInput {
+.switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.switch {
+.slider {
   position: absolute;
   cursor: pointer;
   top: 0;
@@ -389,7 +329,7 @@
   border-radius: 24px;
 }
 
-.switch:before {
+.slider:before {
   position: absolute;
   content: "";
   height: 18px;
@@ -401,311 +341,368 @@
   border-radius: 50%;
 }
 
-input:checked + .switch {
+input:checked + .slider {
   background-color: #28a745;
 }
 
-input:focus + .switch {
-  box-shadow: 0 0 1px #28a745;
+input:checked + .slider:before {
+  transform: translateX(26px);
 }
 
-input:checked + .switch:before {
-  transform: translateX(24px);
+@media (max-width: 768px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  .table {
+    display: block;
+    overflow-x: auto;
+  }
+  .actionButton {
+    padding: 0.4rem;
+    font-size: 1rem;
+  }
 }
 
-/* Metadata com datas de criação/atualização */
-.metadataContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin: 15px 0;
-  font-size: 14px;
-  color: #666;
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 4px;
-  border-left: 3px solid #17a2b8;
-}
-
-.metadataItem {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 200px;
-}
-
-.metadataLabel {
-  font-weight: 600;
-  margin-right: 8px;
-  color: #495057;
-}
-
-.metadataValue {
-  color: #212529;
-  font-weight: 500;
-}
-
-/* Estilos específicos para parcelas */
-.parcelasContainer {
-  margin-top: 20px;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  padding: 15px;
-  background-color: #f8f9fa;
-}
-
-.parcelasHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.parcelasTitle {
-  font-size: 1.2rem;
-  font-weight: 500;
-  margin: 0;
-}
-
-.btnAddParcela {
-  background-color: #28a745;
+.button {
+  background-color: #28a745; /* Verde */
   color: white;
+  padding: 0.75rem 1.5rem;
   border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: 5px;
+  font-size: 1rem;
   cursor: pointer;
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s ease;
 }
 
-.btnAddParcela:hover {
+.button:hover {
   background-color: #218838;
 }
 
-.parcela {
+.filtrosContainer {
   display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-  align-items: flex-end;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.parcelaItem {
-  flex: 1;
+.filtroItem {
+  display: flex;
+  align-items: center;
+  background-color: #f0f2f5;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
 }
 
-.btnRemoveParcela {
-  background-color: #dc3545;
-  color: white;
+.filtroIcon {
+  color: #888;
+  margin-right: 0.75rem;
+}
+
+.searchInput, .selectFiltro {
   border: none;
-  padding: 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: transparent;
+  outline: none;
+  font-size: 1rem;
+  width: 250px;
 }
 
-.btnRemoveParcela:hover {
-  background-color: #c82333;
+.selectFiltro {
+  width: 200px;
 }
 
-/* Responsividade */
-@media (max-width: 768px) {
-  .filtrosContainer {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .filtrosEsquerda {
-    width: 100%;
-  }
-  
-  .inputPesquisa {
-    width: 100%;
-  }
-  
-  .filtrosDireita {
-    width: 100%;
-  }
-  
-  .btnPrimary {
-    width: 100%;
-  }
-  
-  .formActions {
-    flex-direction: column;
-  }
-  
-  .btnSecondary {
-    width: 100%;
-    margin-right: 0;
-  }
-  
-  .buttonGroup {
-    flex-direction: column;
-  }
-  
-  .submitButton,
-  .cancelButton {
-    width: 100%;
-    margin-right: 0;
-    margin-bottom: 0.5rem;
-  }
-  
-  .parcela {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .parcelaItem {
-    width: 100%;
-  }
-  
-  .btnRemoveParcela {
-    width: 100%;
-    height: auto;
-    padding: 10px;
-  }
+.tableContainer {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  overflow: hidden;
 }
 
-/* Estilos para visualização detalhada */
-.detalhesContainer {
-  padding: 15px;
-}
-
-.detalhesHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #dee2e6;
-  padding-bottom: 10px;
-}
-
-.detalhesHeader h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 500;
-}
-
-.detalhesGerais {
-  margin-bottom: 20px;
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 4px;
-}
-
-.detalhesRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.detalhesItem {
-  flex: 1;
-  min-width: 150px;
-}
-
-.detalhesItem strong {
-  font-weight: 500;
-  margin-right: 5px;
-}
-
-.subtitulo {
+.loading, .nenhumResultado {
+  text-align: center;
+  padding: 2rem;
+  color: #777;
   font-size: 1.1rem;
-  margin-top: 20px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #dee2e6;
-  padding-bottom: 5px;
 }
 
-/* Modal */
 .modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 20px;
 }
 
-.modal {
-  background-color: white;
+.modalSimples {
+  background: #fff;
+  padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  animation: modalFadeIn 0.3s ease-out;
+  max-width: 500px;
 }
 
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.modalSimples .form {
+  padding: 0;
+  box-shadow: none;
 }
 
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #dee2e6;
-  position: sticky;
-  top: 0;
-  background-color: white;
-  border-radius: 8px 8px 0 0;
-  z-index: 10;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.modalHeader h2 {
+.modalHeader h3 {
   margin: 0;
-  font-size: 1.25rem;
-  color: #212529;
+  font-size: 1.5rem;
+}
+
+.modalBody {
+  margin-bottom: 1.5rem;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+}
+
+.newButton {
+  background-color: #17a2b8;
+  color: white;
+}
+.newButton:hover {
+  background-color: #138496;
+}
+
+/* Adicionando o estilo para o botão de visualizar */
+.viewButton {
+  background-color: #007bff; /* Azul */
+  color: white;
+}
+
+.viewButton:hover {
+  background-color: #0069d9;
+}
+
+.modalSimples .titulo {
+  font-size: 1.75rem;
+  color: #333;
+  padding-bottom: 0.5rem;
+  border-bottom: none;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.modalSimples .formFooter {
+  border-top: none;
+}
+
+.parcelasHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+  margin-bottom: 1rem;
+}
+
+.parcelasSubtitulo {
+  font-size: 1.2rem;
+  color: #555;
+  margin: 0;
 }
 
 .closeModal {
   background: none;
   border: none;
-  font-size: 24px;
-  line-height: 1;
-  color: #6c757d;
+  font-size: 2rem;
   cursor: pointer;
-  padding: 0 5px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 35px;
-  height: 35px;
-  transition: all 0.2s;
+  color: #aaa;
+  line-height: 1;
 }
 
 .closeModal:hover {
-  background-color: #f8f9fa;
-  color: #343a40;
+  color: #333;
+}
+
+.modalSearchInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.listaSelecao {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.listaSelecao li {
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #eee;
+}
+
+.listaSelecao li:last-child {
+  border-bottom: none;
+}
+
+.listaSelecao li:hover {
+  background-color: #f4f7fa;
+}
+
+.listaSelecaoItemVazio {
+  text-align: center;
+  padding: 1rem;
+  color: #6c757d;
+}
+
+.modalButton {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.newButton {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.newButton:hover {
+  background-color: #218838;
+}
+
+/* Estilos para o Modal de Visualização */
+.modalContent {
+  padding: 1rem;
+}
+
+.modalTitle {
+  font-size: 1.75rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
 }
 
 .modalBody {
-  padding: 20px;
-  overflow-y: auto;
-  max-height: calc(90vh - 132px); /* Header + Footer height */
+  font-size: 1rem;
+  color: #555;
+}
+
+.modalBody p {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.modalBody strong {
+  color: #333;
+  margin-right: 8px;
+}
+
+.parcelasTitle {
+  font-size: 1.25rem;
+  color: #333;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.modalTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.modalTable th, .modalTable td {
+  padding: 0.75rem;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+.modalTable th {
+  background-color: #f2f2f2;
+  font-weight: 600;
+}
+
+.modalFooter {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  text-align: right;
+}
+
+.modalCloseButton {
+  background-color: #6c757d;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.modalCloseButton:hover {
+  background-color: #5a6268;
+}
+
+.actionButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Estilos para o Modal de Visualização com Layout de Formulário */
+.containerVisualizacao {
+  padding: 2rem;
+  background-color: #fff;
+}
+
+.statusSwitchContainerVisualizacao {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.loadingModal {
+  padding: 3rem;
+  text-align: center;
+  font-size: 1.2rem;
+  color: #555;
 } 
- 
- 
- 
- 
- 
- 

@@ -1,231 +1,275 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styles from './paises.module.css';
+import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
 
-export default function ConsultaPaises() {
+export default function ConsultaPaisesPage() {
   const router = useRouter();
   const [paises, setPaises] = useState([]);
-  const [paisesFiltrados, setPaisesFiltrados] = useState([]);
-  const [carregando, setCarregando] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [mensagem, setMensagem] = useState(null);
-  const [tipoMensagem, setTipoMensagem] = useState('');
-  const [pesquisa, setPesquisa] = useState('');
+  const [filtroTexto, setFiltroTexto] = useState('');
   const [filtroSituacao, setFiltroSituacao] = useState('todos');
-
-  useEffect(() => {
-    if (router.isReady) {
-      // Verificar se há mensagem na query
-    if (router.query.mensagem) {
-        exibirMensagem(router.query.mensagem, router.query.tipo || 'success');
-      
-        // Remove a mensagem da URL
-        const { mensagem, tipo, ...restQuery } = router.query;
-        router.replace({
-          pathname: router.pathname,
-          query: restQuery
-        }, undefined, { shallow: true });
-      }
-      
-        carregarPaises();
-    }
-  }, [router.isReady]);
-
-  useEffect(() => {
-    aplicarFiltros();
-  }, [pesquisa, filtroSituacao, paises]);
-
-  const aplicarFiltros = () => {
-    let resultado = [...paises];
-    
-    // Aplicar filtro de situação
-    if (filtroSituacao === 'habilitado') {
-      resultado = resultado.filter(pais => pais.ativo === true);
-    } else if (filtroSituacao === 'desabilitado') {
-      resultado = resultado.filter(pais => pais.ativo === false);
-    }
-    
-    // Aplicar filtro de pesquisa
-    if (pesquisa) {
-      const termo = pesquisa.toLowerCase();
-      resultado = resultado.filter(pais => 
-        pais.nome.toLowerCase().includes(termo) ||
-        (pais.sigla && pais.sigla.toLowerCase().includes(termo))
-      );
-    }
-    
-    setPaisesFiltrados(resultado);
-  };
+  const [modalExclusao, setModalExclusao] = useState({ aberto: false, pais: null, hasRelationships: false });
+  const [modalConfirmacao, setModalConfirmacao] = useState({ aberto: false, pais: null });
 
   const carregarPaises = async () => {
+    setLoading(true);
     try {
-      setCarregando(true);
       const res = await fetch('/api/paises');
+      if (!res.ok) throw new Error('Falha ao buscar dados dos países');
       const data = await res.json();
-      setPaises(Array.isArray(data) ? data : []);
+      console.log('Dados recebidos da API em /paises/index.js:', data);
+      setPaises(data);
     } catch (error) {
-      console.error('Erro ao buscar países:', error);
-      exibirMensagem('Erro ao carregar países', false);
+      console.error('Erro ao carregar países:', error);
+      setMensagem({ texto: error.message || 'Erro ao carregar países.', tipo: 'error' });
     } finally {
-      setCarregando(false);
+      setLoading(false);
     }
   };
 
-  const handleEditar = (pais) => {
-    router.push(`/paises/cadastro?id=${pais.cod_pais}`);
+  useEffect(() => {
+    carregarPaises();
+    // Verificar se há mensagem da página de cadastro/edição
+    if (router.query.mensagem && router.query.tipo) {
+      exibirMensagem(router.query.mensagem, router.query.tipo === 'success');
+      // Limpar query params para não mostrar a mensagem novamente ao recarregar
+      router.replace('/paises', undefined, { shallow: true });
+    }
+  }, [router.query]);
+
+  const exibirMensagem = (texto, sucesso) => {
+    setMensagem({ texto, tipo: sucesso ? 'success' : 'error' });
+    setTimeout(() => setMensagem(null), 5000);
   };
 
-  const handleExcluir = async (cod_pais) => {
-    const paisNome = paises.find(p => p.cod_pais === cod_pais)?.nome || '';
-    const resposta = confirm(`Tem certeza que deseja excluir o país "${paisNome}"?`);
-    
-    if (!resposta) return;
+  const handleDelete = (cod_pais) => {
+    const paisParaExcluir = paises.find(p => p.cod_pais === cod_pais);
+    if (!paisParaExcluir) return;
 
+    // Mostrar modal de confirmação ANTES de tentar excluir
+    setModalConfirmacao({
+      aberto: true,
+      pais: paisParaExcluir
+    });
+  };
+
+  const confirmarExclusaoInicial = async () => {
+    const { pais } = modalConfirmacao;
+    setModalConfirmacao({ aberto: false, pais: null });
+    
+    setLoading(true);
     try {
-      let url = `/api/paises?cod_pais=${cod_pais}`;
-      
-      // Oferecer a opção de exclusão em cascata
-      const perguntaCascade = confirm(`ATENÇÃO: Este país pode ter estados, cidades e funcionários cadastrados.\n\nDeseja excluir também todos os estados, cidades e funcionários vinculados a este país?\n\nClique em "OK" para excluir tudo ou "Cancelar" para excluir apenas o país (se não houver dependências).`);
-      
-      if (perguntaCascade) {
-        url += '&cascade=true';
-      }
-      
-      const res = await fetch(url, {
-        method: 'DELETE',
-      });
-      
-      const data = await res.json();
+      // Agora sim, tentar excluir para verificar relacionamentos
+      const res = await fetch(`/api/paises?cod_pais=${pais.cod_pais}`, { method: 'DELETE' });
+      const responseData = await res.json();
       
       if (res.ok) {
-        carregarPaises();
         exibirMensagem('País excluído com sucesso!', true);
+        carregarPaises(); // Recarrega a lista
+      } else if (res.status === 409 && responseData.hasRelationships) {
+        // E3 - País tem relacionamentos, mostrar modal
+        setModalExclusao({
+          aberto: true,
+          pais: pais,
+          hasRelationships: true
+        });
       } else {
-        exibirMensagem(`Erro: ${data.error || 'Falha ao excluir país'}`, false);
+        throw new Error(responseData.error || 'Erro ao excluir país');
       }
     } catch (error) {
       console.error('Erro ao excluir país:', error);
-      exibirMensagem(error.message || 'Erro ao excluir país', false);
+      exibirMensagem(error.message, false);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const exibirMensagem = (texto, sucesso) => {
-    setMensagem(texto);
-    setTipoMensagem(sucesso ? 'success' : 'error');
+  const confirmarExclusao = async (opcao) => {
+    const { pais } = modalExclusao;
+    setModalExclusao({ aberto: false, pais: null, hasRelationships: false });
     
-    // Remove a mensagem após 5 segundos
-    setTimeout(() => {
-      setMensagem(null);
-    }, 5000);
+    if (opcao === 'desativar') {
+      // E3 - Desativar em vez de excluir
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/paises?cod_pais=${pais.cod_pais}&desativar=true`, { method: 'DELETE' });
+        
+        if (res.ok) {
+          exibirMensagem('País desativado com sucesso!', true);
+          carregarPaises();
+        } else {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Erro ao desativar país');
+        }
+      } catch (error) {
+        console.error('Erro ao desativar país:', error);
+        exibirMensagem(error.message, false);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
-  const handleChangePesquisa = (e) => {
-    setPesquisa(e.target.value);
-  };
-  
-  const handleChangeSituacao = (e) => {
-    setFiltroSituacao(e.target.value);
-  };
-  
-  const formatarData = (dataString) => {
-    if (!dataString) return '--/--/----';
-    const data = new Date(dataString);
-    if (isNaN(data.getTime())) return '--/--/----';
-    
-    return data.toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+  const paisesFiltrados = useMemo(() => {
+    return paises.filter(pais => {
+      const nomeMatch = pais.nome.toLowerCase().includes(filtroTexto.toLowerCase());
+      const siglaMatch = pais.sigla ? pais.sigla.toLowerCase().includes(filtroTexto.toLowerCase()) : false;
+      const ddiMatch = pais.ddi ? pais.ddi.toLowerCase().includes(filtroTexto.toLowerCase()) : false;
+      const situacaoMatch = 
+        filtroSituacao === 'todos' ? true : 
+        filtroSituacao === 'ativos' ? pais.ativo : 
+        !pais.ativo; // inativos
+
+      return (nomeMatch || siglaMatch || ddiMatch) && situacaoMatch;
     });
-  };
+  }, [paises, filtroTexto, filtroSituacao]);
 
   return (
     <div className={styles.container}>
       <div className={styles.headerContainer}>
-        <Link href="/">
-          <button className={styles.voltarButton}>Voltar</button>
-        </Link>
         <h1 className={styles.titulo}>Consulta de Países</h1>
       </div>
-      
+
       {mensagem && (
-        <div className={`${styles.message} ${tipoMensagem === 'error' ? styles.errorMessage : styles.successMessage}`}>
-          {mensagem}
+        <div className={`${styles.message} ${mensagem.tipo === 'success' ? styles.successMessage : styles.errorMessage}`}>
+          {mensagem.texto}
         </div>
       )}
 
-      <div className={styles.filtrosContainer}>
-        <div className={styles.filtrosEsquerda}>
-          <input
+      <div className={styles.filtrosEAdicionarContainer}>
+        <div className={styles.filtrosContainerLista}>
+          <input 
             type="text"
-            placeholder="Filtrar"
-            value={pesquisa}
-            onChange={handleChangePesquisa}
-            className={styles.inputPesquisa}
+            placeholder="Filtrar por nome, sigla ou DDI..."
+            value={filtroTexto}
+            onChange={(e) => setFiltroTexto(e.target.value)}
+            className={styles.inputPesquisaLista}
           />
           <select 
-            value={filtroSituacao} 
-            onChange={handleChangeSituacao}
-            className={styles.selectFiltro}
+            value={filtroSituacao}
+            onChange={(e) => setFiltroSituacao(e.target.value)}
+            className={styles.selectFiltroLista}
           >
             <option value="todos">Todos</option>
-            <option value="habilitado">Habilitado</option>
-            <option value="desabilitado">Desabilitado</option>
+            <option value="ativos">Habilitados</option>
+            <option value="inativos">Desabilitados</option>
           </select>
         </div>
-        <div className={styles.filtrosDireita}>
-          <Link href="/paises/cadastro">
-            <button className={styles.btnPrimary}>Adicionar</button>
-          </Link>
-        </div>
+        <Link href="/paises/cadastro">
+          <button className={`${styles.button} ${styles.btnAdicionar}`}>
+            <FaPlus style={{ marginRight: '5px' }} /> Adicionar
+          </button>
+        </Link>
       </div>
 
-      {carregando ? (
-        <p>Carregando países...</p>
-      ) : paisesFiltrados.length === 0 ? (
-        <p>Nenhum país encontrado.</p>
-      ) : (
+      {loading && <p>Carregando países...</p>}
+      {!loading && paisesFiltrados.length === 0 && (
+        <p>Nenhum país encontrado com os filtros aplicados.</p>
+      )}
+
+      {!loading && paisesFiltrados.length > 0 && (
         <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Nome</th>
-              <th>Sigla</th>
-              <th>Situação</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paisesFiltrados.map((pais) => (
-              <tr key={pais.cod_pais} 
-                  title={`Data de Criação: ${pais.data_cadastro || '--/--/----'}\nData de Atualização: ${pais.data_atualizacao || '--/--/----'}`}>
-                <td>{pais.cod_pais}</td>
-                <td>{pais.nome}</td>
-                <td>{pais.sigla || '-'}</td>
-                <td>
-                  <span className={pais.ativo ? styles.situacaoAtivo : styles.situacaoInativo}>
-                    {pais.ativo ? 'Habilitado' : 'Desabilitado'}
-                  </span>
-                </td>
-                <td>
-                  <button
-                    onClick={() => handleEditar(pais)}
-                    className={styles.editarButton}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleExcluir(pais.cod_pais)}
-                    className={styles.excluirButton}
-                  >
-                    Excluir
-                  </button>
-                </td>
+          <table className={styles.tableLista}>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>País</th>
+                <th>Sigla</th>
+                <th>DDI</th>
+                <th>Situação</th>
+                <th>Ações</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paisesFiltrados.map(pais => (
+                <tr key={pais.cod_pais}>
+                  <td>{pais.cod_pais}</td>
+                  <td>{pais.nome}</td>
+                  <td>{pais.sigla || '-'}</td>
+                  <td>{pais.ddi || '-'}</td>
+                  <td>
+                    <span className={pais.ativo ? styles.situacaoAtivoLista : styles.situacaoInativoLista}>
+                      {pais.ativo ? 'Habilitado' : 'Desabilitado'}
+                    </span>
+                  </td>
+                  <td className={styles.actionsCellContainer}>
+                    <Link href={`/paises/cadastro?id=${pais.cod_pais}`} passHref>
+                      <button className={`${styles.button} ${styles.editarButtonLista}`}>
+                        <FaEdit /> Editar
+                      </button>
+                    </Link>
+                    <button 
+                      onClick={() => handleDelete(pais.cod_pais)} 
+                      className={`${styles.button} ${styles.excluirButtonLista}`}
+                    >
+                      <FaTrash /> Excluir
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal de confirmação inicial */}
+      {modalConfirmacao.aberto && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h3>Confirmar Exclusão</h3>
+            <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ddd' }} />
+            <p>
+              Tem certeza que deseja excluir o país "{modalConfirmacao.pais?.nome}"?
+            </p>
+            <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ddd' }} />
+            <div className={styles.modalButtons}>
+              <button 
+                className={styles.buttonCancelar}
+                onClick={() => setModalConfirmacao({ aberto: false, pais: null })}
+              >
+                Cancelar
+              </button>
+              <button 
+                className={styles.buttonExcluir}
+                onClick={confirmarExclusaoInicial}
+                style={{ backgroundColor: '#28a745', color: 'white' }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* E3 - Modal de confirmação para exclusão com relacionamentos */}
+      {modalExclusao.aberto && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h3>Confirmar Ação</h3>
+            <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ddd' }} />
+            <p>
+              Não é possível excluir o país "{modalExclusao.pais?.nome}" pois está vinculado a outro registro.
+            </p>
+            <p>Deseja desativar o país ao invés de excluir?</p>
+            <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ddd' }} />
+            <div className={styles.modalButtons}>
+              <button 
+                className={styles.buttonCancelar}
+                onClick={() => setModalExclusao({ aberto: false, pais: null, hasRelationships: false })}
+              >
+                Cancelar
+              </button>
+              <button 
+                className={styles.buttonDesativar}
+                onClick={() => confirmarExclusao('desativar')}
+              >
+                Desativar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

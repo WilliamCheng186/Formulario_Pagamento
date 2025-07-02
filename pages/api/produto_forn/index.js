@@ -11,24 +11,35 @@ export default async function handler(req, res) {
         // Buscar produtos de um fornecedor específico
         if (cod_forn) {
           const result = await pool.query(`
-            SELECT pf.cod_forn, pf.cod_prod, f.nome AS fornecedor, p.descricao AS produto, p.*
-            FROM produto_forn pf
-            JOIN fornecedores f ON pf.cod_forn = f.cod_forn
-            JOIN produtos p ON pf.cod_prod = p.cod_prod
-            WHERE pf.cod_forn = $1
-            ORDER BY p.descricao
+            SELECT 
+              pf.cod_prod,
+              p.nome AS produto_nome 
+            FROM 
+              produto_forn pf
+            JOIN 
+              produtos p ON pf.cod_prod = p.cod_prod
+            WHERE 
+              pf.cod_forn = $1
+            ORDER BY 
+              p.nome
           `, [cod_forn]);
           
-          return res.status(200).json(result.rows);
+          // O frontend espera 'cod_prod' e 'nome'
+          const responseData = result.rows.map(row => ({
+            cod_prod: row.cod_prod,
+            nome: row.produto_nome
+          }));
+          
+          return res.status(200).json(responseData);
         }
         
         // Buscar todas as relações produto-fornecedor
         const result = await pool.query(`
-          SELECT pf.cod_forn, pf.cod_prod, f.nome AS fornecedor, p.descricao AS produto
+          SELECT pf.cod_forn, pf.cod_prod, f.nome AS fornecedor, p.nome AS produto
           FROM produto_forn pf
           JOIN fornecedores f ON pf.cod_forn = f.cod_forn
           JOIN produtos p ON pf.cod_prod = p.cod_prod
-          ORDER BY f.nome, p.descricao
+          ORDER BY f.nome, p.nome
         `);
         
         return res.status(200).json(result.rows);
@@ -39,6 +50,45 @@ export default async function handler(req, res) {
       break;
 
     case 'POST':
+      const { action } = query;
+
+      if (action === 'sync') {
+        const { cod_forn, produtos } = body;
+        if (!cod_forn || !Array.isArray(produtos)) {
+          return res.status(400).json({ message: 'Dados inválidos para sincronização.' });
+        }
+
+        const client = await pool.connect();
+        try {
+          await client.query('BEGIN');
+          
+          // 1. Apagar todas as associações antigas para este fornecedor
+          await client.query('DELETE FROM produto_forn WHERE cod_forn = $1', [cod_forn]);
+          
+          // 2. Inserir as novas associações, se houver alguma
+          if (produtos.length > 0) {
+            // Constrói a query de forma parametrizada para evitar SQL Injection
+            let paramIndex = 1;
+            const valuePlaceholders = produtos.map(() => `($${paramIndex++}, $${paramIndex++})`).join(',');
+            const queryParams = produtos.reduce((acc, cod_prod) => [...acc, cod_forn, cod_prod], []);
+
+            const insertStatement = `INSERT INTO produto_forn (cod_forn, cod_prod) VALUES ${valuePlaceholders}`;
+            
+            await client.query(insertStatement, queryParams);
+          }
+          
+          await client.query('COMMIT');
+          return res.status(200).json({ message: 'Produtos do fornecedor sincronizados com sucesso!' });
+        } catch (err) {
+          await client.query('ROLLBACK');
+          console.error('Erro na sincronização:', err);
+          return res.status(500).json({ message: 'Erro ao sincronizar produtos do fornecedor.' });
+        } finally {
+          client.release();
+        }
+      }
+
+      // Lógica original para adicionar um único produto
       try {
         const { cod_forn, cod_prod } = body;
         console.log('Recebido no POST:', body);

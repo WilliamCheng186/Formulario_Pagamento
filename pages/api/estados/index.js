@@ -8,10 +8,65 @@ export default async function handler(req, res) {
       try {
         const { cod_pais, cod_est } = req.query;
         
+        // Buscar próximo código disponível
+        if (req.query['next-code']) {
+          // Debug: Listar todos os estados existentes (incluindo inativos)
+          const allStates = await pool.query('SELECT cod_est, nome, ativo FROM estados ORDER BY cod_est');
+          console.log('DEBUG - TODOS os estados na tabela (incluindo inativos):', allStates.rows);
+          
+          // Debug: Verificar o valor atual da sequência
+          const seqInfo = await pool.query('SELECT last_value, is_called FROM estados_cod_est_seq');
+          console.log('DEBUG - Info da sequência:', seqInfo.rows[0]);
+          
+          // Se não há registros na tabela, resetar sequência para 1
+          if (allStates.rows.length === 0) {
+            console.log('DEBUG - Nenhum registro encontrado, resetando sequência para 1');
+            await pool.query("SELECT setval('estados_cod_est_seq', 1, false)");
+            return res.status(200).json({ nextCode: 1 });
+          }
+          
+          // Se há registros, verificar se a sequência está muito à frente
+          const maxExistingCode = Math.max(...allStates.rows.map(s => s.cod_est));
+          const currentSeqValue = seqInfo.rows[0].last_value;
+          
+          console.log('DEBUG - Maior código existente:', maxExistingCode);
+          console.log('DEBUG - Valor atual da sequência:', currentSeqValue);
+          
+          // Se a sequência está muito à frente dos registros existentes, ajustar
+          if (currentSeqValue > maxExistingCode + 1) {
+            console.log('DEBUG - Ajustando sequência para próximo código lógico:', maxExistingCode + 1);
+            await pool.query("SELECT setval('estados_cod_est_seq', $1, true)", [maxExistingCode]);
+            return res.status(200).json({ nextCode: maxExistingCode + 1 });
+          }
+          
+          try {
+            // Pegar o último valor da sequência SERIAL
+            const result = await pool.query(`
+              SELECT last_value + 1 as next_code 
+              FROM estados_cod_est_seq
+            `);
+            const nextCode = parseInt(result.rows[0].next_code);
+            console.log('DEBUG - Próximo código da sequência:', nextCode);
+            return res.status(200).json({ nextCode: nextCode });
+          } catch (error) {
+            // Se der erro (sequência nunca usada), usar 1
+            console.log('DEBUG - Sequência nunca usada, usando código 1');
+            return res.status(200).json({ nextCode: 1 });
+          }
+        }
+        
         // Se buscar um estado específico
         if (cod_est) {
           const result = await pool.query(
-            `SELECT e.*, p.nome as pais_nome 
+            `SELECT 
+               e.cod_est,
+               e.nome,
+               e.uf,
+               e.cod_pais,
+               e.ativo,
+               TO_CHAR(e.data_criacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_criacao,
+               TO_CHAR(e.data_atualizacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_atualizacao,
+               p.nome as pais_nome 
              FROM estados e 
              LEFT JOIN paises p ON e.cod_pais = p.cod_pais
              WHERE e.cod_est = $1`,
@@ -27,7 +82,15 @@ export default async function handler(req, res) {
         
         // Busca normal com filtros
         let query = `
-          SELECT e.*, p.nome as pais_nome 
+          SELECT 
+            e.cod_est,
+            e.nome,
+            e.uf,
+            e.cod_pais,
+            e.ativo,
+            TO_CHAR(e.data_criacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_criacao,
+            TO_CHAR(e.data_atualizacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_atualizacao,
+            p.nome as pais_nome 
           FROM estados e 
           LEFT JOIN paises p ON e.cod_pais = p.cod_pais
           WHERE 1=1
@@ -53,22 +116,29 @@ export default async function handler(req, res) {
       break;
 
     case 'POST':
+      const { nome, uf, cod_pais } = req.body;
+      if (!nome || !uf || !cod_pais) {
+        return res.status(400).json({ error: 'Nome, UF e país são obrigatórios.' });
+      }
       try {
-        const { nome, uf, cod_pais, ativo } = req.body;
-        
-        // Validações básicas
-        if (!nome || !uf || !cod_pais) {
-          return res.status(400).json({ error: 'Nome, UF e país são obrigatórios' });
+        // E2: Verificar se o estado ou a UF já existem no mesmo país
+        const checkExist = await pool.query(
+          'SELECT cod_est FROM estados WHERE (LOWER(nome) = LOWER($1) OR LOWER(uf) = LOWER($2)) AND cod_pais = $3',
+          [nome, uf, cod_pais]
+        );
+
+        if (checkExist.rows.length > 0) {
+          return res.status(409).json({ error: 'Este estado ou UF já está cadastrado neste país.' });
         }
-        
+
         const result = await pool.query(
-          'INSERT INTO estados (nome, uf, cod_pais, ativo) VALUES ($1, $2, $3, $4) RETURNING *',
-          [nome, uf, cod_pais, ativo === undefined ? true : ativo]
+          'INSERT INTO estados (nome, uf, cod_pais, ativo) VALUES ($1, $2, $3, true) RETURNING *',
+          [nome, uf.toUpperCase(), cod_pais]
         );
         res.status(201).json(result.rows[0]);
-      } catch (error) {
-        console.error('Erro ao criar estado:', error);
-        res.status(500).json({ error: 'Erro ao criar estado' });
+      } catch (err) {
+        console.error('Erro ao cadastrar estado:', err);
+        res.status(500).json({ error: 'Erro interno do servidor' });
       }
       break;
 
@@ -77,17 +147,43 @@ export default async function handler(req, res) {
         const { cod_est } = req.query;
         const { nome, uf, cod_pais, ativo } = req.body;
         
-        // Validações básicas
-        if (!nome || !uf || !cod_pais) {
-          return res.status(400).json({ error: 'Nome, UF e país são obrigatórios' });
+        // E1 - Validações básicas
+        if (!nome || nome.trim() === '') {
+          return res.status(400).json({ error: 'Nome é obrigatório' });
+        }
+        if (!uf || uf.trim() === '') {
+          return res.status(400).json({ error: 'UF é obrigatório' });
+        }
+        if (!cod_pais) {
+          return res.status(400).json({ error: 'País é obrigatório' });
         }
         
         if (!cod_est) {
           return res.status(400).json({ error: 'Código do estado é obrigatório' });
         }
+
+        // E2 - Verificar se já existe outro estado com o mesmo nome no mesmo país (exceto o atual)
+        const existingState = await pool.query(
+          'SELECT nome FROM estados WHERE LOWER(TRIM(nome)) = LOWER(TRIM($1)) AND cod_pais = $2 AND cod_est != $3',
+          [nome, cod_pais, cod_est]
+        );
+        
+        if (existingState.rows.length > 0) {
+          return res.status(409).json({ error: 'Estado já cadastrado.' });
+        }
         
         const result = await pool.query(
-          'UPDATE estados SET nome = $1, uf = $2, cod_pais = $3, ativo = $4 WHERE cod_est = $5 RETURNING *',
+          `UPDATE estados 
+           SET nome = $1, uf = $2, cod_pais = $3, ativo = $4, data_atualizacao = NOW()
+           WHERE cod_est = $5 
+           RETURNING 
+             cod_est,
+             nome,
+             uf,
+             cod_pais,
+             ativo,
+             TO_CHAR(data_criacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_criacao,
+             TO_CHAR(data_atualizacao AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as data_atualizacao`,
           [nome, uf, cod_pais, ativo === undefined ? true : ativo, cod_est]
         );
         
@@ -108,11 +204,36 @@ export default async function handler(req, res) {
         await pool.query('BEGIN');
 
         const { cod_est } = req.query;
-        const { cascade } = req.query;
+        const { cascade, desativar } = req.query;
 
-        // Verificar se o estado tem cidades
+        // E3 - Se foi solicitado para desativar em vez de excluir
+        if (desativar === 'true') {
+          const result = await pool.query(
+            'UPDATE estados SET ativo = false, data_atualizacao = NOW() WHERE cod_est = $1',
+            [cod_est]
+          );
+          
+          if (result.rowCount === 0) {
+            await pool.query('ROLLBACK');
+            return res.status(404).json({ error: 'Estado não encontrado' });
+          } else {
+            await pool.query('COMMIT');
+            return res.status(200).json({ message: 'Estado desativado com sucesso' });
+          }
+        }
+
+        // E3 - Verificar relacionamentos antes de excluir
         const cidadesResult = await pool.query('SELECT cod_cid FROM cidades WHERE cod_est = $1', [cod_est]);
         const cidades = cidadesResult.rows;
+        const hasRelationships = cidades.length > 0;
+        
+        if (hasRelationships && cascade !== 'true') {
+          await pool.query('ROLLBACK');
+          return res.status(409).json({ 
+            error: 'Não foi possível excluir este Estado pois ele está relacionado a outro registro. Deseja desativar?',
+            hasRelationships: true
+          });
+        }
         
         if (cidades.length > 0) {
           if (cascade === 'true') {
@@ -149,12 +270,6 @@ export default async function handler(req, res) {
             // Agora excluir todas as cidades do estado
             console.log('Excluindo cidades do estado:', cod_est);
             await pool.query('DELETE FROM cidades WHERE cod_est = $1', [cod_est]);
-          } else {
-            // Verificar se o estado tem cidades
-            await pool.query('ROLLBACK');
-            return res.status(400).json({ 
-              error: 'Este estado possui cidades cadastradas. Exclua as cidades primeiro ou use o parâmetro cascade=true.'
-            });
           }
         }
         

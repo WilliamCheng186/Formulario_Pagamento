@@ -33,5 +33,5 @@ CREATE TABLE funcionarios (
     CONSTRAINT fk_pais FOREIGN KEY (cod_pais) REFERENCES paises(cod_pais),
     CONSTRAINT fk_estado FOREIGN KEY (cod_est) REFERENCES estados(cod_est),
     CONSTRAINT fk_cidade FOREIGN KEY (cod_cid) REFERENCES cidades(cod_cid),
-    CONSTRAINT check_sexo CHECK (sexo IN ('M', 'F'))
+    CONSTRAINT check_sexo CHECK (sexo IN ('M', 'F', 'O'))
 ); 

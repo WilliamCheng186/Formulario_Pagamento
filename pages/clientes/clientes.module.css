@@ -3,42 +3,30 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  background-color: #f9f9f9;
 }
 
 .headerContainer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 1.5rem;
-}
-
-.voltarButton {
-  background-color: #e0e0e0;
-  color: #333;
-  border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  margin-right: 1rem;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.voltarButton:hover {
-  background-color: #ccc;
 }
 
 .titulo {
-  font-size: 2rem;
+  font-size: 2.2rem;
+  font-weight: 600;
   color: #333;
-  margin-bottom: 1.5rem;
-  border-bottom: 2px solid #0070f3;
+  border-bottom: 3px solid #0070f3;
   padding-bottom: 0.5rem;
+  margin-bottom: 0;
 }
 
 .subtitulo {
-  font-size: 1.5rem;
-  color: #444;
-  margin: 1.5rem 0;
+  font-size: 1.6rem;
+  color: #3a3f44;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
 }
 
 /* Formulário */
@@ -175,30 +163,39 @@
 }
 
 /* Botões */
-.actionBar {
+.actionButton {
+  padding: 0.6rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
   display: flex;
-  justify-content: flex-start;
-  margin-bottom: 1rem;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
+  transition: opacity 0.2s ease-in-out;
 }
 
-.actionButton {
-  padding: 0.5rem 1rem;
-  background-color: #f0f0f0;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 0.5rem;
-  font-weight: 500;
+.actionButton:hover {
+  opacity: 0.85;
+}
+
+.viewButton {
+  background-color: #007bff;
 }
 
 .editButton {
-  background-color: #0070f3;
-  color: white;
+  background-color: #007bff;
 }
 
 .deleteButton {
-  background-color: #f44336;
-  color: white;
+  background-color: #dc3545;
+}
+
+.acoesContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
 }
 
 .submitButton {
@@ -248,21 +245,25 @@
 .table td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .table th {
-  background-color: #f9f9f9;
+  background-color: #f2f2f2;
   font-weight: 600;
   color: #333;
 }
 
-.table tr:last-child td {
-  border-bottom: none;
+.table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
 }
 
-.table tr:hover {
-  background-color: #f5f5f5;
+.table tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
 }
 
 /* Mensagens */
@@ -620,44 +621,69 @@ input:checked + .slider:before {
   padding: 20px;
 }
 
-.modal {
-  background-color: white;
+.modalDetalhes {
+  background: white;
   border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   width: 90%;
-  max-width: 600px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Garante que os filhos não quebrem o border-radius */
 }
 
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e9ecef;
+  padding: 1.5rem 2rem;
+  background-color: #f8f9fa;
 }
 
 .modalHeader h3 {
   margin: 0;
-  font-size: 1.3rem;
-  color: #333;
+  font-size: 1.5rem;
+  color: #343a40;
+}
+
+.statusBadge {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: transparent !important; /* Força a remoção do fundo */
+  padding: 0;
+}
+
+.statusBadgeHabilitado {
+  background-color: #28a745;
+  color: #28a745;
+}
+
+.statusBadgeDesabilitado {
+  background-color: #dc3545;
+  color: #dc3545;
 }
 
 .closeButton {
-  background: none;
+  background: transparent;
   border: none;
-  font-size: 1.5rem;
+  font-size: 2rem;
   cursor: pointer;
-  color: #777;
+  color: #6c757d;
+  line-height: 1;
 }
 
 .closeButton:hover {
-  color: #333;
+  color: #343a40;
 }
 
 .modalContent {
-  padding: 1.5rem;
-  max-height: 70vh;
   overflow-y: auto;
+  flex-grow: 1;
+  padding: 1.5rem 2rem;
 }
 
 .modalSearchContainer {
@@ -703,8 +729,18 @@ input:checked + .slider:before {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #eee;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e9ecef;
+  align-items: center; /* Alinha verticalmente os itens no footer */
+}
+
+.dateInfoContainer {
+  margin-right: auto; /* Empurra o container para a esquerda */
+  font-size: 0.8rem;
+  color: #6c757d;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .btnCadastrar {
@@ -744,4 +780,768 @@ input:checked + .slider:before {
   .formButtons button {
     width: 100%;
   }
+}
+
+/* Novo estilo para o botão de adicionar */
+.addButton {
+  padding: 0.65rem 1.3rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.addButton:hover {
+  background-color: #218838;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+/* Estilos para a barra de filtros */
+.filtrosContainer {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+.filtroItem {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding-left: 0.75rem;
+  transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.filtroItem:focus-within {
+  border-color: #0070f3;
+  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.1);
+}
+
+.filtroIcon {
+  color: #495057;
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.searchInput,
+.filtroSelect {
+  flex: 1;
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  background-color: transparent;
+  font-size: 0.95rem;
+  color: #495057;
+  outline: none;
+}
+
+.filtroSelect {
+  cursor: pointer;
+}
+
+/* NOVOS ESTILOS ADICIONADOS PARA DETALHES DA CONDIÇÃO DE PAGAMENTO */
+
+.detalhesSection h4 {
+  /* Supondo que já existe, mas pode ser ajustado se necessário */
+  /* Exemplo: */
+  /* margin-bottom: 15px; */
+  /* color: #333; */
+  /* border-bottom: 1px solid #eee; */
+  /* padding-bottom: 8px; */
+}
+
+.detalhesSection h5 {
+  margin-top: 15px; 
+  margin-bottom: 10px;
+  color: #555; /* Cor um pouco mais escura para o subtítulo "Parcelas" */
+  font-weight: 500; /* Peso da fonte para o subtítulo "Parcelas" */
+}
+
+.detalheValorPrincipal {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #333; 
+  display: block; 
+  margin-bottom: 5px; 
+}
+
+.tableParcelasDetalhes {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.9em; /* Tamanho de fonte da tabela de parcelas */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07); /* Sombra mais sutil */
+  border-radius: 4px; /* Bordas arredondadas para a tabela */
+  overflow: hidden; /* Para o border-radius funcionar com a borda da tabela */
+}
+
+.tableParcelasDetalhes th,
+.tableParcelasDetalhes td {
+  border: 1px solid #e9ecef; /* Borda mais clara e consistente com Bootstrap */
+  padding: 0.65rem 0.75rem; /* Padding ajustado para o visual do fornecedor */
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tableParcelasDetalhes th {
+  background-color: #f8f9fa; /* Cor de fundo do cabeçalho (padrão Bootstrap) */
+  font-weight: 500; /* Peso da fonte do cabeçalho */
+  color: #495057; /* Cor do texto do cabeçalho */
+  border-bottom-width: 2px; /* Borda inferior do cabeçalho mais pronunciada */
+}
+
+/* Linhas zebradas para a tabela de parcelas (opcional, mas ajuda na leitura) */
+.tableParcelasDetalhes tbody tr:nth-child(even) {
+  background-color: #fdfdfd; /* Cor muito sutil para linha par */
+}
+.tableParcelasDetalhes tbody tr:hover {
+  background-color: #f1f3f5; /* Hover suave */
+}
+
+
+.tableParcelasDetalhes td:nth-child(1), /* Coluna # */
+.tableParcelasDetalhes td:nth-child(2), /* Coluna Dias */
+.tableParcelasDetalhes td:nth-child(3) { /* Coluna % */
+  text-align: center; /* Centraliza o conteúdo dessas colunas */
+}
+
+/* Ajustes nos itens de detalhe se necessário para alinhar com o estilo do Fornecedor */
+/* (Os estilos .detalheItem, .detalheTitulo, .detalheValor já devem existir e ser consistentes) */
+/* Se precisar de mais espaçamento ou alinhamento específico para Juros/Multa/Desconto: */
+.detalhesGrid { 
+  /* gap: 15px; */ /* Ajuste o gap se a versão inline não for suficiente */
+}
+
+/* ESTILOS REVISADOS E ADICIONAIS PARA O MODAL DE DETALHES DO CLIENTE */
+
+/* Ajustes gerais para seções de detalhes dentro do modalContent */
+.modalContent .detalhesSection {
+  padding-bottom: 0.5rem; /* Reduzir padding se não há mais borda */
+  margin-bottom: 1rem; /* Espaço entre agrupamentos lógicos de campos */
+  border-bottom: none !important; /* FORÇAR remoção da linha separadora */
+}
+
+.modalContent .detalhesSection:last-of-type {
+  /* border-bottom: none; Já coberto acima */
+  margin-bottom: 0;
+}
+
+.modalContent .detalhesSection h4, 
+.modalContent .detalhesSection h5 {
+  /* Remover estilos de título de seção, pois agora serão tratados pelos labels dos campos ou como subtítulos simples */
+  font-size: inherit; /* Herda o tamanho da fonte do pai */
+  font-weight: inherit; /* Herda o peso da fonte do pai */
+  color: inherit; /* Herda a cor do pai */
+  margin: 0 0 0.75rem 0; /* Margem apenas abaixo para separar do próximo elemento, sem formatação de título */
+  padding: 0;
+  border-bottom: none;
+}
+
+/* Estilo específico para o subtítulo "Parcelas:" */
+.subtituloParcelas {
+  font-size: 1rem; /* ou 0.9rem para ser um pouco menor */
+  font-weight: 600; /* Negrito */
+  color: #343a40; /* Cor escura */
+  margin-top: 1.5rem; /* Espaço acima */
+  margin-bottom: 0.5rem; /* Espaço abaixo antes da tabela */
+  display: block; /* Para garantir que ocupe a linha */
+}
+
+.modalContent .detalhesGrid { /* Grid genérico para itens de detalhe */
+  display: grid;
+  gap: 0.5rem 1.5rem; /* Espaçamento entre itens (linha coluna) */
+}
+
+.modalContent .detalheItem { /* Container para um par de título/valor de detalhe */
+  margin-bottom: 0.5rem;
+}
+
+.modalContent .detalheTitulo { /* Rótulo/Título de um item de detalhe (Ex: "Nome:", "CPF/CNPJ:") */
+  display: block;
+  font-size: 0.85rem;
+  color: #6c757d; /* Cinza mais suave */
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.modalContent .detalheValor { /* Valor de um item de detalhe */
+  font-size: 0.95rem;
+  color: #212529; /* Preto suave */
+  word-wrap: break-word;
+}
+
+/* Estilos específicos para a seção "Condição de Pagamento" */
+
+.modalContent .detalhesSection h5 { /* Título "Parcelas:" */
+  margin-top: 1.5rem; /* Mais espaço antes do título "Parcelas" */
+  margin-bottom: 0.75rem;
+  color: #495057;
+  font-weight: 500;
+  font-size: 1rem; /* Tamanho igual ao h4, mas com peso e cor diferentes */
+}
+
+.condPagamentoDescricaoItem { /* Container para a descrição da condição de pagamento */
+  composes: detalheItem from global; /* Referencia detalheItem se não estiver no mesmo escopo, ou apenas use a classe */
+  /* Se .detalheItem já estiver definido globalmente ou neste arquivo, pode usar: */
+  /* composes: detalheItem; */
+  margin-bottom: 1rem; /* Espaço maior após a descrição principal da condição */
+}
+/* Se composes não funcionar como esperado ou detalheItem não for global, defina explicitamente: */
+/*
+.condPagamentoDescricaoItem {
+  margin-bottom: 1rem;
+}
+*/
+
+.detalheValorPrincipal { /* Para o texto da descrição da condição, ex: "À VISTA" */
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #007bff; /* Azul para destaque */
+  display: block;
+}
+
+.condPagamentoInfoGrid { /* Grid para Juros, Multa, Desconto */
+  composes: detalhesGrid from global; /* Ou apenas use a classe se definida neste arquivo */
+  /* composes: detalhesGrid; */
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); /* Colunas flexíveis */
+  gap: 0.75rem;
+  padding: 0.85rem;
+  background-color: #f8f9fa; /* Fundo sutil para agrupar visualmente */
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  margin-top: 0.5rem; /* Espaço acima do grid de juros/multa/desconto */
+  margin-bottom: 1.5rem; /* Espaçamento após o grid */
+}
+/* Se composes não funcionar: */
+/*
+.condPagamentoInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.75rem;
+  padding: 0.85rem;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+*/
+
+.condPagamentoInfoGrid .detalheItem {
+  margin-bottom: 0; /* Sem margem extra para itens dentro deste grid específico */
+}
+
+.condPagamentoInfoGrid .detalheTitulo {
+  font-size: 0.8rem; /* Título menor para juros/multa/desconto */
+  font-weight: 400;
+}
+
+.condPagamentoInfoGrid .detalheValor {
+  font-size: 0.9rem;
+  font-weight: 500; /* Valor um pouco mais destacado */
+}
+
+/* A classe .tableParcelasDetalhes e seus estilos já existem no arquivo e foram mantidos. */
+
+/* NOVOS ESTILOS PARA O LAYOUT DE DETALHES DO CLIENTE (ESTILO FORNECEDOR) */
+.formGridDetalhes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.5rem;
+}
+
+.formGroupDetalhes {
+  display: grid; 
+  grid-template-columns: minmax(120px, auto) 1fr; /* Coluna do rótulo com largura mínima e automática, valor ocupa o resto */
+  gap: 0 0.75rem; /* Sem gap vertical, gap horizontal entre label e campo */
+  align-items: center; 
+  margin-bottom: 0.5rem; /* Reduzindo a margem inferior para juntar mais os campos */
+  /* vertical-align: top; Para alinhar o label no topo se o campo for multiline, mas center é bom para single line */
+}
+
+.formGroupDetalhes.fullWidth {
+  grid-column: span 2; 
+}
+
+.formGroupDetalhes label {
+  font-size: 0.875rem; /* Tamanho do texto do rótulo */
+  color: #343a40; /* Cor do texto do rótulo (mais escuro) */
+  font-weight: 500; /* Peso normal/semi-bold */
+  text-align: left; /* Alinhamento do texto do rótulo */
+  padding-right: 0.5rem; 
+  align-self: center; /* Centraliza o label verticalmente com o campo */
+  line-height: 1.5; /* Para melhor espaçamento se o label quebrar linha (improvável com minmax) */
+}
+
+.detalheValorCampo {
+  background-color: #f8f9fa; 
+  border: 1px solid #dee2e6; /* Borda mais sutil */
+  border-radius: 0.25rem; 
+  padding: 0.4rem 0.75rem; /* Reduzindo um pouco o padding vertical */
+  font-size: 0.875rem; /* Mesmo tamanho do label ou um pouco maior */
+  color: #495057;
+  min-height: 36px; /* Reduzindo um pouco a altura mínima */
+  display: flex;
+  align-items: center;
+  width: 100%; 
+  box-sizing: border-box; 
+  line-height: 1.5;
+}
+
+.statusHabilitadoDetalhes,
+.statusDesabilitadoDetalhes {
+  justify-content: center; /* Centraliza o texto dentro do flex container */
+  font-weight: 600; /* Mais forte para o status */
+  color: #fff;
+  border: none;
+  min-height: 36px; /* Consistente com detalheValorCampo */
+  padding: 0.4rem 0.75rem; /* Consistente com detalheValorCampo */
+}
+
+.statusHabilitadoDetalhes {
+  background-color: #28a745 !important; /* Verde com !important para garantir sobreposição */
+}
+
+.statusDesabilitadoDetalhes {
+  background-color: #dc3545 !important; /* Vermelho com !important */
+}
+
+/* Grid específico para Código e Status lado a lado */
+.codigoStatusGrid {
+  display: grid;
+  grid-template-columns: 1fr auto; /* Código ocupa espaço, Status tem largura automática */
+  gap: 0.5rem 1.5rem; /* Reduzindo o gap entre linhas */
+  align-items: center;
+  margin-bottom: 0.5rem; /* Reduzindo para juntar com o próximo grupo */
+}
+
+.codigoStatusGrid .formGroupDetalhes {
+  margin-bottom: 0; /* Remover margem de baixo pois o grid pai já tem */
+}
+
+/* A classe .tableParcelasDetalhes e seus estilos já existem no arquivo e foram mantidos. */
+
+/* Estilos específicos para a seção "Condição de Pagamento" */
+/* ... (manter estilos de .condPagamentoDescricaoItem, .detalheValorPrincipal, .condPagamentoInfoGrid etc. que já foram feitos) ... */
+
+/* Nova classe para layout de três colunas */
+.gridTresColunas {
+  grid-template-columns: 1fr 1fr 1fr; /* Três colunas de tamanho igual */
+  gap: 0.5rem 1.5rem; 
+}
+
+/* Novas classes para layout específico de Endereço/Número */
+.gridEnderecoNumero {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* Endereço ocupa 2/3, Número 1/3 */
+  gap: 0.5rem 1.5rem; 
+}
+
+/* Novo estilo para form group full width com label acima */
+.formGroupDetalhesFull {
+  grid-column: span 2; /* Ocupa duas colunas no grid de 2 colunas pai */
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.75rem;
+}
+
+.formGroupDetalhesFull label {
+  font-size: 0.875rem;
+  color: #343a40;
+  font-weight: 500;
+  margin-bottom: 0.3rem; /* Espaço entre o label e o campo abaixo */
+}
+
+.formGroupDetalhesFull .detalheValorCampo {
+  /* Os estilos de .detalheValorCampo já se aplicam bem aqui */
+  width: 100%; /* Garante que o campo ocupe a largura total */
+}
+
+/* Estilos específicos para a seção "Condição de Pagamento" */
+/* Se .condPagamentoInfoGrid foi definido para usar composes: formGridDetalhes, 
+   ele herdará o grid-template-columns: 1fr 1fr. 
+   Se precisar de 3 colunas para Juros, Multa, Desconto como no fornecedor, 
+   pode ser necessário aplicar .gridTresColunas diretamente nele ou ajustar .condPagamentoInfoGrid */
+
+.condPagamentoInfoGrid.gridTresColunas {
+    grid-template-columns: 1fr 1fr 1fr !important; /* Força três colunas se ambas as classes estiverem presentes */
+}
+
+/* Ajustes nos itens de detalhe da condição de pagamento para ficarem como label à esquerda */
+.condPagamentoInfoGrid .formGroupDetalhes {
+    margin-bottom: 0; /* Remover margem se o grid pai .condPagamentoInfoGrid já tiver espaçamento */
+}
+
+.detalheValorPrincipal { /* Para o texto da descrição da condição, ex: "À VISTA" */
+  font-size: 1em; /* Ajustado para ser mais consistente com outros campos */
+  font-weight: 500;
+  /* color: #007bff;  A cor já vem do .detalheValorCampo se usado em conjunto */
+  display: block; 
+}
+
+/* Nova classe para valores sem aparência de campo */
+.detalheValorSimples {
+  padding: 0.4rem 0; /* Apenas um leve padding vertical, sem padding lateral para não interferir no alinhamento do grid */
+  font-size: 0.875rem;
+  color: #495057;
+  min-height: 36px; /* Manter altura consistente com os campos para alinhamento vertical com labels */
+  display: flex;
+  align-items: center;
+  line-height: 1.5;
+  background-color: transparent;
+  border: none;
+  width: auto; /* Largura automática baseada no conteúdo */
+}
+
+/* Ajustar o grid de Juros, Multa, Desconto para que fiquem mais próximos e na mesma linha */
+.condPagamentoInfoGrid {
+  display: grid;
+  /* grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); */ /* Ajustar para que caibam 3 itens confortavelmente */
+  grid-template-columns: repeat(3, auto); /* Colunas automáticas baseadas no conteúdo */
+  gap: 0.5rem 2rem; /* Espaço entre eles, aumentar o gap da coluna */
+  align-items: center;
+  margin-top: 0.25rem; /* Menor margem acima */
+  margin-bottom: 1rem; /* Espaço antes das parcelas */
+  padding: 0; /* Remover padding se os itens internos já têm */
+  background-color: transparent; /* Sem fundo para o grid em si */
+  border: none; /* Sem borda para o grid em si */
+}
+
+.condPagamentoInfoGrid .formGroupDetalhes label {
+  /* Os rótulos podem ser um pouco menores ou mais leves aqui se necessário */
+  font-weight: 400; /* Mais leve para Juros/Multa/Desconto labels */
+}
+
+/* --- Estilos para o status dot --- */
+.statusDot {
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+  box-shadow: 0 0 5px currentColor;
+}
+
+.statusDotAtivo {
+  background-color: #28a745; /* Verde para Ativo */
+}
+
+.statusDotInativo {
+  background-color: #dc3545; /* Vermelho para Inativo */
+}
+
+/* --- Fim dos estilos para o status dot --- */
+
+.modalFooter button {
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.btnFechar {
+  background-color: #dc3545; /* Vermelho */
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.btnFechar:hover {
+  background-color: #c82333; /* Vermelho mais escuro */
+}
+
+.btnEditar {
+  background-color: #007bff; /* Azul */
+  color: white;
+}
+
+.btnEditar:hover {
+  background-color: #0056b3;
+}
+
+.detalhesSection {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.detalhesSection:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.formGridDetalhes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.gridTresColunas {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.gridEnderecoNumero {
+  display: grid;
+  grid-template-columns: 3fr 1fr; /* Endereço mais largo que o número */
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.formGroupDetalhes label {
+  font-size: 0.8rem;
+  color: #6c757d;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.detalheValorCampo {
+  font-size: 1rem;
+  color: #212529;
+  background-color: #f8f9fa;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+}
+
+.fullWidth {
+  grid-column: 1 / -1; /* Ocupa todas as colunas do grid */
+}
+
+.detalhesSubSection {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #ced4da;
+}
+
+.detalhesSubTitulo {
+  color: #495057;
+  margin-bottom: 0.75rem;
+}
+
+.detalhesGridFinanceiro {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.tableParcelasDetalhes {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.tableParcelasDetalhes th, .tableParcelasDetalhes td {
+  border: 1px solid #dee2e6;
+  padding: 8px;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.tableParcelasDetalhes th {
+  background-color: #f2f2f2;
+}
+
+/* Estilos para o status no modal de detalhes */
+.statusHabilitadoDetalhes {
+  color: #198754; /* Verde */
+  font-weight: bold;
+}
+
+.statusDesabilitadoDetalhes {
+  color: #dc3545; /* Vermelho */
+  font-weight: bold;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+  gap: 15px;
+}
+
+.formGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroupHalf {
+  flex-basis: calc(50% - 7.5px);
+}
+
+.formGroupThird {
+  flex-basis: calc(33.333% - 10px);
+}
+
+.formGroup label {
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.displayField {
+  background-color: #e9ecef;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 1rem;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  color: #212529;
+  border: 1px solid #ced4da;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.statusBadge {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statusBadgeHabilitado {
+  background-color: #28a745; /* verde */
+}
+
+.statusBadgeDesabilitado {
+  background-color: #dc3545; /* vermelho */
+}
+
+/* --- Estilos para Seção de Condição de Pagamento no Modal --- */
+.detalhesSection {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.sectionTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #343a40;
+  margin-bottom: 1rem;
+}
+
+.condPagamentoHeader {
+  margin-bottom: 0.5rem;
+}
+
+.condPagamentoDescricao {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #212529;
+}
+
+.condPagamentoInfoGrid {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.parcelasTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.tableParcelas {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableParcelas th, .tableParcelas td {
+  padding: 0.75rem;
+  border: 1px solid #dee2e6;
+  text-align: left;
+}
+
+.tableParcelas th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+/* Adicionado para corresponder ao estilo do fornecedor */
+.condicaoPagtoContainer {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+}
+
+.condicaoPagtoContainer p {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.condicaoPagtoContainer strong {
+  color: #0056b3;
+}
+
+.condicaoPagtoDetalhes {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.condicaoPagtoContainer h5 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.parcelasTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.parcelasTable th,
+.parcelasTable td {
+  border: 1px solid #dee2e6;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.parcelasTable th {
+  background-color: #f2f4f6;
+  font-weight: 600;
+}
+
+.parcelasTable tbody tr:nth-child(even) {
+  background-color: #f9fafb;
 }

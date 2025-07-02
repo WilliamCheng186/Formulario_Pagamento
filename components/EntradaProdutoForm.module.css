@@ -1,0 +1,427 @@
+.formContainer {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.fieldset {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.fieldset legend {
+  padding: 0 0.5rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.row {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-end; /* Alinha os itens na parte inferior */
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.mainField {
+  flex: 1;
+}
+
+.sideField {
+  flex: 0 0 200px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup label {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.input, .select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: #fff;
+}
+
+.input[readonly] {
+  background-color: #e9ecef;
+}
+
+.inputComBotao {
+  display: flex;
+  align-items: stretch;
+}
+
+.inputComBotao .input, .inputComBotao .select {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  flex-grow: 1;
+}
+
+.searchButton {
+  padding: 0.75rem;
+  border: 1px solid #007bff;
+  border-left: none;
+  background-color: #007bff;
+  color: white;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addButton {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background-color: #28a745;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  height: 100%; /* Faz o botão ter a mesma altura do input */
+}
+
+.addButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.table th, .table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #dee2e6;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.deleteButton {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.totalContainer {
+  font-size: 1.1rem;
+  width: 350px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+.totalContainer strong {
+  font-weight: 600;
+  color: #495057;
+}
+
+.totalContainer:last-child {
+  font-size: 1.3rem;
+  font-weight: bold;
+  border-top: 1px solid #dee2e6;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.saveButton, .cancelButton {
+  padding: 0.8rem 2rem;
+  border-radius: 4px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.saveButton {
+  background-color: #28a745;
+  color: white;
+}
+
+.saveButton:hover {
+  background-color: #218838; /* Verde mais escuro */
+}
+
+.cancelButton {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.topModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Um pouco mais escuro para diferenciar */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050; /* Z-index maior */
+}
+
+.modalContent {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  padding: 15px 20px;
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.modalFooter {
+  padding: 15px 20px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  min-width: 110px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  background-color: #218838; /* Verde mais escuro */
+}
+
+.actionButton svg {
+  margin-right: 8px;
+}
+
+.newButton {
+  background-color: #28a745; /* Verde */
+}
+
+.newButton:hover {
+  background-color: #218838; /* Verde mais escuro */
+}
+
+.cancelButton {
+  background-color: #dc3545; /* Vermelho */
+}
+
+.cancelButton:hover {
+  background-color: #c82333; /* Vermelho mais escuro */
+}
+
+.searchContainer {
+  padding: 15px 20px;
+}
+
+.listContainer {
+  padding: 0 20px 20px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.modalTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.modalTable th, .modalTable td {
+  padding: 12px 8px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.modalTable th {
+  font-weight: 600;
+  background-color: #fafafa;
+}
+
+.modalTable tbody tr:hover {
+  background-color: #f1f1f1;
+  cursor: pointer;
+}
+
+.novoCadastroButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  background-color: #28a745;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  margin-left: auto;
+  margin-right: 1rem;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.modalBody {
+  overflow-y: auto;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.selectButton {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.clickableRow:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.addActionsContainer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.addLinhaButton {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #6c757d;
+  background-color: transparent;
+  color: #6c757d;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.addLinhaButton:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+.produtoRow {
+  flex-wrap: nowrap;
+  align-items: flex-end;
+}
+
+.produtoField { flex: 3 1 250px; }
+.referenciaField { flex: 2 1 100px; }
+.unidadeField { flex: 0 0 60px; }
+.precoField { flex: 1 1 120px; }
+.quantidadeField { flex: 0 0 80px; }
+.deleteButtonContainer { flex: 0 0 auto; }
+
+.deleteRowButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(2.25rem + 2px); /* Altura do input + bordas */
+    padding: 0 1rem;
+    background-color: transparent;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.deleteRowButton:hover {
+    color: #a71d2a;
+}
+
+.table td {
+  color: #495057;
+}
+
+.actionButton:hover {
+  color: #0056b3;
+}
+
+.totalsWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-top: 1.5rem;
+} 

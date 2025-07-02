@@ -1,56 +1,88 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 import styles from './forma-pagto.module.css';
+import { toast } from 'react-toastify';
+
+const formatarDataParaDisplay = (dataString) => {
+    if (!dataString) return 'N/A';
+    const data = new Date(dataString);
+    if (isNaN(data.getTime())) return 'Data inválida';
+    return data.toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+};
 
 export default function CadastroFormaPagamento() {
   const router = useRouter();
-  const { id, view } = router.query;
-  const editando = !!id;
-  const visualizando = view === 'true';
+  const { id } = router.query;
+  const isEditando = !!id;
 
-  const [descricao, setDescricao] = useState('');
-  const [ativo, setAtivo] = useState(true);
-  const [dataCadastro, setDataCadastro] = useState(null);
-  const [dataAtualizacao, setDataAtualizacao] = useState(null);
-  
-  const [carregando, setCarregando] = useState(false);
-  const [salvando, setSalvando] = useState(false);
-  const [mensagem, setMensagem] = useState(null);
-  const [tipoMensagem, setTipoMensagem] = useState('');
+  const [formData, setFormData] = useState({
+    descricao: '',
+    ativo: true
+  });
+  const [displayCode, setDisplayCode] = useState('Auto');
+  const [datas, setDatas] = useState({ criacao: null, atualizacao: null });
+  const [loading, setLoading] = useState(false);
+  const [carregandoDados, setCarregandoDados] = useState(false);
 
   useEffect(() => {
-    if (router.isReady && id) {
-      carregarFormaPagamento(id);
-    }
-  }, [router.isReady, id]);
-
-  const carregarFormaPagamento = async (cod_forma) => {
-    setCarregando(true);
-    try {
-      const response = await fetch(`/api/forma-pagto?cod_forma=${cod_forma}`);
-      
-      if (!response.ok) {
-        throw new Error('Erro ao buscar forma de pagamento');
+    async function fetchNextCode() {
+      try {
+        const res = await fetch('/api/forma-pagto?action=nextcode');
+        const data = await res.json();
+        if (res.ok) {
+          setDisplayCode(data.nextCode);
+        } else {
+          throw new Error(data.error || 'Falha ao buscar próximo código');
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error(error.message);
+        setDisplayCode('Erro');
       }
-      
+    }
+
+    if (router.isReady) {
+      if (isEditando) {
+        setCarregandoDados(true);
+        carregarFormaPagamento(id);
+      } else {
+        fetchNextCode();
+      }
+    }
+  }, [router.isReady, id, isEditando]);
+
+  const carregarFormaPagamento = async (codForma) => {
+    try {
+      const response = await fetch(`/api/forma-pagto?cod_forma=${codForma}`);
+      if (!response.ok) throw new Error('Falha ao carregar forma de pagamento');
       const data = await response.json();
-      
-      setDescricao(data.descricao || '');
-      setAtivo(data.ativo !== false);
-      setDataCadastro(data.data_cadastro);
-      setDataAtualizacao(data.data_atualizacao);
+      if (data) {
+        setFormData({
+          descricao: data.descricao || '',
+          ativo: data.ativo,
+        });
+        setDisplayCode(data.cod_forma);
+        setDatas({ criacao: data.data_criacao, atualizacao: data.data_atualizacao });
+      }
     } catch (error) {
-      console.error('Erro ao carregar forma de pagamento:', error);
-      exibirMensagem('Erro ao carregar forma de pagamento: ' + error.message, 'error');
+      console.error(error);
+      toast.error(error.message);
     } finally {
-      setCarregando(false);
+      setCarregandoDados(false);
     }
   };
 
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+  
   const validarFormulario = () => {
-    if (!descricao.trim()) {
-      exibirMensagem('A descrição é obrigatória', 'error');
+    if (!formData.descricao.trim()) {
+      toast.error('O campo Descrição é obrigatório.');
       return false;
     }
     return true;
@@ -58,180 +90,86 @@ export default function CadastroFormaPagamento() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validarFormulario()) {
-      return;
-    }
-    
-    setSalvando(true);
-    
+    if (!validarFormulario()) return;
+
+    setLoading(true);
+
     try {
-      const formaPagamento = {
-        descricao,
-        ativo
-      };
-      
-      const url = editando 
-        ? `/api/forma-pagto?cod_forma=${id}` 
-        : '/api/forma-pagto';
-      
-      const method = editando ? 'PUT' : 'POST';
+      const url = isEditando ? `/api/forma-pagto?cod_forma=${id}` : '/api/forma-pagto';
+      const method = isEditando ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formaPagamento)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
       });
-      
+
       const data = await response.json();
       
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao salvar forma de pagamento');
+      if (response.status === 409) {
+        toast.error(data.error);
+        return;
       }
       
-      // Redirecionar para a página de consulta com mensagem de sucesso
-      router.push({
-        pathname: '/forma-pagto',
-        query: {
-          mensagem: editando 
-            ? 'Forma de pagamento atualizada com sucesso' 
-            : 'Forma de pagamento cadastrada com sucesso',
-          tipo: 'success'
-        }
-      });
-      
+      if (!response.ok) throw new Error(data.error || 'Erro ao salvar forma de pagamento');
+
+      toast.success(isEditando ? 'Forma de pagamento atualizada com sucesso!' : 'Forma de pagamento salva com sucesso!');
+      router.push('/forma-pagto');
     } catch (error) {
-      console.error('Erro ao salvar forma de pagamento:', error);
-      exibirMensagem(error.message, 'error');
-      setSalvando(false);
+      console.error(error);
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const exibirMensagem = (texto, tipo) => {
-    setMensagem(texto);
-    setTipoMensagem(tipo);
-    
-    // Remove a mensagem após 5 segundos
-    setTimeout(() => {
-      setMensagem(null);
-      setTipoMensagem('');
-    }, 5000);
+  const handleCancel = () => {
+    router.push('/forma-pagto');
   };
 
-  const formatarData = (dataString) => {
-    if (!dataString) return '--/--/----';
-    const data = new Date(dataString);
-    if (isNaN(data.getTime())) return '--/--/----';
-    
-    return data.toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
+  if (carregandoDados) {
+    return <div className={styles.loading}>Carregando...</div>;
+  }
+  
   return (
     <div className={styles.container}>
-      <div className={styles.headerContainer}>
-        <Link href="/forma-pagto">
-          <button className={styles.voltarButton}>Voltar</button>
-        </Link>
-        <h1 className={styles.titulo}>
-          {visualizando 
-            ? 'Visualizar Forma de Pagamento' 
-            : editando 
-              ? 'Editar Forma de Pagamento' 
-              : 'Nova Forma de Pagamento'}
-        </h1>
-      </div>
-      
-      {mensagem && (
-        <div className={`${styles.message} ${tipoMensagem === 'error' ? styles.errorMessage : styles.successMessage}`}>
-          {mensagem}
-        </div>
-      )}
-      
-      {carregando ? (
-        <p>Carregando dados...</p>
-      ) : (
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="descricao" className={styles.formLabel}>Descrição</label>
-            <input
-              type="text"
-              id="descricao"
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              className={styles.formControl}
-              placeholder="Digite a descrição"
-              required
-              disabled={visualizando}
-            />
-          </div>
-          
-          <div className={styles.formGroup}>
-            <label className={styles.switchLabel}>
-              <span>Situação</span>
-              <div className={styles.switchContainer}>
-                <input
-                  type="checkbox"
-                  className={styles.switchInput}
-                  checked={ativo}
-                  onChange={(e) => setAtivo(e.target.checked)}
-                  disabled={visualizando}
-                />
-                <span className={styles.switch}></span>
-              </div>
-              <span>{ativo ? 'Habilitado' : 'Desabilitado'}</span>
+      <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
+        <div className={styles.statusSwitchContainer}>
+            <label className={styles.switch}>
+                <input type="checkbox" name="ativo" checked={formData.ativo} onChange={handleChange} />
+                <span className={styles.slider}></span>
             </label>
+            <span className={`${styles.statusLabel} ${formData.ativo ? styles.statusHabilitado : styles.statusDesabilitado}`}>
+                {formData.ativo ? 'Habilitado' : 'Desabilitado'}
+            </span>
+        </div>
+
+        <div className={styles.formRow}>
+          <div className={`${styles.formGroup} ${styles.codigo}`}>
+            <label className={styles.label}>Código</label>
+            <input type="text" value={displayCode} className={styles.input} disabled />
           </div>
-          
-          {editando && (
-            <div className={styles.metadataContainer}>
-              <div className={styles.metadataItem}>
-                <span className={styles.metadataLabel}>Criado em:</span>
-                <span className={styles.metadataValue}>{formatarData(dataCadastro)}</span>
-              </div>
-              <div className={styles.metadataItem}>
-                <span className={styles.metadataLabel}>Atualizado em:</span>
-                <span className={styles.metadataValue}>{formatarData(dataAtualizacao)}</span>
-              </div>
-            </div>
-          )}
-          
+          <div className={`${styles.formGroup} ${styles.nomeProduto}`}>
+            <label className={styles.label}>Descrição</label>
+            <input type="text" name="descricao" value={formData.descricao} onChange={handleChange} className={styles.input} maxLength="50" required />
+          </div>
+        </div>
+        
+        <div className={styles.formFooter}>
+          <div className={styles.dateInfo}>
+            <span>Data de Criação: {formatarDataParaDisplay(datas.criacao)}</span>
+            <span>Última Atualização: {formatarDataParaDisplay(datas.atualizacao)}</span>
+          </div>
           <div className={styles.buttonGroup}>
-            <button 
-              type="button" 
-              className={styles.cancelButton}
-              onClick={() => router.push('/forma-pagto')}
-            >
-              {visualizando ? 'Fechar' : 'Cancelar'}
+            <button type="button" onClick={handleCancel} className={styles.cancelButton}>
+              Cancelar
             </button>
-            {!visualizando && (
-              <button 
-                type="submit" 
-                className={styles.submitButton}
-                disabled={salvando}
-              >
-                {salvando ? 'Salvando...' : 'Salvar'}
-              </button>
-            )}
-            {visualizando && (
-              <button 
-                type="button" 
-                className={styles.submitButton}
-                onClick={() => router.push(`/forma-pagto/cadastro?id=${id}`)}
-              >
-                Editar
-              </button>
-            )}
+            <button type="submit" className={styles.submitButton} disabled={loading}>
+              {loading ? 'Salvando...' : 'Salvar'}
+            </button>
           </div>
-        </form>
-      )}
+        </div>
+      </form>
     </div>
   );
 } 

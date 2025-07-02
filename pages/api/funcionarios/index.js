@@ -1,7 +1,22 @@
 import pool from '@/lib/db';
 
 // Função auxiliar para converter string vazia para NULL
-const emptyToNull = (value) => value === '' ? null : value;
+const emptyToNull = (value) => (value === '' || value === undefined) ? null : value;
+// Função auxiliar para converter para float ou null
+const toFloatOrNull = (value) => {
+  const num = parseFloat(value);
+  return isNaN(num) ? null : num;
+};
+// Função auxiliar para converter para int ou null
+const toIntOrNull = (value) => {
+  const num = parseInt(value, 10);
+  return isNaN(num) ? null : num;
+};
+
+const validarCNH = (cnh) => {
+  const cnhLimpa = String(cnh).replace(/[^\d]/g, '');
+  return cnhLimpa.length === 11;
+}
 
 export default async function handler(req, res) {
   const { method } = req;
@@ -10,9 +25,8 @@ export default async function handler(req, res) {
     case 'GET':
       try {
         const { cod_func, todos } = req.query;
-        console.log('GET request recebido para funcionários. Query params:', req.query);
+        // console.log('GET request recebido para funcionários. Query params:', req.query);
 
-        // Verificar se a tabela funcionários tem a coluna 'ativo'
         const checkColumn = await pool.query(`
           SELECT column_name 
           FROM information_schema.columns 
@@ -21,31 +35,36 @@ export default async function handler(req, res) {
         
         const hasAtivoColumn = checkColumn.rows.length > 0;
         
-        // Consulta base
         let query = `
-          SELECT f.*, 
+          SELECT 
+            f.cod_func, f.nome_completo, f.cpf, f.rg, f.data_nascimento, f.sexo, 
+            f.telefone, f.email, f.cep, f.endereco, f.numero, f.complemento, f.bairro, 
+            f.cod_pais, f.cod_est, f.cod_cid, f.carga_horaria, f.salario, 
+            f.data_admissao, f.data_demissao, f.ativo,
+            f.cod_cargo, f.cnh_numero, f.cnh_categoria, f.cnh_validade,
+            f.data_criacao, f.data_atualizacao,
             p.nome as pais_nome,
             e.nome as estado_nome,
             e.uf as estado_uf,
-            c.nome as cidade_nome
+            c.nome as cidade_nome,
+            ca.cargo as cargo,
+            ca.exige_cnh
           FROM funcionarios f
           LEFT JOIN paises p ON f.cod_pais = p.cod_pais
           LEFT JOIN estados e ON f.cod_est = e.cod_est
           LEFT JOIN cidades c ON f.cod_cid = c.cod_cid
+          LEFT JOIN cargos ca ON f.cod_cargo = ca.cod_cargo
         `;
         
         let params = [];
         let conditions = [];
         
-        // Se um código de funcionário específico foi solicitado
         if (cod_func) {
-          console.log('Buscando funcionário específico:', cod_func);
+          // console.log('Buscando funcionário específico:', cod_func);
           conditions.push(`f.cod_func = $${params.length + 1}`);
           params.push(cod_func);
         }
         
-        // Se tiver a coluna ativo e não for solicitado 'todos' e não for uma consulta por id específico, 
-        // filtramos apenas funcionários ativos
         if (hasAtivoColumn && !todos && !cod_func) {
           conditions.push(`f.ativo = true`);
         }
@@ -56,19 +75,18 @@ export default async function handler(req, res) {
         
         query += ` ORDER BY f.nome_completo`;
         
-        console.log('Query:', query);
-        console.log('Params:', params);
+        // console.log('Query:', query);
+        // console.log('Params:', params);
         
         const result = await pool.query(query, params);
-        console.log(`${result.rows.length} funcionários encontrados`);
+        // console.log(`${result.rows.length} funcionários encontrados`);
         
-        // Se foi solicitado um funcionário específico, retorna apenas ele
         if (cod_func) {
           if (result.rows.length === 0) {
-            console.error(`Funcionário ${cod_func} não encontrado`);
+            // console.error(`Funcionário ${cod_func} não encontrado`);
             return res.status(404).json({ error: 'Funcionário não encontrado' });
           }
-          console.log('Retornando funcionário específico:', result.rows[0].cod_func, result.rows[0].nome_completo);
+          // console.log('Retornando funcionário específico:', result.rows[0].cod_func, result.rows[0].nome_completo);
           return res.status(200).json(result.rows[0]);
         }
         
@@ -96,91 +114,114 @@ export default async function handler(req, res) {
           cod_pais, 
           cod_est, 
           cod_cid, 
-          uf,
           cargo, 
           data_admissao,
-          ativo = true
+          ativo = true,
+          complemento,
+          salario,
+          carga_horaria,
+          data_demissao,
+          cod_cargo,
+          cnh_numero,
+          cnh_categoria,
+          cnh_validade
         } = req.body;
 
-        // Validação de campos obrigatórios
-        if (!nome_completo || !cpf || !cargo || !data_admissao) {
-          return res.status(400).json({ 
-            error: 'Campos obrigatórios não preenchidos'
-          });
+        if (!rg) {
+          return res.status(400).json({ error: 'O campo RG é obrigatório.' });
         }
 
-        // Verificar se CPF já existe
-        const cpfCheck = await pool.query(
-          'SELECT * FROM funcionarios WHERE cpf = $1',
-          [cpf]
-        );
-
-        if (cpfCheck.rows.length > 0) {
-          return res.status(400).json({ 
-            error: 'CPF já cadastrado no sistema'
-          });
+        if (cnh_numero && !validarCNH(cnh_numero)) {
+          return res.status(400).json({ error: 'CNH inválido, verifique e tente novamente' });
         }
 
-        // Verificar se a tabela tem a coluna 'ativo'
-        const checkColumn = await pool.query(`
-          SELECT column_name 
-          FROM information_schema.columns 
-          WHERE table_name = 'funcionarios' AND column_name = 'ativo'
-        `);
+        if (!nome_completo || !data_admissao || !cod_cargo) {
+          return res.status(400).json({ error: 'Campos obrigatórios (Nome, Cargo, Data de Admissão) não preenchidos' });
+        }
         
-        const hasAtivoColumn = checkColumn.rows.length > 0;
-
-        // Verificar se a tabela tem a coluna 'uf'
-        const checkUfColumn = await pool.query(`
-          SELECT column_name 
-          FROM information_schema.columns 
-          WHERE table_name = 'funcionarios' AND column_name = 'uf'
-        `);
+        // Validação da CNH
+        if (cod_cargo) {
+            const cargoResult = await pool.query('SELECT exige_cnh FROM cargos WHERE cod_cargo = $1', [cod_cargo]);
+            if (cargoResult.rows.length > 0 && cargoResult.rows[0].exige_cnh) {
+                if (!cnh_numero || !cnh_categoria || !cnh_validade) {
+                    return res.status(400).json({ error: 'Este cargo exige CNH. Por favor, preencha os dados da CNH.' });
+                }
+            }
+        }
         
-        const hasUfColumn = checkUfColumn.rows.length > 0;
+        if (!cod_est) {
+          return res.status(400).json({ message: 'O código do estado (cod_est) é obrigatório.' });
+        }
 
-        // Construir a consulta SQL dinamicamente com base nas colunas disponíveis
+        const estadoResult = await pool.query('SELECT uf FROM estados WHERE cod_est = $1', [cod_est]);
+        if (estadoResult.rows.length === 0) {
+          return res.status(404).json({ message: 'Estado não encontrado.' });
+        }
+        const uf = estadoResult.rows[0].uf;
+
+        const cpfLimpo = cpf ? cpf.replace(/\D/g, "") : null;
+
+        // Verifica se o CPF já existe, SOMENTE se um CPF foi fornecido
+        if (cpfLimpo) { // Apenas executa se cpfLimpo não for null ou string vazia
+          const cpfCheck = await pool.query('SELECT cod_func FROM funcionarios WHERE cpf = $1', [cpfLimpo]);
+          if (cpfCheck.rows.length > 0) {
+            return res.status(400).json({ error: 'CPF já cadastrado no sistema' });
+          }
+        }
+
         let fields = [
           'nome_completo', 'cpf', 'rg', 'data_nascimento', 'sexo', 
           'telefone', 'email', 'cep', 'endereco', 'numero', 
-          'bairro', 'cod_pais', 'cod_est', 'cod_cid', 'cargo', 'data_admissao'
+          'bairro', 'cod_pais', 'cod_est', 'cod_cid', 'data_admissao',
+          'ativo', 'complemento', 'salario', 'carga_horaria', 'data_demissao', 'uf',
+          'cod_cargo', 'cnh_numero', 'cnh_categoria', 'cnh_validade'
         ];
-        let placeholders = ['$1', '$2', '$3', '$4', '$5', '$6', '$7', '$8', '$9', '$10', 
-                            '$11', '$12', '$13', '$14', '$15', '$16'];
+
         let values = [
-          nome_completo, cpf, rg, data_nascimento, sexo, 
-          telefone, email, cep, endereco, numero, 
-          bairro, 
-          emptyToNull(cod_pais), 
-          emptyToNull(cod_est), 
-          emptyToNull(cod_cid), 
-          cargo, data_admissao
+          nome_completo, 
+          cpfLimpo, // Usar cpfLimpo que pode ser null
+          emptyToNull(rg), emptyToNull(data_nascimento), emptyToNull(sexo), 
+          emptyToNull(telefone), emptyToNull(email), emptyToNull(cep), emptyToNull(endereco), emptyToNull(numero), 
+          emptyToNull(bairro), 
+          toIntOrNull(cod_pais), 
+          toIntOrNull(cod_est), 
+          toIntOrNull(cod_cid), 
+          emptyToNull(data_admissao),
+          ativo, 
+          emptyToNull(complemento),
+          toFloatOrNull(salario),
+          toIntOrNull(carga_horaria),
+          emptyToNull(data_demissao),
+          uf,
+          toIntOrNull(cod_cargo),
+          emptyToNull(cnh_numero),
+          emptyToNull(cnh_categoria),
+          emptyToNull(cnh_validade)
         ];
+        
+        const finalFields = [];
+        const finalValues = [];
+        const finalPlaceholders = [];
 
-        // Adicionar campo uf se existir na tabela
-        if (hasUfColumn) {
-          fields.push('uf');
-          placeholders.push(`$${placeholders.length + 1}`);
-          values.push(uf);
-        }
-
-        // Adicionar campo ativo se existir na tabela
-        if (hasAtivoColumn) {
-          fields.push('ativo');
-          placeholders.push(`$${placeholders.length + 1}`);
-          values.push(ativo);
-        }
+        fields.forEach((field, index) => {
+          // Adicionamos o campo se o valor não for undefined. 
+          // O `emptyToNull` e `cpfLimpo` já tratam string vazia para null.
+          // Para valores numéricos convertidos, se forem null (ex: string não numérica), não são adicionados.
+          // A condição `values[index] !== undefined` é mantida, mas para CPF, se for null, será inserido como NULL.
+          if (field === 'cpf' || values[index] !== undefined) { 
+            finalFields.push(field);
+            finalValues.push(values[index]); // values[index] para CPF será cpfLimpo (que pode ser null)
+            finalPlaceholders.push(`$${finalPlaceholders.length + 1}`);
+          }
+        });
 
         const query = `
-          INSERT INTO funcionarios (${fields.join(', ')}) 
-          VALUES (${placeholders.join(', ')}) 
+          INSERT INTO funcionarios (${finalFields.join(', ')}) 
+          VALUES (${finalPlaceholders.join(', ')}) 
           RETURNING *
         `;
 
-        console.log('Query:', query);
-        console.log('Values:', values);
-
-        const result = await pool.query(query, values);
+        const result = await pool.query(query, finalValues);
 
         res.status(201).json({ 
           message: 'Funcionário cadastrado com sucesso',
@@ -197,11 +238,8 @@ export default async function handler(req, res) {
 
     case 'PUT':
       try {
-        const { cod_func } = req.query;
-        console.log('PUT request recebido para funcionário:', cod_func);
-        console.log('Corpo da requisição:', req.body);
-        
         const { 
+          cod_func,
           nome_completo, 
           cpf, 
           rg, 
@@ -214,196 +252,138 @@ export default async function handler(req, res) {
           numero, 
           bairro, 
           cod_pais, 
-          cod_est, 
+          cod_est, // Código do estado recebido
           cod_cid, 
-          uf,
           cargo, 
           data_admissao,
-          ativo
+          ativo,
+          complemento,
+          salario,
+          carga_horaria,
+          data_demissao,
+          cod_cargo,
+          cnh_numero,
+          cnh_categoria,
+          cnh_validade
         } = req.body;
 
-        // Validação
+        if (!rg) {
+            return res.status(400).json({ error: 'O campo RG é obrigatório.' });
+        }
+
+        if (cnh_numero && !validarCNH(cnh_numero)) {
+          return res.status(400).json({ error: 'CNH inválido, verifique e tente novamente' });
+        }
+
         if (!cod_func) {
-          console.error('Erro: Código do funcionário não fornecido');
-          return res.status(400).json({ 
-            error: 'Código do funcionário é obrigatório'
-          });
+          return res.status(400).json({ error: 'O código do funcionário é obrigatório para atualização.' });
         }
 
-        // Verificar se funcionário existe
-        const funcCheck = await pool.query(
-          'SELECT * FROM funcionarios WHERE cod_func = $1',
-          [cod_func]
-        );
+        // Validação da CNH
+        if (cod_cargo) {
+            const cargoResult = await pool.query('SELECT exige_cnh FROM cargos WHERE cod_cargo = $1', [cod_cargo]);
+            if (cargoResult.rows.length > 0 && cargoResult.rows[0].exige_cnh) {
+                if (!cnh_numero || !cnh_categoria || !cnh_validade) {
+                    return res.status(400).json({ error: 'Este cargo exige CNH. Por favor, preencha os dados da CNH.' });
+                }
+            }
+        }
 
+        const funcCheck = await pool.query('SELECT * FROM funcionarios WHERE cod_func = $1', [cod_func]);
         if (funcCheck.rows.length === 0) {
-          console.error(`Erro: Funcionário ${cod_func} não encontrado`);
-          return res.status(404).json({ 
-            error: 'Funcionário não encontrado'
-          });
+          return res.status(404).json({ error: 'Funcionário não encontrado' });
         }
 
-        // Verificar se a tabela tem a coluna 'ativo'
-        const checkColumn = await pool.query(`
-          SELECT column_name 
-          FROM information_schema.columns 
-          WHERE table_name = 'funcionarios' AND column_name = 'ativo'
-        `);
-        
-        const hasAtivoColumn = checkColumn.rows.length > 0;
+        if (cpf && cpf !== funcCheck.rows[0].cpf) {
+          const cpfConflictCheck = await pool.query(
+            'SELECT cod_func FROM funcionarios WHERE cpf = $1 AND cod_func != $2',
+            [cpf, cod_func]
+          );
+          if (cpfConflictCheck.rows.length > 0) {
+            return res.status(400).json({ error: 'CPF já cadastrado para outro funcionário.' });
+          }
+        }
 
-        // Verificar se a tabela tem a coluna 'uf'
-        const checkUfColumn = await pool.query(`
-          SELECT column_name 
-          FROM information_schema.columns 
-          WHERE table_name = 'funcionarios' AND column_name = 'uf'
-        `);
-        
-        const hasUfColumn = checkUfColumn.rows.length > 0;
-
-        // Montar os campos para atualização
         const updateFields = [];
-        const values = [];
-        let valueIndex = 1;
+        const updateValues = [];
+        let placeholderIndex = 1;
+        let ufParaSalvar = null; // Variável para armazenar a UF derivada do cod_est
 
-        // Adicionar cada campo se for fornecido
-        if (nome_completo !== undefined) {
-          updateFields.push(`nome_completo = $${valueIndex}`);
-          values.push(nome_completo);
-          valueIndex++;
+        // Função para adicionar campo à atualização se ele foi fornecido no req.body
+        const addField = (field, value, type) => {
+          if (value !== undefined) {
+            let processedValue = value;
+            if (type === 'int') processedValue = toIntOrNull(value);
+            if (type === 'float') processedValue = toFloatOrNull(value);
+            if (type === 'emptyToNull') processedValue = emptyToNull(value);
+            
+            updateFields.push(`${field} = $${placeholderIndex++}`);
+            updateValues.push(processedValue);
+          }
+        };
+
+        if (cod_est) {
+            const estadoResult = await pool.query('SELECT uf FROM estados WHERE cod_est = $1', [cod_est]);
+            if (estadoResult.rows.length > 0) {
+                ufParaSalvar = estadoResult.rows[0].uf;
+            }
         }
-
+        
+        addField('nome_completo', nome_completo);
         if (cpf !== undefined) {
-          updateFields.push(`cpf = $${valueIndex}`);
-          values.push(cpf);
-          valueIndex++;
+          const cpfLimpo = cpf ? cpf.replace(/\D/g, "") : null;
+          addField('cpf', cpfLimpo);
         }
-
-        if (rg !== undefined) {
-          updateFields.push(`rg = $${valueIndex}`);
-          values.push(rg);
-          valueIndex++;
+        addField('rg', rg, 'emptyToNull');
+        addField('data_nascimento', data_nascimento, 'emptyToNull');
+        addField('sexo', sexo, 'emptyToNull');
+        addField('telefone', telefone, 'emptyToNull');
+        addField('email', email, 'emptyToNull');
+        addField('cep', cep, 'emptyToNull');
+        addField('endereco', endereco, 'emptyToNull');
+        addField('numero', numero, 'emptyToNull');
+        addField('complemento', complemento, 'emptyToNull');
+        addField('bairro', bairro, 'emptyToNull');
+        addField('cod_pais', cod_pais, 'int');
+        addField('cod_est', cod_est, 'int');
+        addField('cod_cid', cod_cid, 'int');
+        if (ufParaSalvar) {
+            addField('uf', ufParaSalvar);
         }
+        addField('carga_horaria', carga_horaria, 'int');
+        addField('salario', salario, 'float');
+        addField('data_admissao', data_admissao, 'emptyToNull');
+        addField('data_demissao', data_demissao, 'emptyToNull');
+        addField('ativo', ativo);
+        addField('cod_cargo', cod_cargo, 'int');
+        addField('cnh_numero', cnh_numero, 'emptyToNull');
+        addField('cnh_categoria', cnh_categoria, 'emptyToNull');
+        addField('cnh_validade', cnh_validade, 'emptyToNull');
 
-        if (data_nascimento !== undefined) {
-          updateFields.push(`data_nascimento = $${valueIndex}`);
-          values.push(data_nascimento);
-          valueIndex++;
-        }
-
-        if (sexo !== undefined) {
-          updateFields.push(`sexo = $${valueIndex}`);
-          values.push(sexo);
-          valueIndex++;
-        }
-
-        if (telefone !== undefined) {
-          updateFields.push(`telefone = $${valueIndex}`);
-          values.push(telefone);
-          valueIndex++;
-        }
-
-        if (email !== undefined) {
-          updateFields.push(`email = $${valueIndex}`);
-          values.push(email);
-          valueIndex++;
-        }
-
-        if (cep !== undefined) {
-          updateFields.push(`cep = $${valueIndex}`);
-          values.push(cep);
-          valueIndex++;
-        }
-
-        if (endereco !== undefined) {
-          updateFields.push(`endereco = $${valueIndex}`);
-          values.push(endereco);
-          valueIndex++;
-        }
-
-        if (numero !== undefined) {
-          updateFields.push(`numero = $${valueIndex}`);
-          values.push(numero);
-          valueIndex++;
-        }
-
-        if (bairro !== undefined) {
-          updateFields.push(`bairro = $${valueIndex}`);
-          values.push(bairro);
-          valueIndex++;
-        }
-
-        if (cod_pais !== undefined) {
-          updateFields.push(`cod_pais = $${valueIndex}`);
-          values.push(emptyToNull(cod_pais));
-          valueIndex++;
-        }
-
-        if (cod_est !== undefined) {
-          updateFields.push(`cod_est = $${valueIndex}`);
-          values.push(emptyToNull(cod_est));
-          valueIndex++;
-        }
-
-        if (cod_cid !== undefined) {
-          updateFields.push(`cod_cid = $${valueIndex}`);
-          values.push(emptyToNull(cod_cid));
-          valueIndex++;
-        }
-
-        if (hasUfColumn && uf !== undefined) {
-          updateFields.push(`uf = $${valueIndex}`);
-          values.push(uf);
-          valueIndex++;
-        }
-
-        if (cargo !== undefined) {
-          updateFields.push(`cargo = $${valueIndex}`);
-          values.push(cargo);
-          valueIndex++;
-        }
-
-        if (data_admissao !== undefined) {
-          updateFields.push(`data_admissao = $${valueIndex}`);
-          values.push(data_admissao);
-          valueIndex++;
-        }
-
-        if (hasAtivoColumn && ativo !== undefined) {
-          updateFields.push(`ativo = $${valueIndex}`);
-          values.push(ativo);
-          valueIndex++;
-        }
-
-        // Se não tem campos para atualizar
         if (updateFields.length === 0) {
-          return res.status(400).json({ 
-            error: 'Nenhum campo para atualizar'
+          return res.status(200).json({ 
+            message: 'Nenhum campo para atualizar', 
+            funcionario: funcCheck.rows[0] 
           });
         }
 
-        // Construir e executar a consulta
+        updateValues.push(cod_func);
+
         const query = `
-          UPDATE funcionarios
-          SET ${updateFields.join(', ')}
-          WHERE cod_func = $${valueIndex}
+          UPDATE funcionarios 
+          SET ${updateFields.join(', ')} 
+          WHERE cod_func = $${placeholderIndex} 
           RETURNING *
         `;
 
-        values.push(cod_func);
-        
-        console.log('Query de atualização:', query);
-        console.log('Valores:', values);
+        const result = await pool.query(query, updateValues);
 
-        const result = await pool.query(query, values);
-
-        console.log('Funcionário atualizado com sucesso:', result.rows[0]);
         res.status(200).json({ 
-          message: 'Funcionário atualizado com sucesso',
-          funcionario: result.rows[0]
+          message: 'Funcionário atualizado com sucesso', 
+          funcionario: result.rows[0] 
         });
       } catch (error) {
-        console.error('Erro detalhado ao atualizar funcionário:', error);
+        console.error('Erro ao atualizar funcionário:', error);
         res.status(500).json({ 
           error: 'Erro ao atualizar funcionário',
           details: error.message
@@ -414,40 +394,17 @@ export default async function handler(req, res) {
     case 'DELETE':
       try {
         const { cod_func } = req.query;
-        console.log('DELETE request recebido para funcionário:', cod_func);
-
         if (!cod_func) {
-          console.error('Erro: Código do funcionário não fornecido para exclusão');
-          return res.status(400).json({ 
-            error: 'Código do funcionário é obrigatório' 
-          });
+          return res.status(400).json({ error: 'Código do funcionário é obrigatório' });
         }
 
-        // Verificar se funcionário existe
-        const funcCheck = await pool.query(
-          'SELECT * FROM funcionarios WHERE cod_func = $1',
-          [cod_func]
-        );
+        const deleteOp = await pool.query('DELETE FROM funcionarios WHERE cod_func = $1 RETURNING *', [cod_func]);
 
-        if (funcCheck.rows.length === 0) {
-          console.error(`Erro: Funcionário ${cod_func} não encontrado para exclusão`);
-          return res.status(404).json({ 
-            error: 'Funcionário não encontrado' 
-          });
+        if (deleteOp.rowCount === 0) {
+          return res.status(404).json({ error: 'Funcionário não encontrado para exclusão' });
         }
 
-        // Realizar exclusão física (hard delete) independentemente da coluna 'ativo'
-        console.log(`Excluindo funcionário ${cod_func} (hard delete)`);
-        const result = await pool.query(
-          'DELETE FROM funcionarios WHERE cod_func = $1 RETURNING *',
-          [cod_func]
-        );
-        
-        console.log('Funcionário excluído com sucesso:', result.rows[0]);
-        res.status(200).json({ 
-          message: 'Funcionário excluído com sucesso',
-          funcionario: result.rows[0]
-        });
+        res.status(200).json({ message: 'Funcionário excluído com sucesso', funcionario: deleteOp.rows[0] });
       } catch (error) {
         console.error('Erro ao excluir funcionário:', error);
         res.status(500).json({ 
@@ -459,6 +416,6 @@ export default async function handler(req, res) {
 
     default:
       res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-      res.status(405).json({ error: `Método ${method} não permitido` });
+      res.status(405).end(`Method ${method} Not Allowed`);
   }
 } 

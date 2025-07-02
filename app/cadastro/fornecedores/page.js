@@ -1,11 +1,5 @@
-import CadastroFornecedor from '@/components/CadastroFornecedor';
+import CadastroFornecedorNovo from '@/components/CadastroFornecedorNovo';
 
 export default function CadastroFornecedoresPage() {
-  return <CadastroFornecedor />;
+  return <CadastroFornecedorNovo />;
 } 
- 
-
-export default function CadastroFornecedoresPage() {
-  return <CadastroFornecedor />;
-} 
- 

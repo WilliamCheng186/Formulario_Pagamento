@@ -1,0 +1,107 @@
+.kpiCard {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #333;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.kpiCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.value {
+  font-size: 2.5rem; /* Aumentado para destaque */
+  font-weight: bold;
+  color: #1a73e8; /* Cor primária azul, similar ao exemplo */
+  margin-bottom: 4px;
+  line-height: 1.1;
+}
+
+.title {
+  font-size: 0.9rem;
+  color: #5f6368;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.details {
+  font-size: 0.75rem;
+  color: #70757a;
+}
+
+.iconWrapper {
+  margin-left: 16px;
+  padding: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  color: #1a73e8; /* Cor padrão do ícone */
+}
+
+/* Variações de cor para os cards (baseado no exemplo) */
+.blue {
+  /* background-color: #e3f2fd; */ /* Fundo mais suave se necessário */
+}
+.blue .value {
+  color: #007bff; /* Azul */
+}
+.blue .iconWrapper {
+   background-color: rgba(0, 123, 255, 0.1);
+}
+.blue .icon {
+  color: #007bff;
+}
+
+.orange {
+  /* background-color: #fff3e0; */
+}
+.orange .value {
+  color: #fd7e14; /* Laranja */
+}
+.orange .iconWrapper {
+   background-color: rgba(253, 126, 20, 0.1);
+}
+.orange .icon {
+  color: #fd7e14;
+}
+
+.green {
+  /* background-color: #e8f5e9; */
+}
+.green .value {
+  color: #28a745; /* Verde */
+}
+.green .iconWrapper {
+  background-color: rgba(40, 167, 69, 0.1);
+}
+.green .icon {
+  color: #28a745;
+}
+
+.red {
+  /* background-color: #fdecea; */
+}
+.red .value {
+  color: #dc3545; /* Vermelho */
+}
+.red .iconWrapper {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+.red .icon {
+  color: #dc3545;
+} 

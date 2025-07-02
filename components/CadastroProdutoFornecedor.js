@@ -99,7 +99,7 @@ export default function CadastroProdutoFornecedor() {
 
       {carregando && <p>Carregando...</p>}
 
-      <form onSubmit={handleSubmit} className={styles.form}>
+              <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
         <div className={styles.formGroup}>
           <label htmlFor="cod_forn" className={styles.label}>Fornecedor*</label>
           <select

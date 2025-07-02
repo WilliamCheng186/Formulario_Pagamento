@@ -121,12 +121,23 @@ export default function ConsultaFuncionarios() {
     setMostrarModalDetalhes(true);
   };
 
-  const formatarData = (dataString) => {
-    if (!dataString) return '';
-    
+  const formatarData = (dataString, tipo = 'date') => {
+    if (!dataString) return '-';
     try {
       const data = new Date(dataString);
-      return data.toLocaleDateString('pt-BR');
+      if (isNaN(data.getTime())) return '-';
+
+      const options = {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      };
+
+      if (tipo === 'datetime') {
+        options.hour = '2-digit';
+        options.minute = '2-digit';
+      }
+      return data.toLocaleString('pt-BR', options);
     } catch {
       return dataString;
     }
@@ -147,9 +158,9 @@ export default function ConsultaFuncionarios() {
   return (
     <div className={styles.container}>
       <div className={styles.headerContainer}>
-        <Link href="/">
+        {/* <Link href="/">
           <button className={styles.voltarButton}>Voltar</button>
-        </Link>
+        </Link> */}
         <h1 className={styles.titulo}>Funcionários</h1>
       </div>
       
@@ -205,13 +216,11 @@ export default function ConsultaFuncionarios() {
           <thead>
             <tr>
               <th>Código</th>
+              <th>Status</th>
               <th>Nome</th>
-              <th>CPF</th>
               <th>Cargo</th>
-              <th>E-mail</th>
               <th>Telefone</th>
               <th>Cidade/UF</th>
-              <th>Status</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -219,17 +228,16 @@ export default function ConsultaFuncionarios() {
             {funcionarios.map(funcionario => (
               <tr key={funcionario.cod_func}>
                 <td>{funcionario.cod_func}</td>
-                <td>{funcionario.nome_completo}</td>
-                <td>{funcionario.cpf}</td>
-                <td>{funcionario.cargo}</td>
-                <td>{funcionario.email}</td>
-                <td>{funcionario.telefone}</td>
-                <td>{`${funcionario.cidade_nome || ''}${funcionario.cidade_nome && funcionario.uf ? '/' : ''}${funcionario.uf || ''}`}</td>
-                <td>
-                  <span className={funcionario.ativo ? styles.statusAtivo : styles.statusInativo}>
-                    {funcionario.ativo ? 'Habilitado' : 'Desabilitado'}
-                  </span>
+                <td className={styles.statusCell}>
+                  <span
+                    className={`${styles.statusIndicator} ${funcionario.ativo ? styles.statusHabilitado : styles.statusDesabilitado}`}
+                    title={funcionario.ativo ? 'Habilitado' : 'Desabilitado'}
+                  ></span>
                 </td>
+                <td className={styles.nomeColumn}>{funcionario.nome_completo}</td>
+                <td className={styles.cargoColumn}>{funcionario.cargo}</td>
+                <td>{funcionario.telefone}</td>
+                <td className={styles.cidadeUfColumn}>{`${funcionario.cidade_nome || ''}${funcionario.cidade_nome && funcionario.estado_uf ? ' - ' : ''}${funcionario.estado_uf || ''}`}</td>
                 <td>
                   <div className={styles.acoesBotoes}>
                     <button
@@ -261,131 +269,141 @@ export default function ConsultaFuncionarios() {
         </table>
       )}
 
-      {/* Modal de detalhes do funcionário */}
+      {/* Modal de Detalhes */}
       {mostrarModalDetalhes && funcionarioSelecionado && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalDetalhes}>
+        <div className={styles.modalOverlay} onClick={() => setMostrarModalDetalhes(false)}>
+          <div className={`${styles.modalSimples} ${styles.modalDetalhes}`} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3>Detalhes do Funcionário</h3>
-              <button onClick={() => setMostrarModalDetalhes(false)} className={styles.closeButton}>
-                &times;
-              </button>
             </div>
-            <div className={styles.modalContent}>
-              <div className={styles.detalhesSection}>
-                <h4>Informações Pessoais</h4>
-                <div className={styles.detalhesGrid}>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>Nome:</span>
-                    <span>{funcionarioSelecionado.nome_completo}</span>
-                  </div>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>Sexo:</span>
-                    <span>{funcionarioSelecionado.sexo === 'M' ? 'Masculino' : funcionarioSelecionado.sexo === 'F' ? 'Feminino' : '-'}</span>
-                  </div>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>Data de Nascimento:</span>
-                    <span>{formatarData(funcionarioSelecionado.data_nascimento)}</span>
-                  </div>
+            <div className={styles.modalBody}>
+              <div className={styles.switchContainerTopRight}>
+                <span className={funcionarioSelecionado.ativo ? styles.statusAtivoLabel : styles.statusInativoLabel}>
+                  {funcionarioSelecionado.ativo ? 'Habilitado' : 'Desabilitado'}
+                </span>
+              </div>
+              
+              <div className={styles.formRow}>
+                <div className={styles.formGroupCode}>
+                  <label>Código</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.cod_func}</p>
+                </div>
+                <div className={styles.formGroup} style={{ flex: 2 }}>
+                  <label>Funcionário</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.nome_completo}</p>
+                </div>
+                <div className={styles.formGroup} style={{ flex: 1 }}>
+                  <label>Sexo</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.sexo === 'M' ? 'Masculino' : funcionarioSelecionado.sexo === 'F' ? 'Feminino' : 'Outros'}</p>
                 </div>
               </div>
 
-              <div className={styles.detalhesSection}>
-                <h4>Documentos</h4>
-                <div className={styles.detalhesGrid}>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>CPF:</span>
-                    <span>{funcionarioSelecionado.cpf}</span>
-                  </div>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>RG:</span>
-                    <span>{funcionarioSelecionado.rg || '-'}</span>
-                  </div>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup} style={{ flex: '2.5' }}>
+                  <label>Endereço</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.endereco || '-'}</p>
+                </div>
+                <div className={styles.formGroupSmall}>
+                  <label>Número</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.numero || '-'}</p>
+                </div>
+                <div className={styles.formGroup} style={{ flex: '1.5' }}>
+                  <label>Complemento</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.complemento || '-'}</p>
+                </div>
+                <div className={styles.formGroup} style={{ flex: '1.5' }}>
+                  <label>Bairro</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.bairro || '-'}</p>
                 </div>
               </div>
 
-              <div className={styles.detalhesSection}>
-                <h4>Contato</h4>
-                <div className={styles.detalhesGrid}>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>Telefone:</span>
-                    <span>{funcionarioSelecionado.telefone || '-'}</span>
-                  </div>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>E-mail:</span>
-                    <span>{funcionarioSelecionado.email || '-'}</span>
-                  </div>
+              <div className={styles.formRow}>
+                <div className={styles.formGroupHalf}>
+                  <label>CEP</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.cep || '-'}</p>
+                </div>
+                <div className={styles.formGroupHalf}>
+                  <label>Cidade</label>
+                  <p className={styles.readOnlyField}>{`${funcionarioSelecionado.cidade_nome || ''}${funcionarioSelecionado.estado_nome ? ` - ${funcionarioSelecionado.estado_nome}` : ''}${funcionarioSelecionado.estado_uf ? `/${funcionarioSelecionado.estado_uf}` : ''}`}</p>
+                </div>
+              </div>
+              
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>CPF</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.cpf}</p>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>RG</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.rg || '-'}</p>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Data de Nascimento</label>
+                  <p className={styles.readOnlyField}>{formatarData(funcionarioSelecionado.data_nascimento)}</p>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Data de Admissão</label>
+                  <p className={styles.readOnlyField}>{formatarData(funcionarioSelecionado.data_admissao)}</p>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Data de Demissão</label>
+                  <p className={styles.readOnlyField}>{formatarData(funcionarioSelecionado.data_demissao)}</p>
                 </div>
               </div>
 
-              <div className={styles.detalhesSection}>
-                <h4>Endereço</h4>
-                <div className={styles.detalhesGrid}>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>CEP:</span>
-                    <span>{funcionarioSelecionado.cep || '-'}</span>
-                  </div>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>Endereço:</span>
-                    <span>
-                      {`${funcionarioSelecionado.endereco || ''} ${funcionarioSelecionado.numero ? `, ${funcionarioSelecionado.numero}` : ''}`}
-                    </span>
-                  </div>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>Bairro:</span>
-                    <span>{funcionarioSelecionado.bairro || '-'}</span>
-                  </div>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>Cidade/UF:</span>
-                    <span>
-                      {`${funcionarioSelecionado.cidade_nome || ''} ${
-                        funcionarioSelecionado.uf ? `/${funcionarioSelecionado.uf}` : ''
-                      }`}
-                    </span>
-                  </div>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>País:</span>
-                    <span>{funcionarioSelecionado.pais_nome || '-'}</span>
-                  </div>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Cargo</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.cargo}</p>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Carga Horária</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.carga_horaria || '-'}</p>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Salário (R$)</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.salario ? parseFloat(funcionarioSelecionado.salario).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</p>
                 </div>
               </div>
 
-              <div className={styles.detalhesSection}>
-                <h4>Informações Profissionais</h4>
-                <div className={styles.detalhesGrid}>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>Cargo:</span>
-                    <span>{funcionarioSelecionado.cargo}</span>
+              {funcionarioSelecionado.exige_cnh && (
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label>Número CNH</label>
+                    <p className={styles.readOnlyField}>{funcionarioSelecionado.cnh_numero || '-'}</p>
                   </div>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>Data de Admissão:</span>
-                    <span>{formatarData(funcionarioSelecionado.data_admissao)}</span>
+                  <div className={styles.formGroup}>
+                    <label>Categoria</label>
+                    <p className={styles.readOnlyField}>{funcionarioSelecionado.cnh_categoria || '-'}</p>
                   </div>
-                  <div className={styles.detalheItem}>
-                    <span className={styles.detalheTitulo}>Status:</span>
-                    <span className={funcionarioSelecionado.ativo ? styles.statusAtivo : styles.statusInativo}>
-                      {funcionarioSelecionado.ativo ? 'Habilitado' : 'Desabilitado'}
-                    </span>
+                  <div className={styles.formGroup}>
+                    <label>Validade</label>
+                    <p className={styles.readOnlyField}>{formatarData(funcionarioSelecionado.cnh_validade)}</p>
                   </div>
                 </div>
+              )}
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroupHalf}>
+                  <label>E-mail</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.email || '-'}</p>
+                </div>
+                <div className={styles.formGroupHalf}>
+                  <label>Telefone</label>
+                  <p className={styles.readOnlyField}>{funcionarioSelecionado.telefone || '-'}</p>
+                </div>
               </div>
+
             </div>
-            <div className={styles.modalFooter}>
-              <button
-                onClick={() => setMostrarModalDetalhes(false)}
-                className={styles.btnCancelar}
-              >
-                Fechar
-              </button>
-              <button
-                onClick={() => {
-                  setMostrarModalDetalhes(false);
-                  handleEditar(funcionarioSelecionado);
-                }}
-                className={styles.btnCadastrar}
-              >
-                Editar Funcionário
-              </button>
+            
+            <div className={styles.formFooter}>
+              <div className={styles.dateInfoContainer}>
+                <span>Data Criação: {formatarData(funcionarioSelecionado.data_criacao, 'datetime')}</span>
+                <span>Data Atualização: {formatarData(funcionarioSelecionado.data_atualizacao, 'datetime')}</span>
+              </div>
+              <div className={styles.buttonGroup}>
+                <button onClick={() => setMostrarModalDetalhes(false)} className={styles.btnCancelar}>Fechar</button>
+              </div>
             </div>
           </div>
         </div>

@@ -1,38 +1,238 @@
-/* Estilos para páginas de países */
+/* === Consulta de Países - Estilos Baseados na Consulta de Estados === */
+
+/* Container Principal e Cabeçalho */
 .container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  /* padding: 25px; */ /* Removido para não criar espaçamento extra */
+  /* background-color: #f4f6f8; */ /* Removido para que o fundo do body apareça */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .headerContainer {
   display: flex;
+  /* justify-content: space-between; (Removido para permitir que o título fique à esquerda do botão voltar se necessário) */
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 25px;
 }
 
 .voltarButton {
-  background-color: #e0e0e0;
-  color: #333;
+  padding: 8px 16px;
+  background-color: #6c757d; /* Cinza escuro */
+  color: white;
   border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  margin-right: 1rem;
+  border-radius: 5px;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
+  text-decoration: none;
+  font-size: 0.9em;
+  margin-right: 20px; /* Espaço à direita do botão voltar */
 }
-
 .voltarButton:hover {
-  background-color: #ccc;
+  background-color: #5a6268;
 }
 
 .titulo {
-  font-size: 1.8rem;
-  color: #333;
-  margin-bottom: 1.5rem;
+  font-size: 2em; /* Maior */
+  color: #343a40; /* Preto suave */
+  font-weight: 600;
+  margin: 0;
 }
 
+/* Mensagens de Feedback */
+.message {
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  text-align: center;
+  font-size: 0.95em;
+}
+.successMessage {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+.errorMessage {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Container de Filtros e Botão Adicionar */
+.filtrosEAdicionarContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  background-color: #ffffff; /* Fundo branco para a seção de filtros e botão */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.filtrosContainerLista {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.inputPesquisaLista {
+  padding: 10px 12px;
+  border: 1px solid #ced4da; /* Borda cinza claro */
+  border-radius: 5px;
+  width: 280px; 
+  font-size: 0.9em;
+}
+.inputPesquisaLista:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.selectFiltroLista {
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  background-color: white;
+  font-size: 0.9em;
+  min-width: 150px; /* Largura mínima */
+}
+.selectFiltroLista:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.button {
+    /* Estilo base para botões, se houver outros botões com esta classe */
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.btnAdicionar {
+  background-color: #28a745; /* Verde */
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btnAdicionar:hover {
+  background-color: #218838; /* Verde mais escuro no hover */
+}
+
+/* Tabela */
+.tableContainer {
+  overflow-x: auto; 
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.tableLista {
+  width: 100%;
+  border-collapse: collapse; 
+}
+
+.tableLista th,
+.tableLista td {
+  padding: 12px 18px; /* Mais padding para espaçamento */
+  text-align: left;
+  border-bottom: 1px solid #dee2e6; /* Linha divisória mais sutil */
+  font-size: 0.9em;
+}
+
+.tableLista th {
+  background-color: #e9ecef; /* Cinza muito claro para cabeçalho da tabela */
+  font-weight: 600;
+  color: #495057; /* Cor de texto mais escura para cabeçalho */
+  text-transform: uppercase; /* Estilo comum para cabeçalhos de tabela */
+  letter-spacing: 0.5px;
+}
+
+.tableLista tr:last-child td {
+  border-bottom: none; /* Remove a borda do último item */
+}
+
+.tableLista tr:hover {
+  background-color: #f8f9fa; /* Um hover suave na linha */
+}
+
+/* Situação na Tabela */
+.situacaoAtivoLista,
+.situacaoInativoLista {
+  padding: 3px 8px; /* Padding menor para o status */
+  border-radius: 12px; /* Mais arredondado para parecer uma pílula */
+  font-size: 0.8em;
+  display: inline-flex; 
+  align-items: center;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.situacaoAtivoLista::before, 
+.situacaoInativoLista::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.situacaoAtivoLista {
+  /* background-color: #c8e6c9; Verde pastel */
+  color: #388e3c; /* Verde mais escuro para texto */
+}
+.situacaoAtivoLista::before {
+  background-color: #4CAF50; /* Verde da bolinha */
+}
+
+.situacaoInativoLista {
+  /* background-color: #ffcdd2; Vermelho pastel */
+  color: #d32f2f; /* Vermelho mais escuro para texto */
+}
+.situacaoInativoLista::before {
+  background-color: #f44336; /* Vermelho da bolinha */
+}
+
+/* Botões de Ação na Tabela */
+.actionsCellContainer { 
+  display: flex;
+  gap: 8px; 
+}
+
+.editarButtonLista,
+.excluirButtonLista {
+  padding: 7px 12px; /* Padding ajustado para botões de ação */
+  font-size: 0.85em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px; 
+  border-radius: 5px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.editarButtonLista {
+  background-color: #007bff; /* Azul */
+}
+.editarButtonLista:hover {
+  background-color: #0056b3;
+}
+
+.excluirButtonLista {
+  background-color: #dc3545; /* Vermelho */
+}
+.excluirButtonLista:hover {
+  background-color: #c82333;
+}
+
+/* Estilos para páginas de países */
 .subtitulo {
   font-size: 1.3rem;
   color: #444;
@@ -41,13 +241,6 @@
 }
 
 /* Filtros */
-.filtrosContainer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
 .filtrosEsquerda {
   display: flex;
   align-items: center;
@@ -110,12 +303,6 @@
 }
 
 /* Tabela */
-.tableContainer {
-  overflow-x: auto;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -171,36 +358,27 @@
   background-color: #d32f2f;
 }
 
-/* Mensagens */
-.message {
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
-}
-
-.successMessage {
-  background-color: #e6f7e6;
-  color: #2e7d32;
-  border-left: 4px solid #2e7d32;
-}
-
-.errorMessage {
-  background-color: #ffebee;
-  color: #c62828;
-  border-left: 4px solid #c62828;
-}
-
 /* Formulário */
-.form {
+.formContainer {
   background-color: #fff;
-  padding: 1.5rem;
+  padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  max-width: 700px; /* Largura máxima para o painel do formulário */
+  margin: 2rem auto; /* Centraliza o painel e adiciona margem vertical */
+}
+
+.formRow {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end; /* Alinha os itens na base */
+  margin-bottom: 20px;
 }
 
 .formGroup {
-  margin-bottom: 1rem;
+  margin-bottom: 20px;
+  flex: 1; /* Faz os grupos de formulário ocuparem espaço igual */
 }
 
 .formGroup label {
@@ -212,198 +390,511 @@
 
 .input {
   width: 100%;
-  padding: 0.5rem;
+  padding: 10px 12px;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: 5px;
+  background-color: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  height: 42px; /* Altura explícita */
+  box-sizing: border-box; /* Garante que padding e border não adicionem à altura */
 }
 
 .input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
   outline: none;
-  border-color: #0070f3;
 }
 
-.buttonGroup {
+.inputSmall {
+  max-width: 100px; /* Reduzindo ainda mais a largura */
+}
+
+/* --- ESTILOS DO SWITCH (CONJUNTO ÚNICO E CORRETO) --- */
+.switchTopRight {
+  position: absolute;
+  top: 2.5rem;
+  right: 2rem;
+}
+
+.switchLabelWrapper {
   display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.submitButton {
-  background-color: #0070f3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
+  align-items: center;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  user-select: none;
 }
 
-.submitButton:hover {
-  background-color: #0051b3;
+.switchTextLabel {
+  margin-right: 10px;
+  font-weight: 500;
 }
 
-.submitButton:disabled {
+.statusEnabled {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.statusDisabled {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.switchInput {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.switchVisual {
+  position: relative;
+  width: 44px;
+  height: 24px;
   background-color: #ccc;
-  cursor: not-allowed;
+  border-radius: 12px;
+  transition: background-color 0.2s;
 }
 
-.cancelButton {
-  background-color: #e0e0e0;
-  color: #333;
+.switchVisual::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.switchInput:checked + .switchVisual {
+  background-color: #28a745;
+}
+
+.switchInput:checked + .switchVisual::after {
+  transform: translateX(20px);
+}
+
+.switchInput:focus-visible + .switchVisual {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #007bff;
+}
+/* --- FIM DOS ESTILOS DO SWITCH --- */
+
+/* Estilos do Rodapé */
+.footerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.footerInfo {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.footerInfo p {
+  margin: 0 0 0.25rem 0;
+}
+
+.buttonContainerBottomRight {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.submitButtonGreen {
+  background-color: #28a745; 
+  color: white;
+}
+.submitButtonGreen:hover {
+  background-color: #218838;
+}
+
+.cancelButtonRed {
+  background-color: #dc3545; 
+  color: white;
+}
+.cancelButtonRed:hover {
+  background-color: #c82333;
+}
+
+/* === Estilos para MODAIS === */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.65); /* Fundo mais escuro */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050; /* z-index alto */
+  padding: 15px; /* Espaço para evitar que o modal encoste nas bordas da tela */
+}
+
+.modalPequeno, .modalMedio, .modalGrande { /* Classes base para modais */
+  background-color: #fff;
+  padding: 20px 25px 25px 25px;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+  z-index: 1051;
+  width: 100%; 
+  max-height: 90vh; 
+  display: flex;
+  flex-direction: column; 
+  overflow: hidden; /* Para conter o .modalBody com scroll */
+}
+
+.modalPequeno {
+  max-width: 500px; 
+}
+
+.modalMedio {
+  max-width: 700px; 
+}
+
+.modalGrande {
+  max-width: 900px; /* Se precisar de um modal maior */
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e9ecef; /* Linha divisória sutil */
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.5em; /* Tamanho do título do modal */
+  color: #343a40;
+  font-weight: 500;
+}
+
+.closeModalButton {
+  background: none;
   border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
+  font-size: 2em; /* Botão de fechar maior */
+  line-height: 1;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0;
+}
+.closeModalButton:hover {
+    color: #343a40;
+}
+
+.modalBody {
+  overflow-y: auto; 
+  /* padding-right: 10px;  Removido - melhor usar padding no conteúdo interno se necessário */
+  margin-bottom: 20px;
+  flex-grow: 1; /* Faz o corpo ocupar espaço disponível */
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end; 
+  gap: 10px;
+  padding-top: 20px;
+  margin-top: auto; /* Empurra o footer para baixo se o modalBody for pequeno */
+  border-top: 1px solid #e9ecef;
+}
+
+/* Input com botão de busca/lupa */
+.inputWithButton {
+  display: flex;
+  align-items: center; /* Alinha verticalmente o input e o botão */
+}
+
+.inputWithButton .input { /* Para o input dentro do .inputWithButton */
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.searchButtonLupa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  height: 42px; /* Mesma altura explícita do input */
+  border: 1px solid #007bff;
+  background-color: #007bff;
+  color: white;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
-.cancelButton:hover {
-  background-color: #ccc;
+.inputWithButton .input:focus + .searchButtonLupa {
+  border-color: #007bff;
 }
 
-/* Switch de Situação */
-.switchLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
+.searchButtonLupa:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
 }
 
-.switchContainer {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
+/* Estilos específicos para inputs de pesquisa e botões dentro de modais, se necessário */
+.inputPesquisaModal {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 0.9em;
 }
 
-.switchInput {
-  display: none;
-}
-
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 40px;
-  height: 20px;
-  background-color: #ccc;
-  border-radius: 20px;
-  transition: all 0.3s;
-}
-
-.switch:before {
-  content: '';
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-color: white;
-  top: 2px;
-  left: 2px;
-  transition: all 0.3s;
-}
-
-.switchInput:checked + .switch {
-  background-color: #2e7d32;
-}
-
-.switchInput:checked + .switch:before {
-  transform: translateX(20px);
-}
-
-/* Situação na tabela */
-.situacaoAtivo {
-  color: #2e7d32;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-}
-
-.situacaoAtivo::before {
-  content: "";
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background-color: #2e7d32;
-  border-radius: 50%;
-  margin-right: 6px;
-}
-
-.situacaoInativo {
-  color: #c62828;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-}
-
-.situacaoInativo::before {
-  content: "";
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background-color: #c62828;
-  border-radius: 50%;
-  margin-right: 6px;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-  .buttonGroup {
-    flex-direction: column;
-  }
-
-  .submitButton,
-  .cancelButton {
-    width: 100%;
-    margin: 0.5rem 0;
-  }
-
-  .table {
-    font-size: 0.875rem;
-  }
-
-  .filtrosContainer {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .filtrosEsquerda {
-    width: 100%;
-  }
-
-  .inputPesquisa, 
-  .selectFiltro {
-    width: 100%;
-  }
-
-  .filtrosDireita {
-    width: 100%;
-  }
-}
-
-/* Metadata (datas) */
-.metadataContainer {
-  display: none;
-  position: absolute;
-  background-color: #fff;
-  border: 1px solid #ddd;
+.modalListContainer {
+  max-height: 250px; /* Altura máxima para a lista antes de rolar */
+  overflow-y: auto;
+  border: 1px solid #eee;
   border-radius: 4px;
-  padding: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modalListItem {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+}
+.modalListItem:last-child {
+  border-bottom: none;
+}
+.modalListItem:hover {
+  background-color: #f0f0f0;
+}
+
+.buttonPrimaryAction {
+  background-color: #007bff; 
+  color: white;
+}
+.buttonPrimaryAction:hover {
+  background-color: #0056b3;
+}
+
+.buttonSecondaryAction {
+  background-color: #6c757d;
+  color: white;
+}
+.buttonSecondaryAction:hover {
+  background-color: #5a6268;
+}
+
+/* Classes para mensagens dentro de modais (se precisar de estilo diferente) */
+.successMessageModal {
+  background-color: #d4edda;
+  color: #155724;
+  /* ... */
+}
+.errorMessageModal {
+  background-color: #f8d7da;
+  color: #721c24;
+  /* ... */
+}
+
+/* Classes para formulários dentro de modais */
+.formModalPais {
+  /* Estilos específicos para o form dentro do modal de cadastro de país */
+}
+.formGroupModal {
+  margin-bottom: 15px;
+}
+.formGroupModal label {
+  display: block;
+  margin-bottom: 5px;
+}
+.formGroupModalSwitch {
+  margin-bottom: 15px;
+  display: flex; 
+  align-items: center; 
+  justify-content: flex-start; /* Ou como preferir o alinhamento do switch no modal */
+}
+
+.footerInfo {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #ccc;
+  font-size: 0.9em;
+  color: #666;
+  text-align: center;
+}
+
+.footerInfo p {
+  margin: 5px 0;
+}
+
+.footerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.formContainer {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative; /* Essencial para o posicionamento absoluto do filho */
+}
+
+.formRow {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.switchTopRight {
+  position: absolute;
+  top: 2.5rem; /* Ajuste conforme necessário para alinhar com o título */
+  right: 2rem;
+}
+
+/* Rodapé do Formulário - Estilo copiado de Funcionários */
+.formFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: #f8f9fa; /* Cinza claro */
+  border-top: 1px solid #dee2e6;
+  border-radius: 0 0 8px 8px; /* Arredondar cantos inferiores */
+  margin: 1.5rem -24px -24px; /* Ajuste para preencher o container */
+}
+
+.dateInfoContainer {
+  font-size: 0.8rem;
+  color: #6c757d;
+  display: flex;
+  flex-direction: column; /* Alinha os itens verticalmente */
+  gap: 0.5rem; /* Espaço entre as datas na vertical */
+}
+
+.dateInfoContainer span {
+  display: block; /* Garante que fiquem em "bloco" se precisar */
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* E1 - Estilos para validação de campos obrigatórios */
+.inputError {
+  border: 2px solid #e74c3c !important;
+  background-color: #ffeaea !important;
+}
+
+.errorText {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* E3 - Estilos para modal de confirmação */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
 
-.metadataItem {
-  margin: 0.25rem 0;
+.modalContent {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.metadataLabel {
-  font-weight: 500;
-  color: #666;
+.modalContent h3 {
+  margin: 0 0 16px 0;
+  color: #2c3e50;
+  font-size: 18px;
 }
 
-.metadataValue {
-  color: #333;
-  margin-left: 0.5rem;
+.modalContent p {
+  margin: 0 0 12px 0;
+  color: #34495e;
+  line-height: 1.5;
+}
+
+.modalButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.buttonCancelar {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.buttonCancelar:hover {
+  background-color: #c0392b;
+}
+
+.buttonDesativar {
+  background-color: #f1c40f;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.buttonDesativar:hover {
+  background-color: #f39c12;
+}
+
+.buttonExcluir {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.buttonExcluir:hover {
+  background-color: #c0392b;
 }

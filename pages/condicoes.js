@@ -45,7 +45,7 @@ export default function CondicaoPagamento() {
     <div className={styles.container}>
       <h1 className={styles.titulo}>Cadastro de Condição de Pagamento</h1>
 
-      <form onSubmit={handleSubmit} className={styles.form}>
+              <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
         <input
           type="text"
           name="descricao"

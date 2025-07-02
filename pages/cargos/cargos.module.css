@@ -1,0 +1,1258 @@
+/* Estilos para páginas de funcionários */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.headerContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.voltarButton {
+  background-color: #e0e0e0;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  margin-right: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.voltarButton:hover {
+  background-color: #ccc;
+}
+
+.titulo {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #0070f3;
+  padding-bottom: 0.5rem;
+}
+
+.subtitulo {
+  font-size: 1.5rem;
+  color: #444;
+  margin: 1.5rem 0;
+}
+
+/* Formulário */
+.form {
+  background-color: #fff;
+  padding: 2.5rem 1.5rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.formSection {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.formSection:hover {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.formSection:last-child {
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.2rem;
+  color: #0070f3;
+  margin-bottom: 1.2rem;
+  font-weight: 600;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Espaço para ícones futuros */
+.sectionTitle::before {
+  content: "";
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
+.formRow {
+  display: flex;
+  margin-bottom: 20px;
+  gap: 20px; /* Aumenta o espaçamento entre os campos */
+  align-items: flex-start;
+  flex-wrap: nowrap; /* Impede que os itens quebrem para a próxima linha */
+}
+
+.formGroup {
+  flex: 1; /* Permite que o campo cresça */
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Ajuda o flex a encolher os itens se necessário */
+  flex-basis: 0; /* Garante que o flex-grow funcione corretamente */
+}
+
+.formGroupHalf {
+  flex: 0 0 calc(50% - 0.5rem);
+  min-width: 150px;
+}
+
+.formGroupThird {
+  flex: 0 0 calc(33.333% - 0.667rem);
+  min-width: 120px;
+}
+
+.formGroupQuarter {
+  flex: 0 0 calc(25% - 0.75rem);
+  min-width: 100px;
+}
+
+.formGroupSmall {
+  flex: 0 0 100px;
+  min-width: 80px;
+  margin-right: 0.5rem;
+}
+
+.formGroupCode {
+  flex: 0 0 90px;
+  min-width: 70px;
+  margin-bottom: 0.5rem;
+}
+
+.formGroupFull {
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+.formGroup label,
+.formGroupHalf label,
+.formGroupThird label,
+.formGroupQuarter label,
+.formGroupSmall label,
+.formGroupCode label,
+.formGroupFull label {
+  display: block;
+  margin-bottom: 8px; /* Aumentado o espaço */
+  font-weight: 500;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: #0070f3;
+  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.1);
+}
+
+/* Switch de status */
+.switchItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  margin-left: 1rem;
+}
+
+.switchWrapper {
+  display: flex;
+  align-items: center;
+  margin-left: 1rem;
+}
+
+/* Nome e status na mesma linha */
+.formSection:first-child .formRow:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.formSection:first-child .formRow:first-child .formGroupFull {
+  flex: 1;
+  margin-right: 1rem;
+}
+
+/* Botões */
+.actionBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.actionButton {
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.editButton {
+  background-color: #0070f3;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #005cdb;
+}
+
+.deleteButton {
+  background-color: #f44336;
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #d32f2f;
+}
+
+.submitButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.submitButton:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.submitButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.submitButton:disabled {
+  background-color: #a5d6a7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.cancelButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Tabela */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.table th {
+  background-color: #f5f7fa;
+  font-weight: 600;
+  color: #333;
+  padding: 1rem 0.75rem;
+  white-space: nowrap;
+}
+
+.table tbody tr:hover {
+  background-color: #f5f7fa;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.message {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.successMessage {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.errorMessage {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Estilos para input com botão de pesquisa */
+.inputWithButton {
+  display: flex;
+  width: 100%;
+}
+
+.searchButton {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  cursor: pointer;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.searchButton:hover {
+  background-color: #0b7dda;
+}
+
+/* Modais */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px; /* Adiciona um padding para evitar que o modal grude nas bordas */
+}
+
+/* Modais específicos com z-index crescente */
+.modalOverlay:has(.modalCidade) {
+  z-index: 1000;
+}
+
+.modalOverlay:has(.modalCadastroCidade) {
+  z-index: 1100;
+}
+
+.modalOverlay:has(.modalEstado) {
+  z-index: 1200;
+}
+
+.modalOverlay:has(.modalCadastroEstado) {
+  z-index: 1300;
+}
+
+.modalOverlay:has(.modalPais) {
+  z-index: 1400;
+}
+
+.modalOverlay:has(.modalCadastroPais) {
+  z-index: 1060;
+}
+
+.modalSimples {
+  background: #fff;
+  border-radius: 8px;
+  /* O padding foi removido daqui e aplicado aos filhos para melhor controle */
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  position: relative;
+  width: 600px; /* Reduzido para um tamanho mais padrão e unificado */
+  max-width: 90vw; /* Garante responsividade em telas menores */
+  z-index: 1001;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* Garante que o modal não seja maior que a tela */
+}
+
+/* Efeito cascata para modais sobrepostos */
+.modalOverlay + .modalOverlay .modalSimples {
+  transform: translateY(-20px) scale(0.98);
+}
+
+.modalOverlay + .modalOverlay + .modalOverlay .modalSimples {
+  transform: translateY(-40px) scale(0.96);
+}
+
+/* Definindo um tamanho padrão para os modais de cadastro em cascata */
+.modalSimples.modalCadastroCidade,
+.modalSimples.modalCadastroEstado,
+.modalSimples.modalCadastroPais {
+  width: 520px; /* Largura fixa desejada */
+  max-width: 95vw; /* Para garantir que não quebre em telas muito pequenas */
+  /* Herda outras propriedades de .modalSimples como background, border-radius, etc. */
+  /* Se .modalSimples já tem width: 90%, esta regra específica irá sobrescrevê-la para estes modais. */
+}
+
+.modalHeader {
+  border-bottom: 1px solid #eee;
+  padding: 15px 25px; /* Padding aplicado aqui */
+  margin-bottom: 0; /* Removido para controle do body */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.modalBody {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 20px 25px; /* Padding consistente aplicado aqui */
+}
+
+.modalContent {
+  padding: 1rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.closeModal {
+  background: transparent;
+  border: none;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #888;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  color: #555;
+}
+
+.modalSearchContainer {
+  margin-bottom: 1.5rem; /* Aumenta o espaço abaixo da barra de busca */
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #0070f3;
+  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.1);
+}
+
+.modalButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.btnNovo {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #f0f0f0;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btnNovo:hover {
+  background-color: #e0e0e0;
+}
+
+.modalList {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.modalItem {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
+.modalItem:hover {
+  background-color: #f5f5f5;
+}
+
+.modalItem:last-child {
+  border-bottom: none;
+}
+
+.modalFooterSimples {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem;
+  border-top: 1px solid #eee;
+  gap: 1rem;
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+}
+
+.btnCadastrar {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btnCadastrar:hover {
+  background-color: #45a049;
+}
+
+.btnCadastrar:disabled {
+  background-color: #a5d6a7;
+  cursor: not-allowed;
+}
+
+.btnCancelar {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btnCancelar:hover {
+  background-color: #c82333; /* Vermelho mais escuro */
+}
+
+.btnCancelar:disabled {
+  background-color: #ef9a9a;
+  cursor: not-allowed;
+}
+
+.formInput {
+  width: 100%;
+  padding: 8px 10px;
+}
+
+.formInputWithButton {
+  display: flex;
+  align-items: center;
+}
+
+.formInputWithButton input {
+  flex: 1;
+  border-radius: 4px 0 0 4px;
+}
+
+.inputButton {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 4px 4px 0;
+}
+
+.inputButton:hover {
+  background-color: #0b7dda;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #4caf50;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* Adicionado para customização do input de data */
+.dateInputCustom[data-empty="true"]::-webkit-datetime-edit {
+  color: transparent;
+}
+
+.dateInputCustom:focus::-webkit-datetime-edit {
+  color: #333;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .formRow {
+    flex-direction: column;
+  }
+  
+  .formGroupHalf,
+  .formGroupThird,
+  .formGroupQuarter,
+  .formGroupSmall {
+    flex: 1 0 100%;
+  }
+  
+  .modalSimples {
+    width: 95%;
+  }
+}
+
+/* Classes para os tipos de modais */
+.modalCidade, .modalEstado, .modalPais,
+.modalCadastroCidade, .modalCadastroEstado, .modalCadastroPais {
+  /* Estas classes são usadas apenas para seleção no CSS */
+}
+
+/* Estilo para botões nos modais */
+.modalCidade .btnCadastrar,
+.modalEstado .btnCadastrar,
+.modalPais .btnCadastrar {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.modalCidade .btnCadastrar:hover,
+.modalEstado .btnCadastrar:hover,
+.modalPais .btnCadastrar:hover {
+  background-color: #45a049;
+}
+
+.modalCidade .btnCadastrar:disabled,
+.modalEstado .btnCadastrar:disabled,
+.modalPais .btnCadastrar:disabled {
+  background-color: #a5d6a7;
+  cursor: not-allowed;
+}
+
+.modalCidade .btnCancelar,
+.modalEstado .btnCancelar,
+.modalPais .btnCancelar {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.modalCidade .btnCancelar:hover,
+.modalEstado .btnCancelar:hover,
+.modalPais .btnCancelar:hover {
+  background-color: #d32f2f;
+}
+
+.modalCidade .btnCancelar:disabled,
+.modalEstado .btnCancelar:disabled,
+.modalPais .btnCancelar:disabled {
+  background-color: #ef9a9a;
+  cursor: not-allowed;
+}
+
+/* Filtros */
+.filtrosContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filtroItem {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 200px;
+}
+
+.filtroIcon {
+  margin-right: 8px;
+  color: #0070f3;
+}
+
+.filtroSelect {
+  padding: 0.6rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  min-width: 200px;
+  flex: 1;
+  background-color: white;
+}
+
+.filtroSelect:focus {
+  outline: none;
+  border-color: #0070f3;
+  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.1);
+}
+
+/* Status */
+.statusAtivo {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #d4edda;
+  color: #155724;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  min-width: 90px;
+  border: 1px solid #c3e6cb;
+}
+
+.statusInativo {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  min-width: 90px;
+  border: 1px solid #f5c6cb;
+}
+
+/* Botão de visualização */
+.viewButton {
+  background-color: #2196F3;
+  color: white;
+}
+
+.viewButton:hover {
+  background-color: #0b7dda;
+}
+
+.viewButton svg {
+  vertical-align: middle;
+}
+
+/* Modal de detalhes */
+.modalDetalhes {
+  background-color: white;
+  border-radius: 8px;
+  width: 95%;
+  max-width: 1100px;
+  max-height: 90vh;
+  margin: 0 auto;
+  padding: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalFooter {
+  padding: 20px 25px; /* Padding aplicado aqui */
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: auto; /* Empurra o rodapé para o fundo do flex container */
+  background-color: #f9f9f9;
+}
+
+.detalhesSection {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.detalhesSection h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #0070f3;
+  font-size: 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+}
+
+.detalhesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.detalheItem {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.detalheItem:hover {
+  background-color: #f0f0f0;
+}
+
+.detalheTitulo {
+  font-weight: 600;
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .detalhesGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filtrosContainer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filtroItem {
+    width: 100%;
+  }
+}
+
+/* Botões de Ação */
+.acoesBotoes {
+  display: flex;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.actionButton {
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.editButton {
+  background-color: #0070f3;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #005cdb;
+}
+
+.deleteButton {
+  background-color: #f44336;
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #d32f2f;
+}
+
+.viewButton {
+  background-color: #2196F3;
+  color: white;
+}
+
+.viewButton:hover {
+  background-color: #0b7dda;
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #555;
+}
+
+/* Switch Status Labels */
+.statusAtivoLabel {
+  color: #2e7d32;
+  background-color: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.statusInativoLabel {
+  color: #c62828;
+  background-color: #ffebee;
+  border: 1px solid #ef9a9a;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Adicionando estilos para truncar texto nas colunas da tabela de funcionários */
+
+.table td.truncate, /* Classe genérica se precisar usar em outros lugares */
+.table td.nomeColumn,
+.table td.emailColumn,
+.table td.cargoColumn,
+.table td.cidadeUfColumn {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle; /* Bom para consistência */
+}
+
+/* Definindo larguras máximas específicas para cada coluna problemática */
+.table td.nomeColumn {
+  max-width: 220px; /* Ajuste conforme necessário */
+}
+
+.table td.emailColumn {
+  max-width: 200px; /* Ajuste conforme necessário */
+}
+
+.table td.cargoColumn {
+  max-width: 180px; /* Ajuste conforme necessário */
+}
+
+.table td.cidadeUfColumn {
+  max-width: 160px; /* Ajuste conforme necessário */
+}
+
+/* Estilo opcional para a tabela inteira, caso queira reduzir um pouco a fonte */
+/* .table {
+  font-size: 0.9rem;
+} */
+
+/* Certifique-se que os estilos abaixo (seus estilos originais) não conflitem 
+   ou sobrescrevam o white-space, overflow, text-overflow das colunas específicas.
+   Se eles já definem max-width, pode ser necessário ajustar lá ou garantir que 
+   as classes específicas tenham maior prioridade (o que geralmente têm). */
+
+/* Novos estilos para o Modal de Detalhes de Funcionário Reordenado */
+.detalhesLinha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem; /* Espaçamento entre itens na mesma linha */
+  padding: 0.75rem 0; /* Espaçamento vertical para a linha */
+  border-bottom: 1px solid #f0f0f0; /* Linha divisória sutil */
+}
+
+.detalhesLinha:last-child {
+  border-bottom: none;
+}
+
+.detalheItemFlex {
+  flex: 1 1 calc(33.333% - 1rem); /* Tenta colocar 3 por linha, ajusta conforme necessário */
+  display: flex; /* Alterado para flex */
+  flex-direction: row; /* Para alinhar título e valor lado a lado */
+  align-items: center; /* Alinhar itens verticalmente ao centro */
+  gap: 0.5rem; /* Espaço entre título e valor */
+  min-width: 150px; /* Largura mínima */
+  background-color: #f8f9fa; /* Cor de fundo para o campo */
+  padding: 0.5rem 0.75rem; /* Padding interno */
+  border: 1px solid #e9ecef; /* Borda sutil */
+  border-radius: 4px; /* Bordas arredondadas */
+}
+
+/* Ajuste para itens que devem ocupar mais espaço, como nome completo ou endereço */
+.detalheItemFlex.fullWidth {
+  flex-basis: 100%;
+}
+
+.detalheItemFlex .detalheTitulo {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.9rem; /* Ajustado para consistência */
+  white-space: nowrap; /* Evitar quebra de linha no título */
+  flex-shrink: 0; /* Não encolher o título */
+}
+
+.detalheItemFlex span:not(.detalheTitulo) {
+  font-size: 0.9rem; /* Ajustado para consistência */
+  color: #333;
+  word-wrap: break-word;
+  flex-grow: 1; /* Permitir que o valor cresça */
+  text-align: left; /* Alinhamento do valor */
+}
+
+/* Ajustes para a linha de status se parecer com o fornecedor */
+.detalhesLinha .statusAtivo,
+.detalhesLinha .statusInativo {
+  padding: 0.5rem 1rem; /* Ajustar padding para ficar mais parecido com botão */
+  font-size: 0.9rem;
+  border-radius: 4px;
+  text-align: center;
+  /* Outros estilos de .statusAtivo e .statusInativo já definidos devem funcionar */
+}
+
+/* Remover a estilização específica de .detalheItemFlex .statusAtivo/Inativo se não for mais necessária */
+/* .detalheItemFlex .statusAtivo { ... } */
+/* .detalheItemFlex .statusInativo { ... } */
+
+/* Estilos para status dentro do modal, se diferentes da tabela */
+.detalheItemFlex .statusAtivo {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #d4edda;
+  color: #155724;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  border: 1px solid #c3e6cb;
+}
+
+.detalheItemFlex .statusInativo {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  border: 1px solid #f5c6cb;
+}
+
+.formFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px; /* Padding aplicado aqui */
+  border-top: 1px solid #eee;
+  margin-top: auto; /* Empurra o rodapé para o fundo do flex container */
+  background-color: #f9f9f9;
+}
+
+.formFooter .buttonGroup {
+  margin-top: 0;
+}
+
+.dateInfoContainer {
+  display: flex;
+  flex-direction: column;
+  color: #555;
+  font-size: 0.8rem;
+  gap: 4px;
+}
+
+.dateInfoContainer span {
+  font-weight: 500;
+}
+
+.switchContainerTopRight {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+}
+
+.readOnlyField {
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  min-height: 42px; /* Mesma altura dos inputs */
+  display: flex;
+  align-items: center;
+  word-break: break-word; /* Garante que textos longos quebrem a linha */
+}
+
+/* Centraliza o container de datas no rodapé do modal de visualização */
+.modalDetalhes .formFooter .dateInfoContainer {
+  justify-content: flex-start;
+  flex-grow: 1;
+}
+
+.table td.truncate, /* Classe genérica se precisar usar em outros lugares */
+.table td.emailColumn { /* Aplicando à coluna de email como exemplo */
+  max-width: 150px; /* Ou o valor que preferir */
+}
+
+/* Estilos para o indicador de status na tabela */
+.statusCell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.statusIndicator {
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.statusHabilitado {
+  background-color: #28a745; /* Verde para habilitado */
+}
+
+.statusDesabilitado {
+  background-color: #dc3545; /* Vermelho para desabilitado */
+}
+
+/* Estilos para o grupo de Radio Button */
+.radioLabel {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding-top: 5px; /* Ajuste para alinhar com os outros campos */
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+input[type="radio"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #4caf50;
+} 

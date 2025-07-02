@@ -2,314 +2,200 @@ import pool from '@/lib/db';
 
 export default async function handler(req, res) {
   const { method, body, query } = req;
+  const client = await pool.connect(); // Usar um cliente para transações
 
+  try {
   switch (method) {
     case 'GET':
-      try {
-        const { cod_forn } = query;
-        
-        // Query melhorada para juntar com tabela de cidades
-        let sqlQuery = `
-          SELECT f.*, c.nome as cidade_nome, c.cod_est, e.uf 
-          FROM fornecedores f
-          LEFT JOIN cidades c ON f.cod_cid = c.cod_cid
-          LEFT JOIN estados e ON c.cod_est = e.cod_est
-        `;
-        
-        let params = [];
-        
-        if (cod_forn) {
-          sqlQuery += ' WHERE f.cod_forn = $1';
-          params.push(cod_forn);
-        }
-        
-        sqlQuery += ' ORDER BY f.nome';
-        
-        const result = await pool.query(sqlQuery, params);
-        res.status(200).json(result.rows);
-      } catch (err) {
-        console.error('Erro ao buscar fornecedores:', err);
-        res.status(500).json({ message: 'Erro ao buscar fornecedores' });
-      }
-      break;
+        // A lógica GET não precisa de transação, pode ser mais simples
+        await client.release(); // Libera o cliente se não for usar
+        return handleGet(req, res);
 
-    case 'POST':
-      try {
-        // Extrair apenas os campos que sabemos que existem na tabela
+      case 'POST':
+        await client.query('BEGIN');
+        const novoFornecedor = await handlePost(req, client);
+        await client.query('COMMIT');
+        res.status(201).json(novoFornecedor);
+        break;
+
+      case 'PUT':
+        await client.query('BEGIN');
+        const fornecedorAtualizado = await handlePut(req, client);
+        await client.query('COMMIT');
+        res.status(200).json(fornecedorAtualizado);
+        break;
+
+      case 'DELETE':
+        await client.query('BEGIN');
+        await handleDelete(req, client);
+        await client.query('COMMIT');
+        res.status(204).end();
+        break;
+
+      default:
+        res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
+        res.status(405).end(`Method ${method} Not Allowed`);
+    }
+  } catch (err) {
+    if (client.active) {
+      await client.query('ROLLBACK');
+    }
+    console.error('Erro na transação do fornecedor:', err);
+    res.status(500).json({ message: err.message || 'Ocorreu um erro no servidor.' });
+  } finally {
+    if (client.active) {
+      client.release();
+    }
+  }
+}
+
+async function handleGet(req, res) {
+  const { cod_forn } = req.query;
+  
+  try {
+    // Query única e mais eficiente para buscar fornecedores com seus e-mails e telefones agregados
+    let sqlQuery = `
+      SELECT 
+        f.*, 
+        c.nome as cidade_nome, 
+        c.cod_est, 
+        e.uf,
+        e.nome as estado_nome,
+        t.nome as nome_transportadora,
+        COALESCE(emails.lista, '[]'::json) as emails,
+        COALESCE(telefones.lista, '[]'::json) as telefones
+      FROM fornecedores f
+      LEFT JOIN cidades c ON f.cod_cid = c.cod_cid
+      LEFT JOIN estados e ON c.cod_est = e.cod_est
+      LEFT JOIN transportadoras t ON f.cod_trans = t.cod_trans
+      LEFT JOIN (
+        SELECT cod_forn, json_agg(json_build_object('valor', email)) as lista 
+        FROM fornecedor_emails 
+        GROUP BY cod_forn
+      ) as emails ON f.cod_forn = emails.cod_forn
+      LEFT JOIN (
+        SELECT cod_forn, json_agg(json_build_object('valor', telefone)) as lista 
+        FROM fornecedor_telefones 
+        GROUP BY cod_forn
+      ) as telefones ON f.cod_forn = telefones.cod_forn
+    `;
+    let params = [];
+    
+    if (cod_forn) {
+      sqlQuery += ' WHERE f.cod_forn = $1';
+      params.push(cod_forn);
+    }
+    
+    sqlQuery += ' ORDER BY f.nome';
+    
+    const result = await pool.query(sqlQuery, params);
+
+    // Se um código foi especificado e encontrado, retorna um único objeto
+    // Senão, retorna o array de todos os fornecedores
+    if (cod_forn) {
+      return res.status(200).json(result.rows[0] || null);
+    } else {
+      return res.status(200).json(result.rows);
+    }
+    
+  } catch (err) {
+    console.error('Erro ao buscar fornecedores:', err);
+    res.status(500).json({ message: 'Erro ao buscar fornecedores' });
+  }
+}
+
+async function handlePost(req, client) {
+  const {
+    nome, nome_fantasia, endereco, numero, bairro, complemento,
+    cod_cid, uf, cep, rg_ie, cpf_cnpj, tipo_pessoa, ativo, cod_pagto, cod_trans,
+    emails = [], telefones = []
+  } = req.body;
+
+  // Validações principais
+  if (!nome || !cpf_cnpj) {
+    throw new Error('Nome e CPF/CNPJ são obrigatórios.');
+  }
+
+  // Inserir fornecedor principal
+  const result = await client.query(
+    `INSERT INTO fornecedores (nome, nome_fantasia, endereco, numero, bairro, complemento, cod_cid, uf, cep, rg_ie, cpf_cnpj, tipo_pessoa, ativo, cod_pagto, cod_trans)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
+    [nome, nome_fantasia, endereco, numero, bairro, complemento, cod_cid, uf, cep, rg_ie, cpf_cnpj, tipo_pessoa, ativo, cod_pagto, cod_trans]
+  );
+  const novoFornecedor = result.rows[0];
+  const codFornNovo = novoFornecedor.cod_forn;
+
+  // Inserir e-mails
+  if (emails.length > 0) {
+    const emailValues = emails.map(email => `(${codFornNovo}, '${email}')`).join(',');
+    await client.query(`INSERT INTO fornecedor_emails (cod_forn, email) VALUES ${emailValues}`);
+  }
+
+  // Inserir telefones
+  if (telefones.length > 0) {
+    const telefoneValues = telefones.map(tel => `(${codFornNovo}, '${tel}')`).join(',');
+    await client.query(`INSERT INTO fornecedor_telefones (cod_forn, telefone) VALUES ${telefoneValues}`);
+  }
+  
+  novoFornecedor.emails = emails.map(e => ({ valor: e }));
+  novoFornecedor.telefones = telefones.map(t => ({ valor: t }));
+
+  return { message: 'Fornecedor cadastrado com sucesso', fornecedor: novoFornecedor };
+}
+
+async function handlePut(req, client) {
+  const { cod_forn } = req.query;
         const { 
-          nome, 
-          endereco, 
-          bairro, 
-          cod_cid, 
-          uf, 
-          cep, 
-          telefone, 
-          cnpj, 
-          email, 
-          ativo 
-        } = body;
-        
-        console.log('Dados recebidos no POST:', body);
-        
-        // Validar campos obrigatórios
-        if (!nome) {
-          return res.status(400).json({ message: 'Nome é obrigatório' });
-        }
-        
-        if (!cod_cid) {
-          return res.status(400).json({ message: 'Cidade é obrigatória' });
-        }
-        
-        if (!uf) {
-          return res.status(400).json({ message: 'UF é obrigatória' });
-        }
-        
-        if (!endereco) {
-          return res.status(400).json({ message: 'Endereço é obrigatório' });
-        }
-        
-        if (!bairro) {
-          return res.status(400).json({ message: 'Bairro é obrigatório' });
-        }
-        
-        if (!cep) {
-          return res.status(400).json({ message: 'CEP é obrigatório' });
-        }
-        
-        if (!telefone) {
-          return res.status(400).json({ message: 'Telefone é obrigatório' });
-        }
-        
-        if (!cnpj) {
-          return res.status(400).json({ message: 'CNPJ é obrigatório' });
-        }
-        
-        // Verificar se já existe um fornecedor com o mesmo CNPJ (se fornecido)
-        if (cnpj && cnpj.trim() !== '') {
-        const checkCnpj = await pool.query(
-          'SELECT * FROM fornecedores WHERE cnpj = $1',
-          [cnpj]
-        );
-        
-        if (checkCnpj.rows.length > 0) {
-            return res.status(409).json({ message: 'Já existe um fornecedor com este CNPJ' });
-          }
-        }
-        
-        // Verificar se já existe um fornecedor com o mesmo nome
-        const checkNome = await pool.query(
-          'SELECT * FROM fornecedores WHERE LOWER(nome) = LOWER($1)',
-          [nome]
-        );
-        
-        if (checkNome.rows.length > 0) {
-          return res.status(409).json({ message: 'Já existe um fornecedor com este nome' });
-        }
+    nome, nome_fantasia, endereco, numero, bairro, complemento,
+    cod_cid, uf, cep, rg_ie, cpf_cnpj, tipo_pessoa, ativo, cod_pagto, cod_trans,
+    emails = [], telefones = []
+  } = req.body;
 
-        // Usar valores padrão para campos nulos ou vazios
-        const sanitizedEmail = email || null;
-        const isAtivo = ativo !== undefined ? ativo : true;
+  if (!cod_forn) throw new Error('Código do fornecedor é obrigatório.');
 
-        console.log('Executando inserção com parâmetros:', [
-          nome, endereco, bairro, cod_cid, uf, cep, telefone, cnpj, sanitizedEmail, isAtivo
-        ]);
+  // Atualizar fornecedor principal
+  const result = await client.query(
+    `UPDATE fornecedores SET 
+     nome=$1, nome_fantasia=$2, endereco=$3, numero=$4, bairro=$5, complemento=$6, cod_cid=$7, uf=$8, cep=$9, rg_ie=$10, cpf_cnpj=$11, tipo_pessoa=$12, ativo=$13, cod_pagto=$14, cod_trans=$15
+     WHERE cod_forn = $16 RETURNING *`,
+    [nome, nome_fantasia, endereco, numero, bairro, complemento, cod_cid, uf, cep, rg_ie, cpf_cnpj, tipo_pessoa, ativo, cod_pagto, cod_trans, cod_forn]
+  );
 
-        // Usar consulta parametrizada com apenas os campos que existem na tabela
-        const result = await pool.query(
-          `INSERT INTO fornecedores 
-           (nome, endereco, bairro, cod_cid, uf, cep, telefone, cnpj, email, ativo) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
-           RETURNING *`,
-          [nome, endereco, bairro, cod_cid, uf, cep, telefone, cnpj, sanitizedEmail, isAtivo]
-        );
-        
-        // Buscar os dados completos do fornecedor para retornar
-        const fornecedorCompleto = await pool.query(`
-          SELECT f.*, c.nome as cidade_nome 
-          FROM fornecedores f
-          LEFT JOIN cidades c ON f.cod_cid = c.cod_cid
-          WHERE f.cod_forn = $1
-        `, [result.rows[0].cod_forn]);
-        
-        res.status(201).json({ 
-          message: 'Fornecedor cadastrado com sucesso',
-          fornecedor: fornecedorCompleto.rows[0],
-          cod_forn: result.rows[0].cod_forn
-        });
-      } catch (err) {
-        console.error('Erro ao cadastrar fornecedor:', err);
-        let errorMessage = 'Erro ao cadastrar fornecedor';
-        let detalhes = null;
-        
-        if (err.code) {
-          switch(err.code) {
-            case '23505': // Violação de restrição única
-              errorMessage = 'Já existe um fornecedor com os mesmos dados';
-              break;
-            case '23503': // Violação de chave estrangeira
-              errorMessage = 'A cidade informada não existe';
-              break;
-            case '22P02': // Erro de tipo de dados inválido
-              errorMessage = 'Formato de dados inválido';
-              break;
-            case '42703': // Coluna não existe
-              errorMessage = 'Campo não existente na tabela';
-              break;
-            default:
-              errorMessage = `Erro no banco de dados (${err.code})`;
-          }
-          detalhes = err.detail || err.message;
-        }
-        
-        res.status(500).json({ 
-          message: errorMessage,
-          detalhes: detalhes
-        });
-      }
-      break;
+  if (result.rowCount === 0) throw new Error('Fornecedor não encontrado.');
+  const fornecedorAtualizado = result.rows[0];
 
-    case 'PUT':
-      try {
-        const { cod_forn } = query;
-        const { 
-          nome, 
-          endereco, 
-          bairro, 
-          cod_cid, 
-          uf, 
-          cep, 
-          telefone, 
-          cnpj, 
-          email, 
-          ativo 
-        } = body;
-        
-        if (!cod_forn) {
-          return res.status(400).json({ message: 'Código do fornecedor é obrigatório' });
-        }
-        
-        if (!nome || !endereco || !bairro || !cod_cid || !uf || !cep || !telefone || !cnpj) {
-          return res.status(400).json({ message: 'Campos obrigatórios não preenchidos' });
-        }
-        
-        // Verificar se o fornecedor existe
-        const checkFornecedor = await pool.query('SELECT * FROM fornecedores WHERE cod_forn = $1', [cod_forn]);
-        
-        if (checkFornecedor.rows.length === 0) {
-          return res.status(404).json({ message: 'Fornecedor não encontrado' });
-        }
-        
-        // Verificar duplicação de CNPJ ao atualizar
-        if (cnpj) {
-          const checkCnpj = await pool.query(
-            'SELECT * FROM fornecedores WHERE cnpj = $1 AND cod_forn != $2',
-            [cnpj, cod_forn]
-          );
-          
-          if (checkCnpj.rows.length > 0) {
-            return res.status(409).json({ message: 'Já existe outro fornecedor com este CNPJ' });
-          }
-        }
-        
-        // Verificar duplicação de nome ao atualizar
-        const checkNome = await pool.query(
-          'SELECT * FROM fornecedores WHERE LOWER(nome) = LOWER($1) AND cod_forn != $2',
-          [nome, cod_forn]
-        );
-        
-        if (checkNome.rows.length > 0) {
-          return res.status(409).json({ message: 'Já existe outro fornecedor com este nome' });
-        }
-        
-        // Determinar o valor de ativo (manter o valor atual se não for fornecido)
-        let isAtivo = checkFornecedor.rows[0].ativo;
-        if (ativo !== undefined) {
-          isAtivo = ativo;
-        }
-        
-        const result = await pool.query(
-          `UPDATE fornecedores 
-          SET nome = $1, endereco = $2, bairro = $3, cod_cid = $4, uf = $5, cep = $6, telefone = $7, cnpj = $8, email = $9, ativo = $10 
-          WHERE cod_forn = $11 
-          RETURNING *`,
-          [nome, endereco, bairro, cod_cid, uf, cep, telefone, cnpj, email, isAtivo, cod_forn]
-        );
-        
-        // Buscar os dados completos do fornecedor para retornar
-        const fornecedorCompleto = await pool.query(`
-          SELECT f.*, c.nome as cidade_nome 
-          FROM fornecedores f
-          LEFT JOIN cidades c ON f.cod_cid = c.cod_cid
-          WHERE f.cod_forn = $1
-        `, [cod_forn]);
-        
-        res.status(200).json({ 
-          message: 'Fornecedor atualizado com sucesso',
-          fornecedor: fornecedorCompleto.rows[0]
-        });
-      } catch (err) {
-        console.error('Erro ao atualizar fornecedor:', err);
-        let errorMessage = 'Erro ao atualizar fornecedor';
-        let detalhes = null;
-        
-        if (err.code) {
-          switch(err.code) {
-            case '23505': // Violação de restrição única
-              errorMessage = 'Já existe um fornecedor com os mesmos dados';
-              break;
-            case '23503': // Violação de chave estrangeira
-              errorMessage = 'A cidade informada não existe';
-              break;
-            case '22P02': // Erro de tipo de dados inválido
-              errorMessage = 'Formato de dados inválido';
-              break;
-            case '42703': // Coluna não existe
-              errorMessage = 'Campo não existente na tabela';
-              break;
-            default:
-              errorMessage = `Erro no banco de dados (${err.code})`;
-          }
-          detalhes = err.detail || err.message;
-        }
-        
-        res.status(500).json({ 
-          message: errorMessage,
-          detalhes: detalhes
-        });
-      }
-      break;
+  // Sincronizar e-mails (Delete + Insert)
+  await client.query('DELETE FROM fornecedor_emails WHERE cod_forn = $1', [cod_forn]);
+  if (Array.isArray(emails) && emails.length > 0) {
+    const emailValues = emails.filter(e => e && e.trim() !== '').map(email => `(${cod_forn}, '${email.replace(/'/g, "''")}')`).join(',');
+    if (emailValues) {
+      await client.query(`INSERT INTO fornecedor_emails (cod_forn, email) VALUES ${emailValues}`);
+    }
+  }
 
-    case 'DELETE':
-      try {
-        const { cod_forn } = query;
+  // Sincronizar telefones (Delete + Insert)
+  await client.query('DELETE FROM fornecedor_telefones WHERE cod_forn = $1', [cod_forn]);
+  if (Array.isArray(telefones) && telefones.length > 0) {
+    const telefoneValues = telefones.filter(t => t && t.trim() !== '').map(tel => `(${cod_forn}, '${tel.replace(/'/g, "''")}')`).join(',');
+    if (telefoneValues) {
+      await client.query(`INSERT INTO fornecedor_telefones (cod_forn, telefone) VALUES ${telefoneValues}`);
+    }
+  }
 
-        if (!cod_forn) {
-          return res.status(400).json({ message: 'Código do fornecedor é obrigatório' });
-        }
-        
-        // Verificar se existem registros relacionados na tabela produto_forn
-        const checkProdutos = await pool.query('SELECT * FROM produto_forn WHERE cod_forn = $1', [cod_forn]);
-        
-        if (checkProdutos.rows.length > 0) {
-          return res.status(409).json({ 
-            message: 'Não é possível excluir este fornecedor porque existem produtos vinculados a ele',
-            count: checkProdutos.rows.length
-          });
-        }
-        
-        await pool.query('DELETE FROM fornecedores WHERE cod_forn = $1', [cod_forn]);
-        res.status(200).json({ 
-          message: 'Fornecedor excluído com sucesso',
-          cod_forn
-        });
-      } catch (err) {
-        console.error('Erro ao excluir fornecedor:', err);
-        res.status(500).json({ message: 'Erro ao excluir fornecedor' });
-      }
-      break;
+  fornecedorAtualizado.emails = emails.map(e => ({ valor: e }));
+  fornecedorAtualizado.telefones = telefones.map(t => ({ valor: t }));
+  
+  return { message: 'Fornecedor atualizado com sucesso', fornecedor: fornecedorAtualizado };
+}
 
-    default:
-      res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-      res.status(405).json({ message: 'Método não permitido' });
+async function handleDelete(req, client) {
+    const { cod_forn } = req.query;
+    if (!cod_forn) throw new Error('Código do fornecedor é obrigatório.');
+
+    // O ON DELETE CASCADE nas tabelas de email/telefone cuidará da limpeza.
+    const result = await client.query('DELETE FROM fornecedores WHERE cod_forn = $1', [cod_forn]);
+
+    if (result.rowCount === 0) {
+        throw new Error('Fornecedor não encontrado para exclusão.');
   }
 }

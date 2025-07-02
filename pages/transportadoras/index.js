@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styles from './transportadoras.module.css';
+import { FaEye, FaFilter, FaSearch, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 
 export default function ConsultaTransportadoras() {
   const router = useRouter();
@@ -14,10 +15,16 @@ export default function ConsultaTransportadoras() {
   const [filtroSituacao, setFiltroSituacao] = useState('todos');
   
   // Estados para o modal de visualização
-  const [mostrarModalVeiculos, setMostrarModalVeiculos] = useState(false);
-  const [transportadoraSelecionada, setTransportadoraSelecionada] = useState(null);
-  const [veiculosSelecionados, setVeiculosSelecionados] = useState([]);
-  const [carregandoVeiculos, setCarregandoVeiculos] = useState(false);
+  const [mostrarModalDetalhes, setMostrarModalDetalhes] = useState(false);
+  const [transportadoraParaVisualizar, setTransportadoraParaVisualizar] = useState(null);
+  const [veiculosDaTransportadora, setVeiculosDaTransportadora] = useState([]);
+  const [condicaoPagamentoDetalhes, setCondicaoPagamentoDetalhes] = useState(null);
+  const [carregandoDetalhes, setCarregandoDetalhes] = useState(false);
+  const [emailsExpandidos, setEmailsExpandidos] = useState(false);
+  const [telefonesExpandidos, setTelefonesExpandidos] = useState(false);
+  const [mostrarModalConfirmacao, setMostrarModalConfirmacao] = useState(false);
+  const [mostrarModalRelacionamento, setMostrarModalRelacionamento] = useState(false);
+  const [itemParaExcluir, setItemParaExcluir] = useState(null);
 
   useEffect(() => {
     // Verificar se há mensagem na query (redirecionamento após cadastro/edição)
@@ -38,7 +45,7 @@ export default function ConsultaTransportadoras() {
   
   // Impedir o scroll quando o modal estiver aberto
   useEffect(() => {
-    if (mostrarModalVeiculos) {
+    if (mostrarModalDetalhes) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
@@ -47,7 +54,7 @@ export default function ConsultaTransportadoras() {
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [mostrarModalVeiculos]);
+  }, [mostrarModalDetalhes]);
   
   const aplicarFiltros = () => {
     let resultado = [...transportadoras];
@@ -108,116 +115,146 @@ export default function ConsultaTransportadoras() {
     router.push(`/transportadoras/cadastro?cod_trans=${transportadora.cod_trans}`);
   };
 
-  const handleDelete = async (cod_trans) => {
-    console.log('Tentando excluir transportadora com código:', cod_trans);
-    if (!cod_trans) {
-      console.error('Código da transportadora não encontrado para exclusão:', cod_trans);
-      exibirMensagem('Código da transportadora não encontrado', 'error');
-      return;
-    }
+  const handleDelete = (transportadora) => {
+    setItemParaExcluir(transportadora);
+    setMostrarModalConfirmacao(true);
+  };
 
-    if (!confirm('Tem certeza que deseja excluir esta transportadora? Todos os veículos associados também serão excluídos.')) {
-      console.log('Exclusão cancelada pelo usuário');
-      return;
-    }
+  const confirmarExclusao = async () => {
+    if (!itemParaExcluir) return;
 
+    setCarregando(true);
+    setMostrarModalConfirmacao(false);
+    
     try {
-      // Primeiro excluir todos os veículos vinculados a esta transportadora
-      const urlVeiculos = `/api/veiculos?cod_trans=${cod_trans}`;
-      console.log('Excluindo veículos:', urlVeiculos);
-      
-      const resVeiculos = await fetch(urlVeiculos, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
+      const res = await fetch(`/api/transportadoras?cod_trans=${itemParaExcluir.cod_trans}`, { 
+        method: 'DELETE' 
       });
       
-      const dataVeiculos = await resVeiculos.json();
-      console.log('Resposta da exclusão de veículos:', dataVeiculos);
+      const data = await res.json();
       
-      // Agora excluir a transportadora
-      const urlTrans = `/api/transportadoras?cod_trans=${cod_trans}`;
-      console.log('Excluindo transportadora:', urlTrans);
-      
-      const resTrans = await fetch(urlTrans, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      console.log('Status da resposta DELETE transportadora:', resTrans.status);
-      const dataTrans = await resTrans.json();
-      console.log('Resposta da exclusão de transportadora:', dataTrans);
-      
-      if (resTrans.ok) {
-        // Atualizar a lista após excluir
-        const novosTransportadoras = transportadoras.filter(t => t.cod_trans !== cod_trans);
-        setTransportadoras(novosTransportadoras);
-        
-        let mensagemSucesso = 'Transportadora excluída com sucesso!';
-        if (dataVeiculos.veiculos_excluidos && dataVeiculos.veiculos_excluidos.length > 0) {
-          mensagemSucesso += ` ${dataVeiculos.veiculos_excluidos.length} veículos também foram excluídos.`;
-        }
-        
-        exibirMensagem(mensagemSucesso, 'success');
-      } else {
-        const mensagemErro = dataTrans.message || dataTrans.error || 'Falha ao excluir transportadora';
-        console.error('Erro ao excluir transportadora:', mensagemErro);
-        exibirMensagem(`Erro: ${mensagemErro}`, 'error');
+      if (res.status === 409 && data.hasRelationships) {
+        setMostrarModalRelacionamento(true);
+        return;
       }
+      
+      if (!res.ok) throw new Error(data.error);
+      
+      exibirMensagem('Transportadora excluída com sucesso!', 'success');
+      await fetchTransportadoras();
+      setItemParaExcluir(null);
+      
     } catch (error) {
-      console.error('Erro técnico ao excluir transportadora:', error);
-      exibirMensagem('Erro ao processar requisição', 'error');
+      exibirMensagem(error.message, 'error');
+    } finally {
+      setCarregando(false);
     }
   };
 
-  const visualizarTransportadora = async (transportadora) => {
-    console.log('Visualizando transportadora:', transportadora);
+  const handleDesativar = async () => {
+    if (!itemParaExcluir) return;
     
-    if (!transportadora || !transportadora.cod_trans) {
-      console.error('Código da transportadora não encontrado para visualizar:', transportadora);
-      exibirMensagem('Não foi possível carregar os dados', 'error');
-      return;
-    }
-    
-    setTransportadoraSelecionada(transportadora);
-    setCarregandoVeiculos(true);
-    setMostrarModalVeiculos(true);
+    setCarregando(true);
+    setMostrarModalRelacionamento(false);
     
     try {
-      const url = `/api/veiculos?cod_trans=${transportadora.cod_trans}`;
-      console.log('Buscando veículos na URL:', url);
+      // Enviar apenas os campos que existem na tabela transportadoras
+      const dados = {
+        nome: itemParaExcluir.nome,
+        tipo_pessoa: itemParaExcluir.tipo_pessoa,
+        nome_fantasia: itemParaExcluir.nome_fantasia,
+        cpf_cnpj: itemParaExcluir.cpf_cnpj,
+        rg_ie: itemParaExcluir.rg_ie,
+        endereco: itemParaExcluir.endereco,
+        numero: itemParaExcluir.numero,
+        bairro: itemParaExcluir.bairro,
+        complemento: itemParaExcluir.complemento,
+        cep: itemParaExcluir.cep,
+        cod_cid: itemParaExcluir.cod_cid,
+        uf: itemParaExcluir.uf,
+        ativo: false
+      };
       
-      const res = await fetch(url);
-      console.log('Status da resposta:', res.status);
+      const res = await fetch(`/api/transportadoras?cod_trans=${itemParaExcluir.cod_trans}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados),
+      });
       
-      if (res.ok) {
-        const data = await res.json();
-        console.log('Veículos recebidos:', data);
-        setVeiculosSelecionados(Array.isArray(data) ? data : []);
-      } else {
-        const error = await res.text();
-        console.error('Erro ao buscar veículos:', error);
-        setVeiculosSelecionados([]);
-        exibirMensagem('Erro ao carregar veículos', 'error');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      exibirMensagem('Transportadora desativada com sucesso!', 'success');
+      await fetchTransportadoras();
+      setItemParaExcluir(null);
+      
+    } catch (error) {
+      exibirMensagem(error.message, 'error');
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const cancelarExclusao = () => {
+    setMostrarModalConfirmacao(false);
+    setMostrarModalRelacionamento(false);
+    setItemParaExcluir(null);
+  };
+
+  const abrirModalVisualizar = async (transportadora) => {
+    if (!transportadora || !transportadora.cod_trans) {
+      exibirMensagem('Dados da transportadora inválidos.', 'error');
+      return;
+    }
+    setEmailsExpandidos(false);
+    setTelefonesExpandidos(false);
+    setCarregandoDetalhes(true);
+    setMostrarModalDetalhes(true);
+    setVeiculosDaTransportadora([]);
+    setCondicaoPagamentoDetalhes(null);
+
+    try {
+      // 1. Buscar dados completos da transportadora (incluindo emails e telefones)
+      const resTransp = await fetch(`/api/transportadoras?cod_trans=${transportadora.cod_trans}`);
+      if (!resTransp.ok) throw new Error('Falha ao carregar dados da transportadora.');
+      const dadosCompletos = await resTransp.json();
+      setTransportadoraParaVisualizar(dadosCompletos);
+
+      // 2. Buscar veículos vinculados
+      const resVeiculos = await fetch(`/api/veiculos?cod_trans=${transportadora.cod_trans}`);
+      if (resVeiculos.ok) {
+        const dadosVeiculos = await resVeiculos.json();
+        setVeiculosDaTransportadora(Array.isArray(dadosVeiculos) ? dadosVeiculos : []);
+      }
+
+      // 3. Buscar detalhes da condição de pagamento
+      if (dadosCompletos.cod_pagto) {
+        const resCond = await fetch(`/api/cond-pagto?cod_pagto=${dadosCompletos.cod_pagto}`);
+        if (resCond.ok) {
+          const dadosCond = await resCond.json();
+          setCondicaoPagamentoDetalhes(dadosCond);
+        }
       }
     } catch (error) {
-      console.error('Erro técnico ao carregar veículos:', error);
-      setVeiculosSelecionados([]);
-      exibirMensagem('Erro ao processar requisição de veículos', 'error');
+      console.error("Erro ao carregar detalhes para o modal:", error);
+      exibirMensagem(error.message, 'error');
+      setTransportadoraParaVisualizar(transportadora); // Pelo menos mostra os dados básicos
     } finally {
-      setCarregandoVeiculos(false);
+      setCarregandoDetalhes(false);
     }
   };
 
   const fecharModal = () => {
-    setMostrarModalVeiculos(false);
-    setVeiculosSelecionados([]);
-    setTransportadoraSelecionada(null);
+    setMostrarModalDetalhes(false);
+    setTransportadoraParaVisualizar(null);
+    setVeiculosDaTransportadora([]);
+    setCondicaoPagamentoDetalhes(null);
   };
 
   // Fechar o modal quando ESC for pressionado
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && mostrarModalVeiculos) {
+      if (e.key === 'Escape') {
         fecharModal();
       }
     };
@@ -227,7 +264,7 @@ export default function ConsultaTransportadoras() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [mostrarModalVeiculos]);
+  }, [mostrarModalDetalhes]);
 
   const exibirMensagem = (texto, tipo) => {
     setMensagem(texto);
@@ -273,13 +310,35 @@ export default function ConsultaTransportadoras() {
     return ativo === true || ativo === 1 || ativo === '1' || ativo === 'true' || ativo === 't';
   };
 
+  const formatarTelefone = (telefone) => {
+    if (!telefone) return '-';
+    const numeros = telefone.replace(/[^\d]/g, '');
+    if (numeros.length === 11) { // (XX) XXXXX-XXXX
+      return numeros.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+    if (numeros.length === 10) { // (XX) XXXX-XXXX
+      return numeros.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+    return telefone; // Retorna original se não corresponder
+  };
+
+  const formatarCpfCnpj = (valor) => {
+    if (!valor) return '';
+    const apenasNumeros = valor.replace(/\D/g, '');
+
+    if (apenasNumeros.length === 11) {
+      return apenasNumeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    } 
+    if (apenasNumeros.length === 14) {
+      return apenasNumeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    }
+    return valor;
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.headerContainer}>
-        <Link href="/">
-          <button className={styles.voltarButton}>Voltar</button>
-        </Link>
-        <h1 className={styles.titulo}>Consulta de Transportadoras</h1>
+        <h1 className={styles.titulo}>Transportadoras</h1>
       </div>
       
       {mensagem && (
@@ -288,205 +347,370 @@ export default function ConsultaTransportadoras() {
         </div>
       )}
 
+      <div className={styles.actionBar} style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button 
+          onClick={() => router.push('/transportadoras/cadastro')}
+          className={styles.submitButton}
+        >
+          <FaPlus style={{ marginRight: '8px' }} /> Cadastrar Nova Transportadora
+        </button>
+      </div>
+
       <div className={styles.filtrosContainer}>
-        <div className={styles.filtrosEsquerda}>
+        <div className={styles.filtroItem}>
+          <FaSearch className={styles.filtroIcon} />
           <input
             type="text"
-            placeholder="Filtrar"
+            placeholder="Pesquisar transportadora..."
             value={pesquisa}
             onChange={handleChangePesquisa}
-            className={styles.inputPesquisa}
+            className={styles.searchInput}
           />
+        </div>
+        
+        <div className={styles.filtroItem}>
+          <FaFilter className={styles.filtroIcon} />
           <select 
             value={filtroSituacao} 
             onChange={handleChangeSituacao}
-            className={styles.selectFiltro}
+            className={styles.filtroSelect}
           >
-            <option value="todos">Todos</option>
-            <option value="habilitado">Habilitado</option>
-            <option value="desabilitado">Desabilitado</option>
+            <option value="todos">Todas as Transportadoras</option>
+            <option value="habilitado">Habilitadas</option>
+            <option value="desabilitado">Desabilitadas</option>
           </select>
-        </div>
-        <div className={styles.filtrosDireita}>
-          <Link href="/transportadoras/cadastro">
-            <button className={styles.btnPrimary}>Adicionar</button>
-          </Link>
         </div>
       </div>
 
+      <h2 className={styles.subtitulo}>Lista de Transportadoras</h2>
+
       {carregando ? (
-        <p>Carregando transportadoras...</p>
+        <div className={styles.loading}>Carregando transportadoras...</div>
       ) : transportadorasFiltradas.length === 0 ? (
         <p>Nenhuma transportadora encontrada.</p>
       ) : (
-        <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Código</th>
-              <th>Nome</th>
-              <th>CNPJ</th>
-              <th>Telefone</th>
-              <th>Cidade</th>
-                <th>Situação</th>
-              <th>Ações</th>
+              <th className={styles.tableHeader}>Código</th>
+              <th className={styles.tableHeader}>Status</th>
+              <th className={styles.tableHeader}>Transportadora</th>
+              <th className={styles.tableHeader}>Tipo</th>
+              <th className={styles.tableHeader}>Telefone</th>
+              <th className={styles.tableHeader}>Cidade/UF</th>
+              <th className={styles.tableHeader}>Ações</th>
             </tr>
           </thead>
           <tbody>
               {transportadorasFiltradas.map(transportadora => (
-              <tr key={transportadora.cod_trans}>
-                <td>{transportadora.cod_trans}</td>
-                <td>{transportadora.nome}</td>
-                <td>{transportadora.cnpj}</td>
-                <td>{transportadora.telefone}</td>
-                <td>{transportadora.cidade_nome || 'Não informada'}</td>
-                  <td>
-                    <div className={isAtivo(transportadora.ativo) ? styles.situacaoAtivo : styles.situacaoInativo}>
-                      {isAtivo(transportadora.ativo) ? 'Habilitado' : 'Desabilitado'}
-                    </div>
+              <tr key={transportadora.cod_trans} className={styles.tableRow}>
+                <td className={styles.tableCell}>{transportadora.cod_trans}</td>
+                <td className={`${styles.tableCell} ${styles.statusCell}`}>
+                  <span className={`${styles.statusIndicator} ${isAtivo(transportadora.ativo) ? styles.statusHabilitado : styles.statusDesabilitado}`}></span>
                 </td>
-                <td>
+                <td className={styles.tableCell} style={{ fontWeight: 'bold' }}>{transportadora.nome}</td>
+                <td className={styles.tableCell}>{transportadora.tipo_pessoa}</td>
+                <td className={styles.tableCell}>{transportadora.telefone ? formatarTelefone(transportadora.telefone) : '-'}</td>
+                <td className={styles.tableCell}>{transportadora.cidade_nome ? `${transportadora.cidade_nome}/${transportadora.uf}` : ''}</td>
+                <td className={styles.tableCell}>
+                  <div className={styles.actionButtons}>
                     <button
-                      onClick={() => visualizarTransportadora(transportadora)}
-                      className={styles.btnView}
-                      title="Visualizar transportadora"
+                        onClick={() => abrirModalVisualizar(transportadora)}
+                        className={`${styles.actionButton} ${styles.viewButton}`}
+                        title="Visualizar"
                     >
-                      Visualizar
+                        <FaEye />
                     </button>
-                  <button
-                    onClick={() => handleEdit(transportadora)}
-                      className={styles.btnEdit}
-                      title="Editar transportadora"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(transportadora.cod_trans)}
-                      className={styles.btnDelete}
-                      title="Excluir transportadora"
-                  >
-                    Excluir
-                  </button>
+                    <button
+                        onClick={() => handleEdit(transportadora)}
+                      className={`${styles.actionButton} ${styles.editButton}`}
+                      title="Editar"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                        onClick={() => handleDelete(transportadora)}
+                      className={`${styles.actionButton} ${styles.deleteButton}`}
+                      title="Excluir"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        </div>
       )}
 
       {/* Modal de Detalhes da Transportadora */}
-      {mostrarModalVeiculos && transportadoraSelecionada && (
+      {mostrarModalDetalhes && (
         <div className={styles.modalOverlay} onClick={fecharModal}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={`${styles.modalContent} ${styles.modalDetalhes}`} onClick={(e) => e.stopPropagation()}>
+            {carregandoDetalhes ? (
+              <div className={styles.loading}>Carregando...</div>
+            ) : transportadoraParaVisualizar && (
+              <>
+                <div className={styles.modalHeader}>
+                  <h2 className={styles.modalTitle}>Detalhes da Transportadora</h2>
+                  <div className={`${styles.modalStatus} ${isAtivo(transportadoraParaVisualizar.ativo) ? styles.statusHabilitadoBadge : styles.statusDesabilitadoBadge}`}>
+                      {isAtivo(transportadoraParaVisualizar.ativo) ? 'Habilitado' : 'Desabilitado'}
+                  </div>
+                </div>
+
+                <div className={styles.modalBodyFlat}>
+                    {/* --- Linha 1: Código, Tipo de Pessoa --- */}
+                    <div className={styles.modalRow}>
+                        <div className={styles.modalFieldItemFixed}>
+                            <span className={styles.modalLabel}>Código</span>
+                            <div className={styles.modalValue}>{transportadoraParaVisualizar.cod_trans}</div>
+                        </div>
+                        <div className={styles.modalFieldItemFixed}>
+                            <span className={styles.modalLabel}>Tipo de Pessoa</span>
+                            <div className={styles.modalValue}>{transportadoraParaVisualizar.tipo_pessoa === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}</div>
+                        </div>
+                    </div>
+                    {/* --- Linha 2: Nome/Razão Social, Nome Fantasia --- */}
+                    <div className={styles.modalRow}>
+                        <div className={styles.modalFieldItemHalf}>
+                            <span className={styles.modalLabel}>Transportadora</span>
+                            <div className={styles.modalValue}>{transportadoraParaVisualizar.nome}</div>
+                        </div>
+                        <div className={styles.modalFieldItemHalf}>
+                            <span className={styles.modalLabel}>Nome Fantasia</span>
+                            <div className={styles.modalValue}>{transportadoraParaVisualizar.nome_fantasia || '-'}</div>
+                        </div>
+                    </div>
+                    {/* --- Linha 3: Endereço, Número, Complemento, Bairro --- */}
+                     <div className={styles.modalRow}>
+                        <div className={styles.modalFieldItemAddress}>
+                            <span className={styles.modalLabel}>Endereço</span>
+                            <div className={`${styles.modalValue} ${styles.truncateText}`}>{transportadoraParaVisualizar.endereco || '-'}</div>
+                        </div>
+                        <div className={styles.modalFieldItemNumber}>
+                            <span className={styles.modalLabel}>Número</span>
+                            <div className={styles.modalValue}>{transportadoraParaVisualizar.numero || '-'}</div>
+                        </div>
+                        <div className={styles.modalFieldItemAddress}>
+                            <span className={styles.modalLabel}>Complemento</span>
+                            <div className={`${styles.modalValue} ${styles.truncateText}`}>{transportadoraParaVisualizar.complemento || '-'}</div>
+                        </div>
+                        <div className={styles.modalFieldItemAddress}>
+                            <span className={styles.modalLabel}>Bairro</span>
+                            <div className={`${styles.modalValue} ${styles.truncateText}`}>{transportadoraParaVisualizar.bairro || '-'}</div>
+                        </div>
+                    </div>
+                     {/* --- Linha 4: CEP, Cidade/UF --- */}
+                    <div className={styles.modalRow}>
+                        <div className={styles.modalFieldItemQuarter}>
+                            <span className={styles.modalLabel}>CEP</span>
+                            <div className={styles.modalValue}>{transportadoraParaVisualizar.cep || '-'}</div>
+                        </div>
+                        <div className={styles.modalFieldItemHalf}>
+                            <span className={styles.modalLabel}>Cidade/UF</span>
+                            <div className={styles.modalValue}>{`${transportadoraParaVisualizar.cidade_nome || ''}${transportadoraParaVisualizar.uf ? `/${transportadoraParaVisualizar.uf}` : ''}`}</div>
+                        </div>
+                    </div>
+                     {/* --- Linha 5: CNPJ/CPF, IE/RG --- */}
+                    <div className={styles.modalRow}>
+                        <div className={styles.modalFieldItemHalf}>
+                            <span className={styles.modalLabel}>{transportadoraParaVisualizar.tipo_pessoa === 'PF' ? 'CPF' : 'CNPJ'}</span>
+                            <div className={styles.modalValue}>{formatarCpfCnpj(transportadoraParaVisualizar.cpf_cnpj)}</div>
+                        </div>
+                        <div className={styles.modalFieldItemHalf}>
+                            <span className={styles.modalLabel}>{transportadoraParaVisualizar.tipo_pessoa === 'PF' ? 'RG' : 'Inscrição Estadual'}</span>
+                            <div className={styles.modalValue}>{transportadoraParaVisualizar.rg_ie || '-'}</div>
+                        </div>
+                    </div>
+
+                    {/* --- Linha 6: Condição de Pagamento --- */}
+                    <div className={styles.modalRow}>
+                       <div className={styles.modalFieldItemFull}>
+                        <span className={styles.modalLabel}>Condição de Pagamento</span>
+                         <div className={styles.modalValue}>
+                           {condicaoPagamentoDetalhes ? (
+                            <div className={styles.condicaoPagtoContainer}>
+                                <div className={styles.condicaoPagtoHeader}>
+                                    <strong>{condicaoPagamentoDetalhes.descricao}</strong>
+                                    <div className={styles.financialDetails}>
+                                        <span>Multa: {Number(condicaoPagamentoDetalhes.multa_perc || 0).toFixed(2)}%</span>
+                                        <span>Juros: {Number(condicaoPagamentoDetalhes.juros_perc || 0).toFixed(2)}%</span>
+                                        <span>Desconto: {Number(condicaoPagamentoDetalhes.desconto_perc || 0).toFixed(2)}%</span>
+                                    </div>
+                                </div>
+                                {condicaoPagamentoDetalhes.parcelas && condicaoPagamentoDetalhes.parcelas.length > 0 && (
+                                    <div className={styles.parcelasContainer}>
+                                        <span className={styles.parcelasTitle}>Parcelas:</span>
+                                        <table className={styles.parcelasTable}>
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Dias</th>
+                                                    <th>%</th>
+                                                    <th>Forma Pagto.</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {condicaoPagamentoDetalhes.parcelas.map(p => (
+                                                    <tr key={p.num_parcela}>
+                                                        <td>{p.num_parcela}</td>
+                                                        <td>{p.dias_vencimento}</td>
+                                                        <td>{Number(p.perc_pagto || 0).toFixed(2)}%</td>
+                                                        <td>{p.forma_pagamento?.descricao || 'N/A'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                           ) : transportadoraParaVisualizar.cod_pagto ? 'Carregando...' : 'Não informada'}
+                         </div>
+                      </div>
+                    </div>
+
+                    {/* --- Linha 7: Veículos --- */}
+                    <div className={styles.modalRow}>
+                      <div className={styles.modalFieldItemFull}>
+                          <span className={styles.modalLabel}>Veículos</span>
+                           <div className={styles.modalValueList}>
+                              {veiculosDaTransportadora.length > 0 ? (
+                                veiculosDaTransportadora.map(v => `${v.placa} (${v.modelo || 'N/A'})`).join(', ')
+                              ) : 'Nenhum veículo vinculado.'}
+                          </div>
+                      </div>
+                    </div>
+
+                    {/* --- Linha 8: E-mails e Telefones --- */}
+                    <div className={styles.modalRow}>
+                        <div className={styles.modalFieldItemHalf}>
+                            <span className={styles.modalLabel}>E-mail(s)</span>
+                             {transportadoraParaVisualizar.emails && transportadoraParaVisualizar.emails.length > 0 ? (
+                                <div className={styles.multiValueContainer}>
+                                    <div className={styles.modalValue}>
+                                        {transportadoraParaVisualizar.emails[0].valor}
+                                        {transportadoraParaVisualizar.emails.length > 1 && (
+                                            <button type="button" onClick={() => setEmailsExpandidos(!emailsExpandidos)} className={styles.expandArrow}>
+                                                <span className={emailsExpandidos ? styles.arrowUp : styles.arrowDown}></span>
+                                            </button>
+                                        )}
+                                    </div>
+                                    {emailsExpandidos && transportadoraParaVisualizar.emails.slice(1).map((email, index) => (
+                                        <div key={index} className={styles.modalValue}>
+                                            {email.valor}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className={styles.modalValue}>-</div>
+                            )}
+                        </div>
+                        <div className={styles.modalFieldItemHalf}>
+                            <span className={styles.modalLabel}>Telefone(s)</span>
+                            {transportadoraParaVisualizar.telefones && transportadoraParaVisualizar.telefones.length > 0 ? (
+                                <div className={styles.multiValueContainer}>
+                                    <div className={styles.modalValue}>
+                                        {formatarTelefone(transportadoraParaVisualizar.telefones[0].valor)}
+                                         {transportadoraParaVisualizar.telefones.length > 1 && (
+                                            <button type="button" onClick={() => setTelefonesExpandidos(!telefonesExpandidos)} className={styles.expandArrow}>
+                                                <span className={telefonesExpandidos ? styles.arrowUp : styles.arrowDown}></span>
+                                            </button>
+                                        )}
+                                    </div>
+                                    {telefonesExpandidos && transportadoraParaVisualizar.telefones.slice(1).map((tel, index) => (
+                                        <div key={index} className={styles.modalValue}>
+                                            {formatarTelefone(tel.valor)}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className={styles.modalValue}>-</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles.modalFooterFlat}>
+                  <div className={styles.dateInfo}>
+                      <span>Data Criação: {formatarData(transportadoraParaVisualizar.data_cadastro)}</span>
+                      <span>Data Atualização: {formatarData(transportadoraParaVisualizar.data_atualizacao) || 'N/A'}</span>
+                  </div>
+                  <button onClick={fecharModal} className={styles.closeButtonFooter}>
+                    Fechar
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação Inicial */}
+      {mostrarModalConfirmacao && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalSimples}>
             <div className={styles.modalHeader}>
-              <h2>Detalhes da Transportadora</h2>
-              <button className={styles.closeModal} onClick={fecharModal} title="Fechar">
-                &times;
-              </button>
+              <h3>Confirmar Exclusão</h3>
             </div>
             <div className={styles.modalBody}>
-              <div className={styles.detalhesContainer}>
-                <div className={styles.detalhesHeader}>
-                  <h3>{transportadoraSelecionada.nome}</h3>
-                  <div className={isAtivo(transportadoraSelecionada.ativo) ? styles.situacaoAtivo : styles.situacaoInativo}>
-                    {isAtivo(transportadoraSelecionada.ativo) ? 'Habilitado' : 'Desabilitado'}
-                  </div>
-                </div>
-                
-                <div className={styles.metadataContainer}>
-                  <div className={styles.metadataItem}>
-                    <span className={styles.metadataLabel}>Data de Criação:</span>
-                    <span className={styles.metadataValue}>{formatarData(transportadoraSelecionada.data_cadastro)}</span>
-                  </div>
-                  <div className={styles.metadataItem}>
-                    <span className={styles.metadataLabel}>Última Atualização:</span>
-                    <span className={styles.metadataValue}>{formatarData(transportadoraSelecionada.data_atualizacao)}</span>
-                  </div>
-                </div>
-                
-                <div className={styles.detalhesGerais}>
-                  <div className={styles.detalhesSection}>
-                    <h4>Informações Gerais</h4>
-                    <div className={styles.detalhesRow}>
-                      <div className={styles.detalhesItem}>
-                        <strong>Código:</strong> {transportadoraSelecionada.cod_trans}
-                      </div>
-                      <div className={styles.detalhesItem}>
-                        <strong>CNPJ:</strong> {transportadoraSelecionada.cnpj}
-                      </div>
-                      <div className={styles.detalhesItem}>
-                        <strong>Telefone:</strong> {transportadoraSelecionada.telefone || 'Não informado'}
-                      </div>
-                      <div className={styles.detalhesItem}>
-                        <strong>E-mail:</strong> {transportadoraSelecionada.email || 'Não informado'}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className={styles.detalhesSection}>
-                    <h4>Endereço</h4>
-                    <div className={styles.detalhesRow}>
-                      <div className={styles.detalhesItem}>
-                        <strong>Endereço:</strong> {transportadoraSelecionada.endereco || 'Não informado'}
-                        {transportadoraSelecionada.numero && `, ${transportadoraSelecionada.numero}`}
-                      </div>
-                      <div className={styles.detalhesItem}>
-                        <strong>Bairro:</strong> {transportadoraSelecionada.bairro || 'Não informado'}
-                      </div>
-                      <div className={styles.detalhesItem}>
-                        <strong>Cidade:</strong> {transportadoraSelecionada.cidade_nome || 'Não informada'}
-                      </div>
-                      <div className={styles.detalhesItem}>
-                        <strong>CEP:</strong> {transportadoraSelecionada.cep || 'Não informado'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className={styles.detalhesSection}>
-                  <h4>Veículos Vinculados</h4>
-            {carregandoVeiculos ? (
-              <p>Carregando veículos...</p>
-            ) : veiculosSelecionados.length === 0 ? (
-              <p>Nenhum veículo cadastrado para esta transportadora.</p>
-            ) : (
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Placa</th>
-                    <th>Modelo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {veiculosSelecionados.map(veiculo => (
-                    <tr key={veiculo.placa}>
-                      <td>{veiculo.placa}</td>
-                      <td>{veiculo.modelo || '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-                </div>
-              </div>
+              <p>Tem certeza que deseja excluir a transportadora "<strong>{itemParaExcluir?.nome}</strong>"?</p>
             </div>
             <div className={styles.modalFooter}>
-              <button 
-                className={styles.btnSecondary}
-                onClick={fecharModal}
-              >
-                Fechar
-              </button>
-              <button 
-                className={styles.btnEdit}
-                onClick={() => {
-                  fecharModal();
-                  handleEdit(transportadoraSelecionada);
-                }}
-              >
-                Editar
-              </button>
+              <div className={styles.modalActions}>
+                <button 
+                  type="button" 
+                  onClick={cancelarExclusao} 
+                  className={`${styles.button} ${styles.cancelButton}`}
+                  style={{ backgroundColor: '#dc3545', color: 'white' }}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="button" 
+                  onClick={confirmarExclusao} 
+                  className={`${styles.button} ${styles.saveButton}`}
+                  style={{ backgroundColor: '#28a745', color: 'white' }}
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Relacionamento */}
+      {mostrarModalRelacionamento && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalSimples}>
+            <div className={styles.modalHeader}>
+              <h3>Confirmar Ação</h3>
+              <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ddd' }} />
+            </div>
+            <div className={styles.modalBody}>
+              <p>Não é possível excluir a transportadora "<strong>{itemParaExcluir?.nome}</strong>" pois está vinculada a outro registro.</p>
+              <p>Deseja desativar a transportadora ao invés de excluir?</p>
+            </div>
+            <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ddd' }} />
+            <div className={styles.modalFooter}>
+              <div className={styles.modalActions}>
+                <button 
+                  type="button" 
+                  onClick={cancelarExclusao} 
+                  className={`${styles.button} ${styles.cancelButton}`}
+                  style={{ backgroundColor: '#dc3545', color: 'white' }}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleDesativar} 
+                  className={`${styles.button}`}
+                  style={{ backgroundColor: '#ffc107', color: 'white' }}
+                >
+                  Desativar
+                </button>
+              </div>
             </div>
           </div>
         </div>

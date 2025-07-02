@@ -8,7 +8,7 @@
 .headerContainer {
     display: flex;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .voltarButton {
@@ -30,7 +30,7 @@
 .titulo {
     font-size: 2rem;
     color: #333;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0;
     border-bottom: 2px solid #0070f3;
     padding-bottom: 0.5rem;
 }
@@ -48,6 +48,7 @@
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
+    position: relative;
 }
 
 .formSection {
@@ -91,7 +92,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 12px;
     align-items: flex-start;
 }
 
@@ -122,12 +123,27 @@
     margin-right: 0.5rem;
 }
 
+.formGroupCode {
+    flex: 0 0 60px;
+    min-width: 50px;
+    margin-bottom: 0.5rem;
+}
+
 .formGroupFull {
     flex: 0 0 100%;
     width: 100%;
 }
 
+.formGroupFitContent {
+    flex-grow: 0;
+    flex-shrink: 1;
+    flex-basis: auto;
+    width: auto;
+    min-width: 200px; /* Garante uma largura mínima razoável */
+}
+
 .formGroup label,
+.formGroupCode label,
 .formGroupHalf label,
 .formGroupThird label,
 .formGroupQuarter label,
@@ -147,6 +163,8 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
+    height: 42px; /* Altura explícita para consistência */
+    box-sizing: border-box;
 }
 
 .input:focus,
@@ -154,6 +172,14 @@
     outline: none;
     border-color: #0070f3;
     box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.1);
+}
+
+.switchContainerTopRight {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    align-items: center;
 }
 
 /* Switch de status */
@@ -277,19 +303,32 @@
 }
 
 .cancelButton {
-    padding: 0.75rem 1.5rem;
-    background-color: #f44336;
+    background-color: #dc3545; /* Vermelho */
     color: white;
     border: none;
+    padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
     font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btnCadastrar:disabled {
+    background-color: #a5d6a7;
+    cursor: not-allowed;
+}
+
+.btnCancelar:hover {
+    background-color: #c82333; /* Vermelho mais escuro */
+}
+
+.btnCancelar:disabled {
+    background-color: #ef9a9a;
 }
 
 .buttonGroup {
     display: flex;
     gap: 1rem;
-    margin-top: 1.5rem;
 }
 
 /* Tabela */
@@ -309,6 +348,7 @@
     text-align: left;
     border-bottom: 1px solid #eee;
     vertical-align: middle;
+    font-size: 0.9rem;
 }
 
 .table th {
@@ -320,7 +360,7 @@
 }
 
 .table tbody tr:hover {
-    background-color: #f5f7fa;
+    background-color: #f1f3f5; /* Cor de hover suave */
 }
 
 .table tbody tr:last-child td {
@@ -341,29 +381,39 @@
 }
 
 .errorMessage {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
 }
 
 /* Estilos para input com botão de pesquisa */
 .inputWithButton {
     display: flex;
-    width: 100%;
+    align-items: stretch; /* Garante que todos os itens tenham a mesma altura */
+}
+
+.inputWithButton .input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    flex-grow: 1;
 }
 
 .searchButton {
     background-color: #2196F3;
     color: white;
-    border: none;
-    padding: 0.75rem;
+    border: 1px solid #2196F3;
+    padding: 0 1rem;
     cursor: pointer;
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
+    border-radius: 0 4px 4px 0;
+    margin-left: -1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .searchButton:hover {
     background-color: #0b7dda;
+    border-color: #0b7dda;
 }
 
 /* Switch */
@@ -756,6 +806,10 @@ input:checked + .slider:before {
     transition: transform 0.2s ease-out;
 }
 
+.modalTransportadora {
+    max-width: 800px; /* Aumenta a largura do modal de transportadora */
+}
+
 /* Estilo para modal sobreposto */
 .modalOverlay + .modalOverlay .modalSimples {
     transform: translateY(-20px) scale(0.98);
@@ -766,14 +820,12 @@ input:checked + .slider:before {
 }
 
 .modalHeader {
-    padding: 15px 20px;
-    border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #f5f7fa;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+    border-bottom: 1px solid #eee;
+    padding: 1.5rem; /* Aumenta o espaçamento interno em todas as direções */
+    margin-bottom: 0; /* Remove a margem, o padding já faz o trabalho */
 }
 
 .modalHeader h2, .modalHeader h3 {
@@ -784,25 +836,42 @@ input:checked + .slider:before {
 }
 
 .modalBody {
-    padding: 20px;
-    max-height: calc(90vh - 120px);
+    padding: 1.5rem;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    max-height: 70vh;
 }
 
 .modalFooterSimples {
+    padding: 15px 20px;
+    background-color: #f9f9f9;
+    border-top: 1px solid #ddd;
     display: flex;
     justify-content: flex-end;
-    padding: 1rem;
-    border-top: 1px solid #eee;
-    gap: 1rem;
-    position: sticky;
-    bottom: 0;
-    background-color: white;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
+    gap: 10px;
+}
+
+.modalFooterComEspacamento {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.modalActions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Abordagem direta para forçar o espaçamento */
+.modalActions .btnInfo,
+.modalActions .btnCadastrar {
+    margin-left: 10px;
 }
 
 .closeModal {
@@ -861,6 +930,22 @@ input:checked + .slider:before {
     border-bottom: none;
 }
 
+.modalItem .checkbox {
+    margin-right: 15px; /* Espaço entre checkbox e o resto */
+}
+
+.modalItemSelected {
+    background-color: #e7f3ff !important;
+    border-left: 4px solid #0070f3;
+    padding-left: 6px;
+}
+
+.checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
 .btnCadastrar {
     background-color: #4caf50;
     color: white;
@@ -882,7 +967,7 @@ input:checked + .slider:before {
 }
 
 .btnCancelar {
-    background-color: #f44336;
+    background-color: #dc3545; /* Vermelho */
     color: white;
     border: none;
     padding: 8px 16px;
@@ -893,12 +978,32 @@ input:checked + .slider:before {
 }
 
 .btnCancelar:hover {
-    background-color: #d32f2f;
+    background-color: #c82333; /* Vermelho mais escuro */
 }
 
 .btnCancelar:disabled {
     background-color: #ef9a9a;
-    cursor: not-allowed;
+}
+
+/* Nova classe para a linha específica do select de produto e botão */
+.produtoSelectRow {
+    align-items: flex-end !important; /* Alinha os itens na base dentro da formRow, !important para garantir prioridade se necessário */
+    gap: 1rem; /* Espaço entre o grupo do select e o botão */
+}
+
+/* Opcional: se quiser uma cor específica para o botão de adicionar produto */
+.botaoVerdeProduto {
+    background-color: #28a745; /* Cor verde para o botão Adicionar Produto */
+    /* Outros estilos podem ser herdados de .submitButton ou definidos aqui */
+}
+
+.botaoVerdeProduto:hover {
+    background-color: #218838; /* Verde mais escuro no hover */
+}
+
+/* Para garantir que o botão não tenha uma margem inferior que o desalinhado */
+.produtoSelectRow .formGroup button {
+    margin-bottom: 0 !important; 
 }
 
 /* Produtos seção (específico para fornecedores) */
@@ -928,75 +1033,1143 @@ input:checked + .slider:before {
 }
 
 .removeButton {
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 0.25rem 0.5rem;
+    background-color: #fce8e6;
+    color: #c53929;
+    border: 1px solid #f8d7da;
+    border-radius: 0 5px 5px 0;
     cursor: pointer;
-    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    font-size: 1.6rem;
+    line-height: 1;
+    flex-shrink: 0;
+    padding: 0 0.75rem;
+}
+
+.removeButton:hover {
+    background-color: #f8d7da;
+}
+
+.productRemoveButton {
+    background-color: #fce8e6;
+    color: #c53929;
+    border: 1px solid #f8d7da;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.2;
+    transition: background-color 0.2s;
+}
+
+.productRemoveButton:hover {
+    background-color: #f8d7da;
 }
 
 .modalSearchContainer {
-    margin-bottom: 15px;
+    margin-bottom: 1rem;
+    position: relative;
 }
 
-.modalList {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #eee;
-    border-radius: 4px;
+/* Styles for the larger Condição de Pagamento modal */
+.modalFormularioCondPagto {
+    width: 80%; /* Você pode ajustar este valor, ex: 75% ou 85% */
+    max-width: 1000px; /* Um limite máximo, ajuste se necessário */
 }
 
-.modalItem {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
+/* Ajuste opcional de padding para o corpo do modal maior */
+.modalFormularioCondPagto .modalBody {
+    padding: 25px; /* Aumenta o preenchimento interno se necessário */
+}
+
+/* ========================================================================== */
+/* MODAL STYLES (ConsultaFornecedores - Visualizar Detalhes) */
+/* ========================================================================== */
+
+.modal { 
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.65); /* Overlay um pouco mais escuro para foco */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modalContent { 
+  background-color: #ffffff;
+  padding: 30px 35px; /* Aumentar padding interno do modal */
+  border-radius: 10px; /* Bordas um pouco mais arredondadas */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Sombra mais pronunciada */
+  position: relative;
+  width: 100%; 
+  max-width: 900px; /* AUMENTADO DE 780px para 900px */
+  max-height: 90vh; 
+  overflow-y: auto; 
+  box-sizing: border-box;
+}
+
+.closeButton { 
+  position: absolute;
+  top: 18px; 
+  right: 25px; 
+  background: none;
+  border: none;
+  font-size: 2rem; 
+  cursor: pointer;
+  color: #E53E3E; /* VERMELHO - Cor principal do ícone */
+  padding: 0; 
+  line-height: 1; 
+  transition: color 0.2s ease; /* Adiciona transição suave para o hover */
+}
+.closeButton:hover {
+  color: #C53030; /* VERMELHO MAIS ESCURO - Cor ao passar o mouse */
+}
+
+.modalTitle { 
+  font-size: 1.75rem; /* Título um pouco maior */
+  color: #2D3748; /* Azul acinzentado escuro */
+  margin-top: 0; 
+  margin-bottom: 30px; /* Mais espaço abaixo do título */
+  text-align: left;
+  font-weight: 600; /* Mais peso na fonte */
+}
+
+.modalDetailLayout {
+  /* Layout principal para os campos de detalhe */
+}
+
+.modalRow { 
+  display: flex;
+  flex-wrap: wrap; 
+  margin-bottom: 18px; /* Aumentar espaçamento vertical entre as linhas */
+  gap: 20px; /* Aumentar espaço entre os field items na mesma linha */
+}
+
+.modalRow:last-of-type { 
+  margin-bottom: 25px; /* Mais espaço antes da seção de produtos */
+}
+
+.modalFieldItemFull,
+.modalFieldItemHalf,
+.modalFieldItemQuarter {
+  display: flex; 
+  align-items: flex-start; /* Alinhar ao topo se os valores tiverem alturas diferentes */
+  padding: 0; /* Remover padding aqui, será no label/value */
+  box-sizing: border-box;
+  flex-grow: 1; 
+}
+
+.modalFieldItemFull {
+  width: 100%;
+}
+
+.modalFieldItemHalf {
+  flex-basis: calc(50% - 10px); 
+  min-width: 250px; /* Aumentar um pouco o min-width para CNPJ/Email também */
+}
+
+.modalFieldItemQuarter {
+  flex-basis: calc(25% - 10px); 
+  min-width: 150px; 
+}
+
+/* Ajuste para telas menores */
+@media (max-width: 768px) { 
+  .modalRow {
+    gap: 0; 
+    margin-bottom: 0; 
+  }
+  .modalFieldItemHalf,
+  .modalFieldItemQuarter,
+  .modalFieldItemFull { 
+    width: 100%;
+    flex-basis: 100%;
+    margin-bottom: 18px; /* Espaço entre itens empilhados */
+  }
+  .modalRow > *:last-child {
+      margin-bottom: 18px; /* Mantém a margem da .modalRow original para a próxima linha */
+  }
+  .modalContent {
+    padding: 25px 20px;
+  }
+  .modalTitle {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+}
+
+.modalLabel { 
+  font-weight: 500; /* Peso médio */
+  font-size: 0.8rem; /* Label menor */
+  color: #4A5568;   /* Cinza azulado para o label */
+  margin-right: 10px; 
+  flex-shrink: 0; 
+  text-transform: uppercase; /* Labels em maiúsculo */
+  padding-top: 6px; /* Alinhar melhor com o valor que terá padding */
+  min-width: 90px; /* Largura mínima para o label (ajuste conforme seus labels mais longos) */
+  display: inline-block; /* Para o min-width funcionar bem */
+}
+
+.modalValue { 
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #f8f9fa; /* Um fundo sutil */
+  border: 1px solid #e9ecef; /* Borda leve */
+  min-height: 38px; /* Altura mínima para alinhar com labels */
+  display: flex;
+  flex-direction: column; /* Alterado para column para melhor layout interno */
+  align-items: flex-start;
+  justify-content: center;
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.5;
+  width: 100%; /* Garantir que ocupe o espaço do item */
+}
+
+/* Estilos específicos para a área de condição de pagamento e parcelas */
+.modalValue p { /* Estilos para os parágrafos de Juros, Multa, Desconto */
+  margin: 2px 0 5px 0 !important; /* Adicionado !important para garantir sobreposição se necessário */
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.modalValue strong { /* Para a descrição da Cond. Pagamento */
+  color: #222;
+  font-weight: 600;
+}
+
+.parcelasTableContainer {
+  margin-top: 15px;
+  width: 100%;
+}
+
+.parcelasTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.parcelasTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.parcelasTable th,
+.parcelasTable td {
+  border: 1px solid #dde2e7;
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.parcelasTable th {
+  background-color: #f2f4f6;
+  font-weight: 600;
+  color: #333;
+}
+
+.parcelasTable td {
+  color: #444;
+}
+
+/* Ajustar alinhamento para colunas específicas se necessário */
+.parcelasTable th:nth-child(1), /* Coluna # */
+.parcelasTable td:nth-child(1) {
+  text-align: center;
+  width: 40px;
+}
+
+.parcelasTable th:nth-child(2), /* Coluna Dias */
+.parcelasTable td:nth-child(2) {
+  text-align: center;
+  width: 60px;
+}
+
+.parcelasTable th:nth-child(3), /* Coluna % */
+.parcelasTable td:nth-child(3) {
+  text-align: right;
+  width: 60px;
+}
+
+.parcelasTable tbody tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.parcelasTable tbody tr:hover {
+  background-color: #e9edf0;
+}
+
+.statusAtivoModal,
+.statusInativoModal {
+  padding: 5px 12px; /* Aumentar padding */
+  border-radius: 5px;
+  font-size: 0.85rem; /* Aumentar um pouco a fonte */
+  font-weight: 600; /* Mais negrito */
+  display: inline-flex; /* Usar flex para alinhar */
+  align-items: center;
+  justify-content: center;
+  border: none; /* Remover borda, o fundo já destaca */
+  color: #fff; /* Texto branco para melhor contraste com fundos coloridos */
+  min-height: auto; /* Resetar min-height do .modalValue */
+  background-color: transparent; /* Resetar background do .modalValue */
+}
+
+.statusAtivoModal {
+  background-color: #38A169; /* Verde mais vibrante */
+  /* color: #fff; Já definido acima */
+}
+
+.statusInativoModal {
+  background-color: #E53E3E; /* Vermelho mais vibrante */
+  /* color: #fff; Já definido acima */
+}
+
+.subtituloModal { 
+  font-size: 1.4rem; /* Subtítulo um pouco maior */
+  color: #1A202C;
+  margin-top: 35px; /* Mais espaço acima */
+  margin-bottom: 20px; 
+  font-weight: 600;
+  padding-bottom: 10px; 
+  border-bottom: 2px solid #E2E8F0; /* Borda um pouco mais grossa */
+}
+
+.tableModal { 
+  font-size: 0.9rem;
+  margin-top: 10px;
+  width: 100%; 
+  border-collapse: separate; /* Mudar para separate para usar border-spacing */
+  border-spacing: 0 4px; /* Espaçamento vertical entre as linhas da tabela */
+}
+
+.tableModal th, 
+.tableModal td {
+  padding: 12px 15px; 
+  text-align: left; 
+  border-bottom: none; /* Remover borda inferior de cada célula, o espaçamento fará a separação */
+}
+
+.tableModal th { 
+  background-color: #EDF2F7; /* Azul acinzentado bem claro para o header */
+  font-weight: 600; 
+  color: #2D3748;
+  font-size: 0.85rem; 
+  text-transform: uppercase; 
+  border-radius: 5px; /* Arredondar cantos do header */
+}
+.tableModal td {
+    background-color: #F7FAFC; /* Fundo levemente diferente para as células de dados */
+    border-radius: 5px;  /* Arredondar cantos das células */
+}
+
+.tableModal tbody tr:hover td { /* Efeito hover nas células */
+  background-color: #E2E8F0; 
+}
+
+.loading { 
+  text-align: center;
+  padding: 40px; /* Mais padding */
+  font-style: italic;
+  font-size: 1rem; /* Um pouco maior */
+  color: #718096; 
+}
+
+.buttonGroup { 
+  margin-top: 30px; /* Mais espaço acima do botão */
+  display: flex;
+  justify-content: flex-end; 
+}
+
+.cancelButton { 
+    background-color: #E53E3E; /* VERMELHO de fundo */
+    color: #FFF;               /* Texto branco */
+    padding: 10px 20px; /* Padding pode ser ajustado se necessário */
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
+    font-size: 0.95rem; /* Mantido o tamanho da fonte */
+    font-weight: 500;
+    transition: background-color 0.2s ease;
 }
 
-.modalItem:hover {
-    background-color: #f5f5f5;
+.cancelButton:hover {
+    background-color: #C53030; /* VERMELHO mais escuro no hover */
 }
 
-.modalItem:last-child {
+/* ========================================================================== */
+/* FIM DOS ESTILOS DO MODAL (ConsultaFornecedores - Visualizar Detalhes) */
+/* ========================================================================== */
+
+/* Adicionar estilos para truncar texto em colunas específicas */
+.table td:nth-child(2), /* Coluna Nome */
+.table td:nth-child(3) { /* Coluna CNPJ */
+    max-width: 200px; /* Ajuste conforme necessário */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Estilo para balão de erro customizado */
+.errorBaloon {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  display: inline-flex; /* Para alinhar ícone e texto */
+  align-items: center;
+  margin-top: 4px;
+  position: relative; /* Para o "triângulo" se desejado depois */
+}
+
+.errorBaloonIcon {
+  margin-right: 0.5rem;
+  color: #ffcc00; /* Amarelo/Laranja para alerta */
+  font-weight: bold; /* Para o '!' ficar mais visível */
+}
+
+.inputGroup {
+    display: flex;
+    align-items: stretch; /* Garante que todos os itens tenham a mesma altura */
+    margin-bottom: 0.5rem;
+    gap: 0; /* Remove o espaço */
+}
+
+.inputGroup .input {
+    flex-grow: 1;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-right: -1px; /* Faz a borda sobrepor */
+    position: relative;
+    z-index: 1;
+}
+
+.inputGroup .input:focus {
+    z-index: 2;
+}
+
+.addButtonInline {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+    padding: 0 0.75rem;
+}
+
+.addButtonInline:hover {
+    background-color: #dcedc8;
+}
+
+.inputWithButton {
+    display: flex;
+    align-items: stretch; /* Garante que todos os itens tenham a mesma altura */
+}
+
+.inputWithButton .input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    flex-grow: 1;
+}
+
+.searchButton {
+    background-color: #2196F3;
+    color: white;
+    border: 1px solid #2196F3;
+    padding: 0 1rem;
+    cursor: pointer;
+    border-radius: 0 4px 4px 0;
+    margin-left: -1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.searchButton:hover {
+    background-color: #0b7dda;
+    border-color: #0b7dda;
+}
+
+.formSectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.formSectionHeader .subtitulo {
+    margin: 0;
     border-bottom: none;
 }
 
-.btnCadastrar {
-    background-color: #4caf50;
+/* --- ESTILOS PARA MODAL DE PRODUTO APRIMORADO --- */
+.modalSelecaoProduto {
+    max-width: 800px; /* Aumenta a largura do modal */
+    height: 500px; /* Altura fixa para o modal */
+    display: flex;
+    flex-direction: column;
+}
+
+.modalSelecaoProduto .modalBody {
+    flex-grow: 1; /* Faz o corpo do modal crescer */
+    overflow-y: auto; /* Adiciona scroll se necessário */
+}
+
+.modalProductItem {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+}
+
+.productDescription {
+    flex: 3; /* Ocupa mais espaço */
+    text-align: left;
+    font-weight: 500;
+}
+
+.productPrice {
+    flex: 1;
+    text-align: right;
+    color: #333;
+}
+
+.productUnit {
+    flex: 0.5;
+    text-align: center;
+    color: #666;
+    background-color: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+/* --- FIM DOS ESTILOS DO MODAL --- */
+
+.formSectionHeader .subtitulo {
+  margin: 0;
+  border: none;
+}
+
+.modalSelecaoProduto {
+  max-width: 800px; /* Aumenta a largura do modal de produtos */
+}
+
+.modalProductItem {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 10px;
+}
+
+.productDescription {
+  flex: 3; /* Ocupa mais espaço */
+  text-align: left;
+}
+
+.productPrice {
+  flex: 1;
+  text-align: right;
+  padding-right: 15px; /* Espaço antes da borda */
+}
+
+.productUnit {
+  flex: 1;
+  text-align: left;
+  padding-left: 15px; /* Espaço depois da borda */
+}
+
+/* Novo cabeçalho da tabela */
+.modalProductHeader {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 10px 10px 50px; /* Alinha com os itens (considerando o checkbox) */
+  font-weight: bold;
+  border-bottom: 2px solid #ccc;
+  color: #333;
+}
+
+.headerItemDescricao {
+  flex: 3;
+  text-align: left;
+  padding-right: 15px; /* Espaçamento interno */
+  border-right: 1px solid #ccc; /* Linha vertical */
+}
+
+.headerItemPreco {
+  flex: 1;
+  text-align: right;
+  padding-right: 15px;
+  border-right: 1px solid #ccc; /* Linha vertical */
+}
+
+.headerItemUnidade {
+  flex: 1;
+  text-align: left;
+  padding-left: 15px;
+}
+
+/* --- Estilos para os ITENS da lista de produtos no modal --- */
+.modalProductItem .productDescription {
+  flex: 3;
+  text-align: left;
+  padding-right: 15px; /* Espaçamento interno */
+  display: flex; /* Adicionado para alinhar checkbox e texto */
+  align-items: center; /* Alinha verticalmente */
+}
+
+.modalProductItem .productDescription .checkbox {
+  margin-right: 10px; /* Espaço entre o checkbox e a descrição */
+}
+
+.modalProductItem .productPrice {
+  flex: 1;
+  text-align: right;
+  padding-right: 15px;
+}
+
+.modalProductItem .productUnit {
+  flex: 1;
+  text-align: left;
+  padding-left: 15px;
+}
+
+.inputWithButton .buttonContainer {
+  display: flex;
+}
+
+.inputWithButton .viewProductButton {
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  border-right: none;
+  border-radius: 0;
+  padding: 0 12px;
+  height: 42px; /* Altura igual ao input */
+  width: auto;
+  box-shadow: none;
+  color: #212529;
+}
+
+.inputWithButton .viewProductButton:hover {
+  background-color: #e9ecef;
+}
+
+/* Ajusta o botão "Adicionar" para se conectar */
+.inputWithButton .searchButton {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.btnEditar, .btnExcluir {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 10px;
+}
+
+.btnEditar {
+  background-color: #007bff; /* Azul */
+  color: white;
+  border: 1px solid #007bff;
+}
+
+.btnEditar:hover {
+  background-color: #0056b3;
+}
+
+.btnExcluir {
+  background-color: #dc3545; /* Vermelho */
+  color: white;
+  border: 1px solid #dc3545;
+}
+
+.btnExcluir:hover {
+  background-color: #c82333;
+}
+
+.btnExcluir:disabled {
+  background-color: #e66b6b;
+  cursor: not-allowed;
+}
+
+.btnExcluirOutline {
+    background-color: #fff;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.btnExcluirOutline:hover {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.btnExcluirOutline:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border-color: #dee2e6;
+    cursor: not-allowed;
+}
+
+.modalFooterSimples {
+    padding: 15px 20px;
+    background-color: #f9f9f9;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: flex-end;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    gap: 10px;
+}
+
+.modalItem.modalItemSelected {
+  background-color: #e9f5ff;
+  border-left: 4px solid #007bff;
+}
+
+.modalProductRow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+}
+
+.modalProductRow .checkbox {
+  margin-right: 15px;
+  pointer-events: none; /* Para que o clique vá para a div pai */
+}
+
+.modalProductRow .productDescription {
+  flex: 1; /* Ocupa o espaço restante */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modalProductRow .productPrice,
+.modalProductRow .productUnit {
+  margin-left: 15px;
+  white-space: nowrap;
+}
+
+.checkbox {
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.formFooter {
+  display: flex;
+  justify-content: flex-end; /* Alinha todo o conteúdo à direita */
+  align-items: center;
+  padding: 16px 24px;
+  margin-top: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  gap: 24px; /* Adiciona um espaço entre o container de datas e o de botões */
+}
+
+.formFooter .buttonGroup {
+  margin-top: 0;
+  background: none; /* Garante que não tenha fundo próprio */
+  padding: 0; /* Remove padding próprio se houver */
+  box-shadow: none; /* Remove sombra própria se houver */
+}
+
+.dateInfoContainer {
+  display: flex;
+  flex-direction: column;
+  color: #555;
+  font-size: 0.85em;
+  gap: 4px;
+  margin-right: auto; /* Empurra os botões para a direita */
+}
+
+.dateInfoContainer span {
+  font-weight: 500;
+}
+
+/* Estilos para o indicador de status na tabela (copiado de funcionarios) */
+.statusCell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.statusIndicator {
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+  box-shadow: 0 0 5px currentColor;
+}
+
+.statusHabilitado {
+  background-color: #28a745;
+  color: #28a745;
+}
+
+.statusDesabilitado {
+  background-color: #dc3545;
+  box-shadow: 0 0 8px rgba(220, 53, 69, 0.7);
+}
+
+/* Estilos para o novo Modal de Detalhes */
+.modalDetalhes {
+  max-width: 1000px; /* Reduzido para um layout mais compacto */
+  width: 95%;
+}
+
+.section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.sectionTitle {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.condicaoPagtoContainer {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.condicaoPagtoDetalhes {
+  display: flex;
+  gap: 2rem;
+  margin: 0.5rem 0 1rem 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.parcelasTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.parcelasTable th, .parcelasTable td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.parcelasTable th {
+  background-color: #f2f2f2;
+}
+
+.listaProdutos {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+.listaProdutos li {
+  margin-bottom: 0.5rem;
+}
+
+.multiValueContainer .readOnlyField:not(:last-child),
+.multiValueContainer .fieldWithInternalIcon:not(:last-child) {
+  margin-bottom: 8px;
+}
+
+/* NOVO: Container para o campo com ícone interno */
+.fieldWithInternalIcon {
+  position: relative;
+  cursor: pointer;
+}
+
+/* NOVO: Ícone da flecha dentro do campo */
+.internalIcon {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: #555;
+  font-size: 0.9rem;
+  pointer-events: none; /* Apenas visual, o clique é no container */
+}
+
+.readOnlyField {
+  background-color: #f0f2f5;
+  padding: 10px 35px 10px 12px; /* Aumentado padding-right para a flecha */
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+  width: 100%;
+  min-height: 40px; /* Garante altura mínima consistente */
+  display: flex;
+  align-items: center;
+  word-break: break-word;
+  font-size: 0.95rem;
+}
+
+/* Forçando o layout do modal de detalhes */
+.formRow {
+  display: flex;
+  flex-wrap: wrap; /* Permite que os itens quebrem se necessário */
+  gap: 20px;
+  margin-bottom: 12px; /* Reduzido para um layout mais compacto */
+  flex-shrink: 0; /* Impedir que encolha */
+}
+
+.formGroup {
+  flex: 1 1 auto; /* Permite crescer e encolher */
+  display: flex;
+  flex-direction: column;
+  min-width: 150px; /* Largura mínima para evitar que fiquem muito pequenos */
+}
+
+.expandButton:hover {
+  background: #dee2e6;
+}
+
+/* Estilo para o botão de lupa de produtos */
+.visualizarProdutosButton {
+  background-color: #6c757d;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.visualizarProdutosButton:hover {
+  background-color: #5a6268;
+}
+
+/* ESTILOS PARA O MODAL DE SELEÇÃO DE PRODUTOS */
+.pesquisaContainerModal {
+  margin-bottom: 1rem;
+}
+.pesquisaInputModal {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+.listaSelecao {
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  overflow-y: auto;
+}
+.itemSelecao {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e9ecef;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.itemSelecao:last-child {
+  border-bottom: none;
+}
+.itemSelecao:hover {
+  background-color: #f8f9fa;
+}
+.itemSelecao.selecionado {
+  background-color: #e7f3ff;
+  font-weight: 500;
+}
+.checkboxSelecao {
+  margin-right: 1rem;
+  width: 18px;
+  height: 18px;
+  pointer-events: none; /* A linha inteira é clicável */
+}
+.itemNome {
+  flex-grow: 1;
+  color: #333;
+}
+.itemPreco {
+  color: #555;
+  font-weight: 500;
+}
+/* FIM DOS ESTILOS DO MODAL */
+
+.btnInfo {
+    background-color: #007bff;
     color: white;
     border: none;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
     font-weight: 500;
+    transition: background-color 0.2s;
 }
 
-.btnCadastrar:hover {
-    background-color: #45a049;
+.btnInfo:hover {
+    background-color: #0056b3;
 }
 
-.btnCadastrar:disabled {
-    background-color: #a5d6a7;
-    cursor: not-allowed;
+.centeredCell {
+  text-align: center;
 }
 
-.btnCancelar {
-    background-color: #f44336;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
+.nomeColumn {
+  max-width: 300px; /* Ou um valor que funcione para o seu layout */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.btnCancelar:hover {
-    background-color: #d32f2f;
+/* Adicionado para os novos modais */
+.modal {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 600px;
+  z-index: 1001;
 }
 
-.btnCancelar:disabled {
-    background-color: #ef9a9a;
-    cursor: not-allowed;
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding: 1.5rem; /* Aumenta o espaçamento interno em todas as direções */
+  margin-bottom: 0; /* Remove a margem, o padding já faz o trabalho */
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #888;
+}
+
+.closeButton:hover {
+    color: #000;
+}
+
+.modalBody {
+  padding-bottom: 1rem;
+}
+
+.itemList {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.itemListRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.itemListRow:last-child {
+  border-bottom: none;
+}
+
+.itemListRow:hover {
+  background-color: #f0f8ff; /* Azul bem claro */
+}
+
+.itemCode {
+  color: #666;
+  font-family: monospace;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.secondaryButton {
+  background-color: #6c757d;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.secondaryButton:hover {
+  background-color: #5a6268;
+}
+
+.inputGroup .addButtonInline,
+.inputGroup .removeButton {
+    height: 42px; /* Alinha com a altura do input */
+    flex-shrink: 0;
+}
+
+.parcelasHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+    margin-top: 1.5rem;
+}
+
+.nomeFornecedor {
+    font-weight: bold;
+}
+
+.acaoHeader {
+    text-align: center;
+    width: 120px; /* Largura fixa para coluna de ações, se necessário */
 }
   

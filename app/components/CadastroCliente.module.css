@@ -1,15 +1,18 @@
-/* Estilos para páginas de clientes */
+/* Estilos para páginas de clientes - ATUALIZADO */
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0;
+    background-color: transparent; /* GARANTE QUE HERDE A COR DO LAYOUT PRINCIPAL */
 }
 
+/* Cabeçalho: Título e Botão Adicionar */
 .headerContainer {
     display: flex;
+    justify-content: space-between; /* Garante que título e botão fiquem em lados opostos */
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 25px; /* Aumentei um pouco a margem inferior */
+    flex-wrap: wrap; /* Para responsividade */
 }
 
 .voltarButton {
@@ -29,194 +32,233 @@
 .title {
     font-size: 2rem;
     color: #333;
-    margin-bottom: 0.5rem;
-    border-bottom: 2px solid #0070f3;
-    padding-bottom: 0.5rem;
+    border-bottom: 3px solid #0d6efd; /* Azul mais forte, espessura maior */
+    padding-bottom: 0.4rem;
+    margin: 0; /* Remove margens padrão do h1 para melhor controle com flex */
+    line-height: 1.2;
 }
 
 .subtitle {
-    margin-top: 30px;
-    margin-bottom: 15px;
-    font-size: 18px;
-    color: #343a40;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.4rem; /* Tamanho ajustado */
+    color: #212529;    /* Cor mais escura */
+    font-weight: 500;  /* Peso da fonte */
 }
 
-/* Barra de ação */
-.actionBar {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 1.5rem;
-}
-
-.addButton {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 10px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: background-color 0.3s;
-    margin-left: auto;
-}
-
-.addButton:hover {
-    background-color: #45a049;
-}
-
-/* Pesquisa e filtro */
+/* Barra de Pesquisa e Filtro - Estilo Card */
 .searchFilterContainer {
     display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: 1rem; /* Espaçamento entre pesquisa e filtro */
+    margin-bottom: 25px; /* Aumentei margem */
     align-items: center;
     flex-wrap: wrap;
+    background-color: #ffffff; /* Fundo branco do card */
+    padding: 1.25rem;      /* Padding interno do card */
+    border-radius: 0.375rem; /* Bordas arredondadas do card */
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); /* Sombra sutil do card */
+    border: 1px solid #dee2e6; /* Borda sutil do card */
 }
 
 .searchBox {
-    flex: 1;
+    flex: 1 1 60%; /* Permite que a pesquisa ocupe mais espaço */
     position: relative;
-    min-width: 250px;
+    min-width: 280px;
 }
 
 .searchIcon {
     position: absolute;
-    left: 12px;
+    left: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #666;
+    color: #6c757d; /* Cinza para o ícone */
+    font-size: 0.9rem;
 }
 
 .searchInput {
     width: 100%;
-    padding: 10px 10px 10px 35px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
+    padding: 0.5rem 0.75rem 0.5rem 2.2rem; /* Padding ajustado para ícone */
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    background-color: #fff;
+    color: #212529;
+}
+
+.searchInput:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
 .filterBox {
-    min-width: 180px;
+    flex: 1 1 35%; /* Permite que o filtro ocupe um bom espaço */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Espaço entre ícone de funil e select */
+    min-width: 220px;
+    color: #6c757d; /* Cor do ícone de funil */
 }
 
 .filterSelect {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    background-color: white;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    background-color: #fff;
+    color: #212529;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.filterSelect:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
 /* Tabela */
 .tableContainer {
-    margin-top: 15px;
     overflow-x: auto;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 0.375rem; /* Bordas do contêiner da tabela */
+    border: 1px solid #dee2e6; /* Borda do contêiner da tabela */
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    background-color: #fff; /* Fundo branco dentro do contêiner */
 }
 
 .table {
     width: 100%;
-    border-collapse: collapse;
-    background-color: white;
-    font-size: 14px;
+    border-collapse: collapse; /* Mantido */
+    font-size: 0.9rem; /* Tamanho de fonte da tabela */
+    color: #212529;
 }
 
 .table th,
 .table td {
-    padding: 12px 16px;
+    padding: 0.75rem; /* Padding uniforme */
     text-align: left;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #dee2e6; /* Borda inferior mais sutil */
+    vertical-align: middle; /* Alinhamento vertical */
 }
 
 .table th {
-    background-color: #f8f9fa;
-    font-weight: 600;
+    background-color: #f8f9fa; /* Fundo do cabeçalho da tabela */
+    font-weight: 500; /* Peso da fonte do cabeçalho */
     color: #495057;
+    border-top: none; /* Remove borda superior do cabeçalho se houver do container */
+    border-bottom-width: 2px; /* Borda inferior mais espessa no cabeçalho */
+}
+
+.table td {
+    /* As linhas zebradas foram removidas */
+}
+
+.table tbody tr:hover {
+    background-color: #f1f3f5; /* Cor de hover suave */
 }
 
 .acaoHeader {
     text-align: center;
-}
-
-.table tbody tr:hover {
-    background-color: #f5f5f5;
+    width: 120px; /* Largura fixa para coluna de ações, se necessário */
 }
 
 .nomeCliente {
     font-weight: 500;
+    color: #333;
 }
 
-/* Status */
+/* Status (mantido como está, mas você pode querer ajustar cores/padding) */
 .statusAtivo, .statusInativo {
     display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 13px;
-    font-weight: 500;
+    padding: 0.25em 0.6em;
+    font-size: 0.8em;
+    font-weight: 600;
+    line-height: 1;
     text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
 }
 
 .statusAtivo {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: #28a745;
+    color: #0f5132;
+    background-color: #d1e7dd;
 }
 
 .statusInativo {
-    background-color: rgba(220, 53, 69, 0.1);
+    color: #842029;
+    background-color: #f8d7da;
+}
+
+/* Status Dot para a lista */
+.statusDot {
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+    box-shadow: 0 0 5px currentColor;
+}
+
+.statusDotAtivo {
+    background-color: #28a745;
+    color: #28a745;
+}
+
+.statusDotInativo {
+    background-color: #dc3545;
     color: #dc3545;
 }
 
-/* Botões de ação */
+/* Botões de ação na tabela */
 .acoesBotoes {
     display: flex;
-    gap: 5px;
-    justify-content: center;
+    gap: 8px; /* Reduzido de 10px para 8px */
+    justify-content: flex-start;
 }
 
 .actionButton {
-    background: none;
+    color: white;
     border: none;
-    width: 32px;
-    height: 32px;
+    width: auto; /* Largura automática baseada no padding */
+    height: auto; /* Altura automática */
+    padding: 0.3rem 0.5rem; /* Padding dos botões de ação */
+    font-size: 0.8rem; /* Tamanho da fonte do ícone/texto */
     cursor: pointer;
-    border-radius: 4px;
-    display: flex;
+    border-radius: 0.2rem;
+    display: inline-flex; /* Para alinhar ícone */
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 .viewButton {
-    background-color: #007bff;
-    color: white;
+    background-color: #0d6efd; /* Azul (primário) */
 }
-
 .viewButton:hover {
-    background-color: #0069d9;
+    background-color: #0b5ed7;
 }
 
 .editButton {
-    background-color: #17a2b8;
-    color: white;
+    background-color: #0d6efd; /* Azul (primário) - IGUAL AO VIEW */
 }
-
 .editButton:hover {
-    background-color: #138496;
+    background-color: #0b5ed7;
 }
 
 .deleteButton {
-    background-color: #dc3545;
-    color: white;
+    background-color: #dc3545; /* Vermelho (perigo) */
 }
-
 .deleteButton:hover {
-    background-color: #c82333;
+    background-color: #bb2d3b;
 }
 
 /* Estados vazios */
@@ -269,15 +311,21 @@
 
 /* Formulário */
 .form {
-    background-color: #fff;
-    padding: 1.5rem;
+    background-color: #ffffff;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Garante que o form ocupe toda a altura do container */
+}
+
+.formBody {
+    flex-grow: 1;
 }
 
 .formSection {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     padding: 1.5rem;
     border-radius: 8px;
     background-color: #f8f9fa;
@@ -391,9 +439,8 @@
 }
 
 .switchWrapper {
-    display: flex;
-    align-items: center;
-    margin-left: 1rem;
+    margin-top: 15px; /* Ajusta a margem superior */
+    padding-bottom: 10px; /* Adiciona espaço abaixo */
 }
 
 /* Nome e status na mesma linha */
@@ -454,13 +501,23 @@
 }
 
 .cancelButton:hover {
-    background-color: #d32f2f;
+    background-color: #c82333;
 }
 
 .buttonGroup {
     display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
+    gap: 0.5rem;
+}
+
+.footerActions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 1rem 2rem;
+    margin: 2rem -2rem -2rem -2rem;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 .message {
@@ -536,6 +593,19 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+.displayField {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: #e9ecef; /* Cor de fundo de campo desabilitado */
+  color: #495057; /* Cor do texto */
+  min-height: 38px; /* Altura mínima para alinhar com inputs */
+  display: flex;
+  align-items: center;
+}
+
 input:checked + .slider {
     background-color: #4caf50;
 }
@@ -595,28 +665,35 @@ input:checked + .slider:before {
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
+    /* display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: center; */
     z-index: 1000;
 }
 
-.modalDetalhes {
-    background-color: white;
+.modalContent {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
     border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     width: 90%;
-    max-width: 700px;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-width: 500px;
+    max-height: 90vh; /* Ajustado para permitir mais conteúdo visível */
+    display: flex;
+    flex-direction: column;
 }
 
 .modalHeader {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
-    border-bottom: 1px solid #eee;
 }
 
 .modalHeader h3 {
@@ -634,8 +711,9 @@ input:checked + .slider:before {
     color: #6c757d;
 }
 
-.modalContent {
-    padding: 20px;
+.modalBody {
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
 .detalhesSection {
@@ -644,11 +722,25 @@ input:checked + .slider:before {
 
 .detalhesSection h4 {
     margin-top: 0;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
     font-size: 16px;
-    color: #495057;
-    padding-bottom: 6px;
+    color: #333;
+    padding-bottom: 8px;
     border-bottom: 1px solid #eee;
+}
+
+.detalhesSection h5 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.detalheValorPrincipal {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 5px;
 }
 
 .detalhesGrid {
@@ -663,14 +755,46 @@ input:checked + .slider:before {
 }
 
 .detalheTitulo {
-    font-size: 13px;
-    color: #6c757d;
-    margin-bottom: 4px;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 3px;
+    font-size: 0.85em;
 }
 
 .detalheValor {
-    font-size: 15px;
-    color: #212529;
+    font-size: 0.95em;
+    color: #222;
+}
+
+.tableParcelasDetalhes {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.9em;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.tableParcelasDetalhes th,
+.tableParcelasDetalhes td {
+    border: 1px solid #e0e0e0;
+    padding: 10px;
+    text-align: left;
+}
+
+.tableParcelasDetalhes th {
+    background-color: #f9f9f9;
+    font-weight: 600;
+    color: #444;
+}
+
+.tableParcelasDetalhes tr:nth-child(even) td {
+    background-color: #fdfdfd;
+}
+
+.tableParcelasDetalhes td:nth-child(1),
+.tableParcelasDetalhes td:nth-child(2),
+.tableParcelasDetalhes td:nth-child(3) {
+    text-align: center;
 }
 
 .modalFooter {
@@ -683,6 +807,10 @@ input:checked + .slider:before {
 
 /* Estilos para os modais em cascata */
 .modalSimples {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -775,27 +903,22 @@ input:checked + .slider:before {
     color: #666;
 }
 
-/* Z-index para cascata de modais */
+/* Z-index para cascata de modais - ORDEM CORRETA */
 .modalCidade {
     z-index: 1100;
 }
-
-.modalEstado {
+.modalCadastroCidade {
     z-index: 1200;
 }
-
-.modalPais {
+.modalEstado {
     z-index: 1300;
 }
-
-.modalCadastroCidade {
+.modalCadastroEstado {
     z-index: 1400;
 }
-
-.modalCadastroEstado {
+.modalPais {
     z-index: 1500;
 }
-
 .modalCadastroPais {
     z-index: 1600;
 }
@@ -810,4 +933,94 @@ input:checked + .slider:before {
 
 .closeModal:hover {
     color: #000;
+}
+
+.formFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    margin-top: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.formFooter .buttonGroup {
+    margin-top: 0;
+}
+
+.dateInfoContainer {
+    display: flex;
+    flex-direction: column;
+    color: #555;
+    font-size: 0.85em;
+    gap: 4px;
+}
+
+.dateInfoContainer span {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.inputCodigo {
+    background-color: #e9ecef; /* Um cinza claro para indicar que é readonly */
+    font-weight: bold;
+    text-align: center;
+}
+
+/* ===================================== */
+/* REVISÃO E CORREÇÃO DOS ESTILOS DO FORMULÁRIO */
+/* ===================================== */
+
+/* O .row principal agora separa os grupos da esquerda e da direita */
+.row {
+    display: flex;
+    gap: 1.5rem; /* Espaçamento entre os campos na mesma linha */
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.fullWidth {
+    width: 100%;
+}
+
+/* Grupo da Esquerda: Código + Tipo de Pessoa */
+.grupoCampoEsquerda {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.campoCodigo {
+    display: flex;
+    flex-direction: column;
+    width: 100px; 
+}
+
+.campoTipoPessoa {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+}
+
+/* Grupo da Direita: Status */
+.grupoCampoDireita {
+    display: flex;
+    flex-direction: column;
+    margin-left: auto; /* Empurra para a direita */
+}
+
+.grupoCampoDireita label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+    align-self: flex-start; /* Alinha o label 'Status' com o início do switch */
+}
+
+/* Garante que o switchWrapper se alinhe com os inputs */
+.switchWrapper {
+    display: flex;
+    align-items: center;
+    height: 38px; 
 }

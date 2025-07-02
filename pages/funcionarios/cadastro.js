@@ -1,21 +1,17 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 import styles from './funcionarios.module.css';
-import { FaSearch, FaPlus } from 'react-icons/fa';
+import { FaPlus, FaSearch } from 'react-icons/fa';
 
 export default function CadastroFuncionario() {
   const router = useRouter();
   const { id } = router.query;
   const cod_func = id;
 
-  const [paises, setPaises] = useState([]);
-  const [estados, setEstados] = useState([]);
-  const [cidades, setCidades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   const [mensagem, setMensagem] = useState(null);
-  const [mensagemSucesso, setMensagemSucesso] = useState(false);
+  const [displayCode, setDisplayCode] = useState('Auto');
 
   const [formData, setFormData] = useState({
     nome_completo: '',
@@ -29,699 +25,714 @@ export default function CadastroFuncionario() {
     endereco: '',
     numero: '',
     bairro: '',
-    pais: '1', // Brasil por padrão
-    cod_pais: '1', // Brasil por padrão
-    pais_nome: 'Brasil', // Nome do país por padrão
-    cidade: '',
     cod_cid: '',
-    estado: '',
+    cidade_nome: '',
     cod_est: '',
-    uf: '',
+    cod_pais: '',
+    ativo: true,
+    complemento: '',
+    cod_cargo: '',
     cargo: '',
     data_admissao: '',
-    cidade_nome: '',
-    ativo: true // Adicionando campo ativo com valor padrão true
+    salario: '',
+    carga_horaria: '',
+    data_demissao: '',
+    data_criacao: '',
+    data_atualizacao: '',
+    numero_cnh: '',
+    categoria_cnh: '',
+    validade_cnh: ''
   });
 
-  // Estados para gerenciar modais
-  const [mostrarModalCidade, setMostrarModalCidade] = useState(false);
-  const [mostrarModalEstado, setMostrarModalEstado] = useState(false);
-  const [mostrarModalPais, setMostrarModalPais] = useState(false);
-  const [mostrarModalCadastroCidade, setMostrarModalCadastroCidade] = useState(false);
-  const [mostrarModalCadastroEstado, setMostrarModalCadastroEstado] = useState(false);
-  const [mostrarModalCadastroPais, setMostrarModalCadastroPais] = useState(false);
+  const [paises, setPaises] = useState([]);
+  const [estados, setEstados] = useState([]);
+  const [cidades, setCidades] = useState([]);
   
-  // Estados para dados dos modais
-  const [cidadesFiltradas, setCidadesFiltradas] = useState([]);
-  const [estadosFiltrados, setEstadosFiltrados] = useState([]);
   const [paisesFiltrados, setPaisesFiltrados] = useState([]);
+  const [estadosFiltrados, setEstadosFiltrados] = useState([]);
+  const [cidadesFiltradas, setCidadesFiltradas] = useState([]);
+
+  const [mostrarModalCidade, setMostrarModalCidade] = useState(false);
+  const [mostrarModalCadastroCidade, setMostrarModalCadastroCidade] = useState(false);
+  const [mostrarModalEstado, setMostrarModalEstado] = useState(false);
+  const [mostrarModalCadastroEstado, setMostrarModalCadastroEstado] = useState(false);
+  const [mostrarModalPais, setMostrarModalPais] = useState(false);
+  const [mostrarModalCadastroPais, setMostrarModalCadastroPais] = useState(false);
+  const [mostrarModalPaisEstado, setMostrarModalPaisEstado] = useState(false);
   
-  // Estados para pesquisa
   const [pesquisaCidade, setPesquisaCidade] = useState('');
   const [pesquisaEstado, setPesquisaEstado] = useState('');
   const [pesquisaPais, setPesquisaPais] = useState('');
   
-  // Estados para seleção
-  const [paisSelecionado, setPaisSelecionado] = useState(null);
-  const [estadoSelecionado, setEstadoSelecionado] = useState(null);
-  
-  // Estados para formulários de cadastro
   const [nomeCidade, setNomeCidade] = useState('');
+  const [dddCidade, setDddCidade] = useState('');
+  const [codEstadoCidade, setCodEstadoCidade] = useState('');
+  const [estadoCidade, setEstadoCidade] = useState('');
+  
   const [nomeEstado, setNomeEstado] = useState('');
   const [ufEstado, setUfEstado] = useState('');
+  const [codPaisEstado, setCodPaisEstado] = useState('');
+  const [paisEstado, setPaisEstado] = useState('');
+
   const [nomePais, setNomePais] = useState('');
   const [siglaPais, setSiglaPais] = useState('');
   const [ddiPais, setDdiPais] = useState('');
-  const [ativoPais, setAtivoPais] = useState(true);
-  const [ativoEstado, setAtivoEstado] = useState(true);
-  const [ativoCidade, setAtivoCidade] = useState(true);
+
+  const [origemModalEstado, setOrigemModalEstado] = useState(null);
+  const [origemModalPais, setOrigemModalPais] = useState(null);
   
-  // Estados para carregamento
-  const [carregandoCidades, setCarregandoCidades] = useState(false);
-  const [carregandoEstados, setCarregandoEstados] = useState(false);
-  const [carregandoPaises, setCarregandoPaises] = useState(false);
   const [carregandoCidade, setCarregandoCidade] = useState(false);
   const [carregandoEstado, setCarregandoEstado] = useState(false);
   const [carregandoPais, setCarregandoPais] = useState(false);
 
-  useEffect(() => {
-    // Carregar países e cidades ao montar o componente
-    carregarPaises();
-    carregarCidades();
+  // States for Cargo
+  const [cargos, setCargos] = useState([]);
+  const [cargosFiltrados, setCargosFiltrados] = useState([]);
+  const [mostrarModalCargo, setMostrarModalCargo] = useState(false);
+  const [mostrarModalCadastroCargo, setMostrarModalCadastroCargo] = useState(false);
+  const [pesquisaCargo, setPesquisaCargo] = useState('');
+  const [carregandoCargo, setCarregandoCargo] = useState(false);
+  const [novoCargo, setNovoCargo] = useState({
+      cargo: '',
+      setor: '',
+      salario_base: '',
+      exige_cnh: false
+  });
+  const [selectedCargo, setSelectedCargo] = useState(null);
 
-    if (id) {
-      carregarFuncionario(id);
+  const formatarMoeda = (valor) => {
+    if (valor === null || valor === undefined || valor === '') return '';
+    const numero = parseFloat(String(valor).replace(',', '.'));
+    if (isNaN(numero)) return '';
+    return new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(numero);
+  };
+
+  const desformatarMoeda = (valor) => {
+    if (!valor) return null;
+    return String(valor).replace(/\./g, '').replace(',', '.');
+  };
+
+  const formatISOToDateInput = (isoString) => {
+    if (!isoString) return '';
+    return isoString.split('T')[0];
+  };
+
+  const sanitizeData = (data) => {
+    const sanitized = { ...data };
+    for (const key in sanitized) {
+        if (sanitized[key] === null) {
+            sanitized[key] = '';
+        }
     }
-  }, [id]);
+    return sanitized;
+  };
 
-  const carregarFuncionario = async (funcionarioId) => {
+  useEffect(() => {
+    const fetchFuncionario = async () => {
+      if (id) {
     setLoadingData(true);
     try {
-      console.log('Carregando funcionário:', funcionarioId);
-      const res = await fetch(`/api/funcionarios?cod_func=${funcionarioId}`);
-      
+          const res = await fetch(`/api/funcionarios?cod_func=${id}`);
       if (!res.ok) {
-        const errorData = await res.json();
-        console.error('Erro ao carregar funcionário. Status:', res.status, 'Mensagem:', errorData.error);
-        throw new Error(`Erro ao carregar funcionário: ${errorData.error || res.statusText}`);
+            throw new Error('Funcionário não encontrado');
       }
-      
-      // Obter resposta como texto para debug
-      const responseText = await res.text();
-      console.log('Resposta texto:', responseText);
-      
-      // Converter resposta para JSON
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (e) {
-        console.error('Erro ao parsear resposta JSON:', e);
-        throw new Error('Formato de resposta inválido');
-      }
-      
-      console.log('Dados do funcionário recebidos:', data);
-      
-      // Agora a API retorna o objeto diretamente, não mais em um array
-      if (data) {
-        const funcionario = data;
-        console.log('Processando dados do funcionário para o formulário:', funcionario);
-        
+      const data = await res.json();
+          const sanitizedData = sanitizeData(data);
+          
+          const cidadeNomeCompleto = sanitizedData.cidade_nome 
+            ? `${sanitizedData.cidade_nome} - ${sanitizedData.estado_nome || 'Estado não informado'}/${sanitizedData.estado_uf || 'UF'}`
+            : '';
+          
+          if (sanitizedData.cod_cargo) {
+            setSelectedCargo({
+                cod_cargo: sanitizedData.cod_cargo,
+                cargo: sanitizedData.cargo,
+                exige_cnh: sanitizedData.exige_cnh
+            });
+          }
+
         setFormData({
-          nome_completo: funcionario.nome_completo || '',
-          cpf: funcionario.cpf || '',
-          rg: funcionario.rg || '',
-          data_nascimento: funcionario.data_nascimento ? funcionario.data_nascimento.split('T')[0] : '',
-          sexo: funcionario.sexo || '',
-          telefone: funcionario.telefone || '',
-          email: funcionario.email || '',
-          cep: funcionario.cep || '',
-          endereco: funcionario.endereco || '',
-          numero: funcionario.numero || '',
-          bairro: funcionario.bairro || '',
-          pais: funcionario.pais || '1',
-          cod_pais: funcionario.cod_pais ? funcionario.cod_pais.toString() : '1',
-          pais_nome: funcionario.pais_nome || 'Brasil',
-          cidade: funcionario.cidade_nome || '',
-          cod_cid: funcionario.cod_cid ? funcionario.cod_cid.toString() : '',
-          estado: funcionario.estado_nome || '',
-          cod_est: funcionario.cod_est ? funcionario.cod_est.toString() : '',
-          uf: funcionario.estado_uf || funcionario.uf || '',
-          cargo: funcionario.cargo || '',
-          data_admissao: funcionario.data_admissao ? funcionario.data_admissao.split('T')[0] : '',
-          cidade_nome: funcionario.cidade_nome || '',
-          ativo: funcionario.ativo !== undefined ? funcionario.ativo : true
-        });
-        
-        console.log('FormData atualizado com os dados do funcionário');
-        
-        // Carregar estados e cidades necessários para o funcionário
-        if (funcionario.cod_pais) {
-          await carregarEstados(funcionario.cod_pais.toString());
-        }
-        
-        if (funcionario.cod_est) {
-          await carregarCidades(funcionario.cod_est.toString());
+            ...sanitizedData,
+            cod_cargo: sanitizedData.cod_cargo || '',
+            cargo: sanitizedData.cargo || '',
+            numero_cnh: sanitizedData.cnh_numero || '',
+            categoria_cnh: sanitizedData.cnh_categoria || '',
+            validade_cnh: formatISOToDateInput(sanitizedData.cnh_validade),
+            data_nascimento: formatISOToDateInput(sanitizedData.data_nascimento),
+            data_admissao: formatISOToDateInput(sanitizedData.data_admissao),
+            data_demissao: formatISOToDateInput(sanitizedData.data_demissao),
+            cidade_nome: cidadeNomeCompleto,
+            cpf: formatarCPF(sanitizedData.cpf),
+            salario: formatarMoeda(sanitizedData.salario),
+          });
+          setDisplayCode(sanitizedData.cod_func);
+        } catch (error) {
+          exibirMensagem(error.message, false);
+          router.push('/funcionarios');
+        } finally {
+          setLoadingData(false);
         }
       } else {
-        console.error('Funcionário não encontrado ou dados inválidos');
-        exibirMensagem('Funcionário não encontrado', false);
-        router.push('/funcionarios');
-      }
+        setLoadingData(true);
+        try {
+          const res = await fetch('/api/funcionarios/next-code');
+          if (!res.ok) {
+            throw new Error('Erro ao buscar o próximo código');
+          }
+          const data = await res.json();
+          setDisplayCode(data.nextCode);
     } catch (error) {
-      console.error('Erro ao carregar funcionário:', error);
-      exibirMensagem(`Erro ao carregar dados do funcionário: ${error.message}`, false);
+          console.error(error);
+          setDisplayCode('Erro');
     } finally {
       setLoadingData(false);
-    }
+        }
+      }
+    };
+    fetchFuncionario();
+  }, [id, router]);
+
+  const exibirMensagem = (texto, sucesso) => {
+    setMensagem({ texto, tipo: sucesso ? 'success' : 'error' });
+    setTimeout(() => { setMensagem(null); }, 5000);
   };
 
   const carregarPaises = async () => {
+    setCarregandoPais(true);
     try {
-      setCarregandoPaises(true);
       const res = await fetch('/api/paises');
       if (!res.ok) throw new Error('Erro ao carregar países');
       const data = await res.json();
       setPaises(data);
       setPaisesFiltrados(data);
     } catch (error) {
-      console.error('Erro ao carregar países:', error);
       exibirMensagem('Erro ao carregar países', false);
-    } finally {
-      setCarregandoPaises(false);
-    }
-  };
-
-  const carregarEstados = async (codPais) => {
-    try {
-      setCarregandoEstados(true);
-      const res = await fetch(`/api/estados${codPais ? `?cod_pais=${codPais}` : ''}`);
-      if (!res.ok) throw new Error('Erro ao carregar estados');
-      const data = await res.json();
-      setEstados(data);
-      setEstadosFiltrados(data);
-    } catch (error) {
-      console.error('Erro ao carregar estados:', error);
-      exibirMensagem('Erro ao carregar estados', false);
-    } finally {
-      setCarregandoEstados(false);
-    }
-  };
-
-  const carregarCidades = async (codEst) => {
-    try {
-      setCarregandoCidades(true);
-      const res = await fetch(`/api/cidades?${codEst ? `cod_est=${codEst}&` : ''}completo=true`);
-      if (!res.ok) throw new Error('Erro ao carregar cidades');
-      const data = await res.json();
-      setCidades(data);
-      setCidadesFiltradas(data);
-    } catch (error) {
-      console.error('Erro ao carregar cidades:', error);
-      exibirMensagem('Erro ao carregar cidades', false);
-    } finally {
-      setCarregandoCidades(false);
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    
-    // Para campos checkbox, usamos a propriedade checked em vez de value
-    const newValue = type === 'checkbox' ? checked : value;
-    
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: newValue 
-    }));
-    
-    // Lógica adicional para campos específicos
-    if (name === 'cod_cid') {
-      // Atualiza o nome da cidade
-      const cidadeSelecionada = cidades.find(c => c.cod_cid === parseInt(value, 10));
-      if (cidadeSelecionada) {
-      setFormData(prev => ({ 
-        ...prev, 
-          cidade: cidadeSelecionada.nome,
-          cidade_nome: `${cidadeSelecionada.nome} - ${cidadeSelecionada.estado_nome}/${cidadeSelecionada.estado_uf}`
-        }));
-      }
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    try {
-      // Prepara dados para envio
-      let dadosForm = {...formData};
-      
-      // Verificar se o ID está sendo passado corretamente quando for edição
-      const method = id ? 'PUT' : 'POST';
-      const url = id ? `/api/funcionarios?cod_func=${id}` : '/api/funcionarios';
-      
-      console.log('Enviando dados para API:', method, url);
-      console.log('Dados:', dadosForm);
-      
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dadosForm),
-      });
-      
-      // Ler a resposta como texto primeiro para debug
-      const textResponse = await res.text();
-      console.log('Resposta texto:', textResponse);
-      
-      // Tentar converter para JSON
-      let data;
-      try {
-        data = JSON.parse(textResponse);
-      } catch (parseError) {
-        console.error('Erro ao parsear resposta:', parseError);
-        throw new Error('Resposta inválida do servidor');
-      }
-      
-      console.log('Resposta da API:', data);
-      
-      if (!res.ok) {
-        console.error('Erro na resposta:', data);
-        throw new Error(data.error || data.details || 'Ocorreu um erro ao processar a solicitação');
-      }
-      
-      // Redirecionar para a página de listagem com mensagem de sucesso
-      router.push({
-        pathname: '/funcionarios',
-        query: { 
-          mensagem: id ? 'Funcionário atualizado com sucesso!' : 'Funcionário cadastrado com sucesso!',
-          tipo: 'success'
-        }
-      });
-    } catch (error) {
-      console.error('Erro detalhado ao salvar funcionário:', error);
-      exibirMensagem(error.message || 'Erro ao salvar funcionário', false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancelar = () => {
-    router.push('/funcionarios');
-  };
-
-  const exibirMensagem = (texto, sucesso) => {
-    setMensagem({
-      texto,
-      tipo: sucesso ? 'success' : 'error'
-    });
-    
-    // Limpar mensagem após 5 segundos
-    setTimeout(() => {
-      setMensagem(null);
-    }, 5000);
-  };
-
-  const abrirSeletorCidade = () => {
-    console.log("Abrindo modal de cidades");
-    
-    // Não fechamos outros modais, apenas abrimos o modal de cidades
-    // Carregar todas as cidades (sem filtro de estado)
-    carregarCidades();
-    
-    // Abrir o modal de cidades
-    setTimeout(() => {
-      setMostrarModalCidade(true);
-      setPesquisaCidade('');
-    }, 100);
-  };
-
-  const fecharModalCidade = () => {
-    setMostrarModalCidade(false);
-  };
-
-  const abrirModalCadastroCidade = () => {
-    setNomeCidade('');
-    setAtivoCidade(true);
-    // Não fechamos o modal de cidade, mantemos ele aberto por trás
-    setMostrarModalCadastroCidade(true);
-  };
-
-  const fecharModalCadastroCidade = () => {
-    setMostrarModalCadastroCidade(false);
-    // Não é necessário abrir explicitamente o modal de cidade, pois ele já está aberto
-  };
-
-  const abrirModalEstado = () => {
-    console.log("Abrindo modal de estados");
-    
-    // Não fechamos outros modais, apenas abrimos o modal de estados
-    // Carregar estados
-    carregarEstados();
-    
-    // Abrir o modal com um pequeno atraso
-    setTimeout(() => {
-      setMostrarModalEstado(true);
-      setPesquisaEstado('');
-    }, 100);
-  };
-
-  const fecharModalEstado = () => {
-    setMostrarModalEstado(false);
-    // Não é necessário reabrir modais anteriores
-  };
-
-  const abrirModalCadastroEstado = () => {
-    setNomeEstado('');
-    setUfEstado('');
-    setAtivoEstado(true);
-    // Não fechamos o modal de estado, mantemos ele aberto por trás
-    setMostrarModalCadastroEstado(true);
-  };
-
-  const fecharModalCadastroEstado = () => {
-    setMostrarModalCadastroEstado(false);
-    // Não é necessário reabrir modais anteriores
-  };
-
-  const abrirSeletorPais = () => {
-    console.log("Abrindo modal de países");
-    
-    // Não fechamos outros modais, apenas abrimos o modal de países
-    // Carregar países
-    carregarPaises();
-    
-    // Abrir o modal com um pequeno atraso
-    setTimeout(() => {
-      setMostrarModalPais(true);
-      setPesquisaPais('');
-    }, 100);
-  };
-
-  const fecharModalPais = () => {
-    setMostrarModalPais(false);
-    // Não é necessário reabrir modais anteriores
-  };
-
-  const abrirModalCadastroPais = () => {
-    setNomePais('');
-    setSiglaPais('');
-    setDdiPais('');
-    setAtivoPais(true);
-    // Não fechamos o modal de país, mantemos ele aberto por trás
-    setMostrarModalCadastroPais(true);
-  };
-
-  const fecharModalCadastroPais = () => {
-    setMostrarModalCadastroPais(false);
-    // Não é necessário reabrir modais anteriores
-  };
-
-  const abrirModalPaisDoCadastroEstado = () => {
-    console.log("Abrindo modal de países do cadastro de estado");
-    // Não fechamos o modal de estado, mantemos ele aberto por trás
-    carregarPaises();
-    
-    // Pequeno atraso para garantir que outros modais sejam fechados primeiro
-    setTimeout(() => {
-      setMostrarModalPais(true);
-      setPesquisaPais('');
-    }, 100);
-  };
-
-  const abrirModalEstadoDoCadastroCidade = () => {
-    console.log("Abrindo modal de estados do cadastro de cidade");
-    // Não fechamos o modal de cadastro de cidade, mantemos ele aberto por trás
-    carregarEstados();
-    
-    setTimeout(() => {
-      setMostrarModalEstado(true);
-      setPesquisaEstado('');
-    }, 100);
-  };
-
-  // Funções para seleção de itens nos modais
-  const selecionarCidade = (cidade) => {
-    setFormData(prev => ({
-      ...prev,
-      cod_cid: cidade.cod_cid.toString(),
-      cidade_nome: `${cidade.nome} - ${cidade.estado_nome}/${cidade.estado_uf}`,
-      cidade: cidade.nome
-    }));
-    
-    // Fechamos todos os modais ao selecionar uma cidade como destino final
-    setMostrarModalCidade(false);
-    setMostrarModalEstado(false);
-    setMostrarModalPais(false);
-    setMostrarModalCadastroCidade(false);
-    setMostrarModalCadastroEstado(false);
-    setMostrarModalCadastroPais(false);
-  };
-
-  const selecionarEstado = (estado) => {
-    setEstadoSelecionado(estado);
-    
-    if (mostrarModalCadastroCidade) {
-      // Se estamos no fluxo de cadastro de cidade, apenas fechamos o modal de estado e voltamos para o cadastro
-      setMostrarModalEstado(false);
-    } else {
-      // Se estamos apenas selecionando um estado, fechamos todos os modais
-      setMostrarModalEstado(false);
-      setMostrarModalCidade(false);
-      setMostrarModalPais(false);
-      setMostrarModalCadastroCidade(false);
-      setMostrarModalCadastroEstado(false);
-      setMostrarModalCadastroPais(false);
-    }
-  };
-
-  const selecionarPais = (pais) => {
-    setPaisSelecionado(pais);
-    
-    if (mostrarModalCadastroEstado) {
-      // Se estamos no fluxo de cadastro de estado, apenas fechamos o modal de país e voltamos para o cadastro
-      setMostrarModalPais(false);
-    } else {
-      // Se estamos apenas selecionando um país, fechamos todos os modais
-      setMostrarModalPais(false);
-      setMostrarModalEstado(false);
-      setMostrarModalCidade(false);
-      setMostrarModalCadastroCidade(false);
-      setMostrarModalCadastroEstado(false);
-      setMostrarModalCadastroPais(false);
-      
-      setFormData(prev => ({
-        ...prev,
-        cod_pais: pais.cod_pais.toString(),
-        pais: pais.nome,
-        pais_nome: `${pais.nome} (${pais.sigla})`
-      }));
-    }
-  };
-
-  // Funções para pesquisa nos modais
-  const handlePesquisaCidade = (e) => {
-    const valor = e.target.value;
-    setPesquisaCidade(valor);
-    
-    if (valor.trim() === '') {
-      setCidadesFiltradas(cidades);
-    } else {
-      const filtradas = cidades.filter(cidade => 
-        cidade.nome.toLowerCase().includes(valor.toLowerCase())
-      );
-      setCidadesFiltradas(filtradas);
-    }
-  };
-
-  const handlePesquisaEstado = (e) => {
-    const valor = e.target.value;
-    setPesquisaEstado(valor);
-    
-    if (valor.trim() === '') {
-      setEstadosFiltrados(estados);
-    } else {
-      const filtrados = estados.filter(estado => 
-        estado.nome.toLowerCase().includes(valor.toLowerCase()) ||
-        estado.uf.toLowerCase().includes(valor.toLowerCase())
-      );
-      setEstadosFiltrados(filtrados);
-    }
-  };
-
-  const handlePesquisaPais = (e) => {
-    const valor = e.target.value;
-    setPesquisaPais(valor);
-    
-    if (valor.trim() === '') {
-      setPaisesFiltrados(paises);
-    } else {
-      const filtrados = paises.filter(pais => 
-        pais.nome.toLowerCase().includes(valor.toLowerCase()) ||
-        (pais.sigla && pais.sigla.toLowerCase().includes(valor.toLowerCase()))
-      );
-      setPaisesFiltrados(filtrados);
-    }
-  };
-
-  // Funções para salvar novos registros com ajustes para manter modais
-  const handleSalvarCidade = async () => {
-    if (!nomeCidade || !estadoSelecionado) {
-      exibirMensagem('Nome da cidade e estado são obrigatórios', false);
-      return;
-    }
-
-    setCarregandoCidade(true);
-
-    try {
-      const res = await fetch('/api/cidades', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: nomeCidade,
-          cod_est: estadoSelecionado.cod_est,
-          ativo: ativoCidade
-        })
-      });
-
-      if (!res.ok) throw new Error('Erro ao salvar cidade');
-      
-      const novaCidade = await res.json();
-      
-      // Exibir mensagem de sucesso
-      exibirMensagem('Cidade cadastrada com sucesso', true);
-      
-      // Atualizar o formulário principal com a cidade recém-cadastrada
-      setFormData(prev => ({
-        ...prev,
-        cod_cid: novaCidade.cod_cid.toString(),
-        cidade_nome: `${novaCidade.nome} - ${estadoSelecionado.nome}/${estadoSelecionado.uf}`,
-        cidade: novaCidade.nome
-      }));
-      
-      // Fechar todos os modais
-      setMostrarModalCadastroCidade(false);
-      setMostrarModalCidade(false);
-      setMostrarModalEstado(false);
-      setMostrarModalCadastroEstado(false);
-      setMostrarModalPais(false);
-      setMostrarModalCadastroPais(false);
-      
-      // Limpar campos
-      setNomeCidade('');
-      
-    } catch (error) {
-      console.error('Erro ao cadastrar cidade:', error);
-      exibirMensagem('Erro ao cadastrar cidade: ' + error.message, false);
-    } finally {
-      setCarregandoCidade(false);
-    }
-  };
-
-  const handleSalvarEstado = async () => {
-    if (!nomeEstado || !ufEstado || !paisSelecionado) {
-      exibirMensagem('Nome, UF e país são obrigatórios', false);
-      return;
-    }
-
-    setCarregandoEstado(true);
-
-    try {
-      const res = await fetch('/api/estados', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: nomeEstado,
-          uf: ufEstado,
-          cod_pais: paisSelecionado.cod_pais,
-          ativo: ativoEstado
-        })
-      });
-
-      if (!res.ok) throw new Error('Erro ao salvar estado');
-      
-      const novoEstado = await res.json();
-      
-      // Exibir mensagem de sucesso
-      exibirMensagem('Estado cadastrado com sucesso', true);
-      
-      // Selecionar o novo estado
-      setEstadoSelecionado(novoEstado);
-      
-      if (mostrarModalCadastroCidade) {
-        // Se estiver no fluxo de cadastro de cidade, fechar apenas os modais de país e estado
-        setMostrarModalCadastroEstado(false);
-        setMostrarModalEstado(false);
-        setMostrarModalPais(false);
-        setMostrarModalCadastroPais(false);
-      } else {
-        // Se estiver apenas cadastrando estado, fechar todos os modais
-        setMostrarModalCadastroEstado(false);
-        setMostrarModalEstado(false);
-        setMostrarModalPais(false);
-        setMostrarModalCadastroPais(false);
-      }
-      
-      // Limpar campos
-      setNomeEstado('');
-      setUfEstado('');
-      
-    } catch (error) {
-      console.error('Erro ao cadastrar estado:', error);
-      exibirMensagem('Erro ao cadastrar estado: ' + error.message, false);
-    } finally {
-      setCarregandoEstado(false);
-    }
-  };
-
-  const handleSalvarPais = async () => {
-    if (!nomePais || !siglaPais) {
-      exibirMensagem('Nome e sigla do país são obrigatórios', false);
-      return;
-    }
-
-    setCarregandoPais(true);
-
-    try {
-      const res = await fetch('/api/paises', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          nome: nomePais, 
-          sigla: siglaPais,
-          ddi: ddiPais,
-          ativo: ativoPais
-        })
-      });
-
-      if (!res.ok) throw new Error('Erro ao salvar país');
-      
-      const novoPais = await res.json();
-      
-      // Exibir mensagem de sucesso
-      exibirMensagem('País cadastrado com sucesso', true);
-      
-      // Selecionar o novo país
-      setPaisSelecionado(novoPais);
-      
-      if (mostrarModalCadastroEstado) {
-        // Se estiver no fluxo de cadastro de estado, fechar apenas os modais de país
-        setMostrarModalCadastroPais(false);
-        setMostrarModalPais(false);
-      } else {
-        // Se estiver apenas cadastrando país, fechar todos os modais
-        setMostrarModalCadastroPais(false);
-        setMostrarModalPais(false);
-      }
-      
-      // Limpar campos
-      setNomePais('');
-      setSiglaPais('');
-      setDdiPais('');
-      
-    } catch (error) {
-      console.error('Erro ao cadastrar país:', error);
-      exibirMensagem('Erro ao cadastrar país: ' + error.message, false);
     } finally {
       setCarregandoPais(false);
     }
   };
 
-  if (loadingData) {
-    return (
-      <div className={styles.container}>
-        <h1 className={styles.titulo}>Carregando...</h1>
-      </div>
+  const carregarEstados = async (codPais) => {
+    setCarregandoEstado(true);
+    try {
+      const url = codPais ? `/api/estados?cod_pais=${codPais}` : '/api/estados';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Erro ao carregar estados');
+      const data = await res.json();
+      setEstados(data);
+      setEstadosFiltrados(data);
+    } catch (error) {
+      exibirMensagem('Erro ao carregar estados', false);
+    } finally {
+      setCarregandoEstado(false);
+    }
+  };
+
+  const carregarCidades = async (codEst) => {
+    setCarregandoCidade(true);
+    try {
+        const url = codEst ? `/api/cidades?cod_est=${codEst}&completo=true` : '/api/cidades?completo=true';
+        const res = await fetch(url);
+      if (!res.ok) throw new Error('Erro ao carregar cidades');
+      const data = await res.json();
+      setCidades(data);
+      setCidadesFiltradas(data);
+    } catch (error) {
+      exibirMensagem('Erro ao carregar cidades', false);
+    } finally {
+        setCarregandoCidade(false);
+    }
+  };
+
+  const carregarCargos = async () => {
+    setCarregandoCargo(true);
+    try {
+        const res = await fetch('/api/cargos');
+        if (!res.ok) throw new Error('Erro ao carregar cargos');
+        const data = await res.json();
+        setCargos(data);
+        setCargosFiltrados(data);
+    } catch (error) {
+        exibirMensagem('Erro ao carregar cargos', false);
+    } finally {
+        setCarregandoCargo(false);
+    }
+  };
+
+  const resetarModais = () => {
+    setMostrarModalCidade(false);
+    setMostrarModalCadastroCidade(false);
+    setMostrarModalEstado(false);
+    setMostrarModalCadastroEstado(false);
+    setMostrarModalPais(false);
+    setMostrarModalPaisEstado(false);
+    setMostrarModalCadastroPais(false);
+    setMostrarModalCargo(false);
+    setMostrarModalCadastroCargo(false);
+  };
+
+  const abrirModalCidade = () => {
+    resetarModais();
+    carregarCidades();
+    setPesquisaCidade('');
+    setMostrarModalCidade(true);
+  };
+
+  const fecharModalCidade = () => resetarModais();
+
+  const abrirModalCadastroCidade = () => {
+    resetarModais();
+    setNomeCidade('');
+    setDddCidade('');
+    setEstadoCidade('');
+    setCodEstadoCidade('');
+    setMostrarModalCadastroCidade(true);
+  };
+
+  const fecharModalCadastroCidade = () => {
+    resetarModais();
+    setMostrarModalCidade(true);
+  };
+
+  const abrirModalEstadoDoCadastroCidade = () => {
+    setOrigemModalEstado('cidade');
+    carregarEstados();
+    setPesquisaEstado('');
+    setMostrarModalEstado(true);
+  };
+
+  const fecharModalEstado = () => {
+    if (origemModalEstado === 'cidade') {
+      setMostrarModalEstado(false);
+      setMostrarModalCadastroCidade(true);
+    } else {
+        setMostrarModalEstado(false);
+    }
+  };
+
+  const abrirModalCadastroEstado = () => {
+    resetarModais();
+    setNomeEstado('');
+    setUfEstado('');
+    setPaisEstado('');
+    setCodPaisEstado('');
+    setMostrarModalCadastroEstado(true);
+  };
+  
+  const fecharModalCadastroEstado = () => {
+    resetarModais();
+    setMostrarModalEstado(true);
+  };
+  
+  const abrirModalPaisDoCadastroEstado = () => {
+    setOrigemModalPais('estado');
+    carregarPaises();
+    setPesquisaPais('');
+    setMostrarModalPaisEstado(true);
+  };
+  
+  const fecharModalPaisEstado = () => {
+    if (origemModalPais === 'estado') {
+        setMostrarModalPaisEstado(false);
+        setMostrarModalCadastroEstado(true);
+    } else {
+        setMostrarModalPaisEstado(false);
+    }
+  };
+
+  const abrirModalCadastroPais = () => {
+    resetarModais();
+    setNomePais('');
+    setSiglaPais('');
+    setDdiPais('');
+    setMostrarModalCadastroPais(true);
+  };
+  
+  const fecharModalCadastroPais = () => {
+    resetarModais();
+    if (origemModalPais === 'estado') {
+      setMostrarModalPaisEstado(true);
+    } else {
+      setMostrarModalPais(true);
+    }
+  };
+
+  const abrirModalCargo = () => {
+    resetarModais();
+    carregarCargos();
+    setPesquisaCargo('');
+    setMostrarModalCargo(true);
+  };
+
+  const fecharModalCargo = () => resetarModais();
+
+  const abrirModalCadastroCargo = () => {
+      resetarModais();
+      setNovoCargo({ cargo: '', setor: '', salario_base: '', exige_cnh: false });
+      setMostrarModalCadastroCargo(true);
+  };
+
+  const fecharModalCadastroCargo = () => {
+      resetarModais();
+      setMostrarModalCargo(true);
+  };
+
+  const handlePesquisaCidade = (e) => handlePesquisa(e, setPesquisaCidade, setCidadesFiltradas, cidades, ['nome', 'estado_uf']);
+  const handlePesquisaEstado = (e) => handlePesquisa(e, setPesquisaEstado, setEstadosFiltrados, estados, ['nome', 'uf']);
+  const handlePesquisaPais = (e) => handlePesquisa(e, setPesquisaPais, setPaisesFiltrados, paises, ['nome', 'sigla']);
+  const handlePesquisaCargo = (e) => handlePesquisa(e, setPesquisaCargo, setCargosFiltrados, cargos, ['cargo', 'setor']);
+  
+  const handlePesquisa = (e, setTermo, setFiltrados, listaCompleta, chaves) => {
+    const termo = e.target.value.toLowerCase();
+    setTermo(termo);
+    if (!termo.trim()) {
+      setFiltrados(listaCompleta);
+      return;
+    }
+    const filtrados = listaCompleta.filter(item => chaves.some(chave => item[chave] && item[chave].toString().toLowerCase().includes(termo)));
+    setFiltrados(filtrados);
+  };
+  
+  const selecionarCidade = (cidade) => {
+    const cidadeCompleta = cidades.find(c => c.cod_cid === cidade.cod_cid) || cidade;
+    const cidadeDisplay = `${cidadeCompleta.nome} - ${cidadeCompleta.estado_nome}/${cidadeCompleta.estado_uf}`;
+
+    setFormData(prev => ({ 
+      ...prev, 
+      cod_cid: cidadeCompleta.cod_cid, 
+      cidade_nome: cidadeDisplay,
+      cod_est: cidadeCompleta.cod_est,
+      cod_pais: cidadeCompleta.cod_pais
+    }));
+    fecharModalCidade();
+  };
+  
+  const selecionarEstado = (estado) => {
+    if (origemModalEstado === 'cidade') {
+      setCodEstadoCidade(estado.cod_est);
+      setEstadoCidade(`${estado.nome} (${estado.uf})`);
+      fecharModalEstado();
+    }
+  };
+
+  const selecionarPais = (pais) => {
+    if (origemModalPais === 'estado') {
+      setCodPaisEstado(pais.cod_pais);
+      setPaisEstado(`${pais.nome} (${pais.sigla})`);
+      fecharModalPaisEstado();
+    } 
+  };
+  
+  const handleSalvar = async (endpoint, corpo, setCarregando, fecharModal, sucessoCallback) => {
+      setCarregando(true);
+      try {
+          const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+          if (!res.ok) {
+              const error = await res.json();
+              throw new Error(error.message || `Erro ao salvar`);
+          }
+          const data = await res.json();
+          exibirMensagem('Salvo com sucesso!', true);
+          fecharModal();
+          if (sucessoCallback) sucessoCallback(data);
+      } catch (error) {
+          exibirMensagem(error.message, false);
+      } finally {
+          setCarregando(false);
+      }
+  };
+  
+  const handleSalvarCidade = () => handleSalvar('/api/cidades', { nome: nomeCidade, ddd: dddCidade, cod_est: codEstadoCidade }, setCarregandoCidade, () => fecharModalCadastroCidade(), (novaCidade) => { carregarCidades().then(() => selecionarCidade(novaCidade)); });
+  const handleSalvarEstado = () => handleSalvar('/api/estados', { nome: nomeEstado, uf: ufEstado, cod_pais: codPaisEstado }, setCarregandoEstado, () => fecharModalCadastroEstado(), (novoEstado) => { carregarEstados(codPaisEstado).then(() => { setOrigemModalEstado('cidade'); selecionarEstado(novoEstado); }); });
+  
+  const handleSalvarPais = () => {
+    const onSucesso = (novoPais) => {
+      // Recarrega a lista de países em segundo plano
+      carregarPaises(); 
+  
+      // Verifica se o fluxo veio do cadastro de estado
+      if (origemModalPais === 'estado') {
+        // Preenche os dados do país no formulário de estado
+        setCodPaisEstado(novoPais.cod_pais);
+        setPaisEstado(`${novoPais.nome} (${novoPais.sigla})`);
+        
+        // Garante que o modal de cadastro de estado seja exibido novamente
+        setMostrarModalCadastroEstado(true); 
+      }
+    };
+  
+    // Função para fechar APENAS o modal de cadastro de país
+    const fecharApenasModalCadastro = () => {
+      setMostrarModalCadastroPais(false);
+    };
+  
+    // Chama a função genérica de salvar com a lógica corrigida
+    handleSalvar(
+      '/api/paises',
+      { nome: nomePais, sigla: siglaPais, ddi: ddiPais },
+      setCarregandoPais,
+      fecharApenasModalCadastro, 
+      onSucesso
     );
+  };
+
+  const handleSalvarCargo = () => {
+    const onSucesso = (novoCargoSalvo) => {
+        exibirMensagem('Cargo salvo com sucesso!', true);
+        carregarCargos().then(() => {
+            selecionarCargo(novoCargoSalvo);
+        });
+    };
+    handleSalvar('/api/cargos', novoCargo, setCarregandoCargo, fecharModalCadastroCargo, onSucesso);
+  };
+
+  const formatarCPF = (cpf) => {
+    if (!cpf) return "";
+    cpf = cpf.replace(/\D/g, "");
+    if (cpf.length <= 3) return cpf;
+    if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
+    if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
+    return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9, 11)}`;
+  };
+
+  const handleCPFBlur = (e) => {
+    const cpf = e.target.value;
+    if (!cpf.trim()) {
+      e.target.setCustomValidity("");
+      return;
+    }
+
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    if (!validarCPF(cpfLimpo)) {
+      e.target.setCustomValidity("CPF inválido. Verifique o número digitado.");
+      e.target.reportValidity();
+    } else {
+      e.target.setCustomValidity("");
+    }
+  };
+
+  const validarCPF = (cpf) => {
+    cpf = String(cpf).replace(/[^\d]/g, '');
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    let soma = 0;
+    let resto;
+    for (let i = 1; i <= 9; i++) soma = soma + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if ((resto === 10) || (resto === 11)) resto = 0;
+    if (resto !== parseInt(cpf.substring(9, 10))) return false;
+    soma = 0;
+    for (let i = 1; i <= 10; i++) soma = soma + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    resto = (soma * 10) % 11;
+    if ((resto === 10) || (resto === 11)) resto = 0;
+    if (resto !== parseInt(cpf.substring(10, 11))) return false;
+    return true;
+  };
+
+  const validarCNH = (cnh) => {
+    const cnhLimpa = String(cnh).replace(/[^\d]/g, '');
+    return cnhLimpa.length === 11;
   }
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    let finalValue = type === 'checkbox' ? checked : value;
+
+    e.target.setCustomValidity('');
+
+    if (name === 'cpf') {
+      finalValue = formatarCPF(finalValue);
+    } else if (name === 'numero_cnh') {
+      finalValue = finalValue.replace(/\D/g, '');
+    } else if (name === 'salario') {
+      const valorNumerico = String(finalValue).replace(/\D/g, '');
+      if (valorNumerico === '') {
+        finalValue = '';
+      } else {
+        const numero = parseFloat(valorNumerico) / 100;
+        finalValue = new Intl.NumberFormat('pt-BR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(numero);
+      }
+    } else if (name === 'carga_horaria') {
+      const match = String(finalValue).match(/\d+/);
+      finalValue = match ? match[0] : '';
+    }
+    
+    setFormData(prev => ({ ...prev, [name]: finalValue }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMensagem(null);
+
+    // Validação de CNH condicional
+    if (selectedCargo?.exige_cnh) {
+      const cnhFields = ['numero_cnh', 'categoria_cnh', 'validade_cnh'];
+      for (const fieldId of cnhFields) {
+        if (!formData[fieldId] || String(formData[fieldId]).trim() === '') {
+          const inputElement = document.getElementById(fieldId);
+          if (inputElement) {
+            inputElement.setCustomValidity('Este campo é obrigatório pois o cargo exige CNH.');
+            inputElement.reportValidity();
+            return; // Interrompe o envio
+          }
+        }
+      }
+    }
+
+    setLoading(true);
+    
+    if (!formData.nome_completo || !formData.data_admissao || !formData.cod_cargo) {
+        exibirMensagem('Preencha os campos obrigatórios: Nome Completo, Cargo e Data de Admissão.', false);
+        setLoading(false);
+        return;
+      }
+    
+    // Cria uma cópia limpa dos dados para enviar
+    const dadosParaSalvar = { ...formData };
+
+    const cpfInput = document.getElementById('cpf');
+    if (cpfInput) {
+      cpfInput.setCustomValidity(''); // Limpa validação anterior
+    }
+
+    // Validação do CPF
+    if (dadosParaSalvar.cpf && !validarCPF(dadosParaSalvar.cpf)) {
+      if (cpfInput) {
+        cpfInput.setCustomValidity('CPF inválido. Por favor, verifique o número digitado.');
+        cpfInput.reportValidity();
+      } else {
+        exibirMensagem('CPF inválido. Por favor, verifique o número digitado.', false);
+      }
+      setLoading(false);
+      return;
+    }
+
+    // 1. Limpa e VALIDA o salário
+    const salarioLimpo = desformatarMoeda(dadosParaSalvar.salario);
+    if (salarioLimpo && parseFloat(salarioLimpo) > 9999999999999.99) {
+      exibirMensagem('O valor do salário é muito alto. O máximo permitido é 9.999.999.999.999,99.', false);
+      setLoading(false);
+      return;
+    }
+    dadosParaSalvar.salario = salarioLimpo;
+
+    const cnhInput = document.getElementById('numero_cnh');
+    if (cnhInput) {
+      cnhInput.setCustomValidity(''); // Limpa a validação anterior
+    }
+
+    // Validação da CNH
+    if (dadosParaSalvar.numero_cnh && !validarCNH(dadosParaSalvar.numero_cnh)) {
+      if (cnhInput) {
+        cnhInput.setCustomValidity('CNH inválido, verifique e tente novamente');
+        cnhInput.reportValidity();
+      } else {
+        exibirMensagem('CNH inválido, verifique e tente novamente', false);
+      }
+        setLoading(false); 
+        return; 
+      }
+
+    // 2. Limpa a carga horária (extrai apenas os números)
+    if (dadosParaSalvar.carga_horaria && typeof dadosParaSalvar.carga_horaria === 'string') {
+        const match = dadosParaSalvar.carga_horaria.match(/\d+/);
+        dadosParaSalvar.carga_horaria = match ? match[0] : null;
+    }
+
+    // 3. Mapeia os nomes dos campos da CNH para o padrão que a API espera
+    dadosParaSalvar.cnh_numero = dadosParaSalvar.numero_cnh;
+    dadosParaSalvar.cnh_categoria = dadosParaSalvar.categoria_cnh;
+    dadosParaSalvar.cnh_validade = dadosParaSalvar.validade_cnh;
+    delete dadosParaSalvar.numero_cnh;
+    delete dadosParaSalvar.categoria_cnh;
+    delete dadosParaSalvar.validade_cnh;
+    
+    // 4. Remove campos que não devem ser enviados para o backend
+    delete dadosParaSalvar.cidade_nome; 
+    delete dadosParaSalvar.cargo; 
+    delete dadosParaSalvar.data_criacao;
+    delete dadosParaSalvar.data_atualizacao;
+    
+    // Adiciona o cod_func se estiver editando
+    if (cod_func) {
+        dadosParaSalvar.cod_func = cod_func;
+    }
+
+    console.log("Enviando para a API:", dadosParaSalvar);
+
+    try {
+        const res = await fetch('/api/funcionarios', {
+            method: cod_func ? 'PUT' : 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dadosParaSalvar),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error || 'Ocorreu um erro ao salvar o funcionário.');
+        }
+
+        exibirMensagem(data.message || 'Funcionário salvo com sucesso!', true);
+        router.push('/funcionarios?mensagem=' + (data.message || 'Funcionário salvo com sucesso!') + '&tipo=success');
+
+    } catch (error) {
+        console.error('Erro ao salvar funcionário:', error);
+      exibirMensagem(error.message, false);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const handleCancelar = () => router.push('/funcionarios');
+
+  const formatarDataParaDisplay = (dataString, tipo = 'datetime') => {
+    if (!dataString) return 'N/A';
+    const data = new Date(dataString);
+    if (isNaN(data.getTime())) return 'Data inválida';
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+    if (tipo === 'datetime') {
+      options.hour = '2-digit';
+      options.minute = '2-digit';
+    }
+    return data.toLocaleString('pt-BR', options);
+  };
+
+  const selecionarCargo = (cargo) => {
+    setFormData(prev => ({
+        ...prev,
+        cod_cargo: cargo.cod_cargo,
+        cargo: cargo.cargo
+    }));
+    setSelectedCargo(cargo);
+    fecharModalCargo();
+  };
+
+  const handleNovoCargoChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    let finalValue;
+
+    if (name === 'exige_cnh') {
+        finalValue = value === 'true'; 
+    } else if (type === 'checkbox') {
+        finalValue = checked;
+    } else {
+        finalValue = value;
+    }
+
+    setNovoCargo(prev => ({ ...prev, [name]: finalValue }));
+  };
 
   return (
     <div className={styles.container}>
       <div className={styles.headerContainer}>
-        <Link href="/funcionarios">
-          <button className={styles.voltarButton}>Voltar</button>
-        </Link>
         <h1 className={styles.titulo}>{id ? 'Editar Funcionário' : 'Cadastrar Funcionário'}</h1>
       </div>
       
@@ -731,369 +742,369 @@ export default function CadastroFuncionario() {
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className={styles.form}>
-        {/* Seção 1: Informações Pessoais */}
-        <div className={styles.formSection}>
-          <h2 className={styles.sectionTitle}>
-            Informações Pessoais
-          </h2>
-          
-          <div className={styles.formRow}>
-            <div className={styles.formGroupFull}>
-              <label htmlFor="nome_completo">Nome Completo</label>
-              <input
-                type="text"
-                id="nome_completo"
-                name="nome_completo"
-                value={formData.nome_completo}
-                onChange={handleChange}
-                className={styles.input}
-                required
-                disabled={loading}
-              />
-            </div>
-            
-            <div className={styles.switchItem}>
-              <label htmlFor="ativo">Status do Funcionário</label>
-              <div className={styles.switchWrapper}>
-                <label className={styles.switch}>
-                  <input
-                    type="checkbox"
-                    id="ativo"
-                    name="ativo"
-                    checked={formData.ativo}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                  <span className={styles.slider}></span>
-                </label>
-                <span 
-                  className={formData.ativo ? styles.statusAtivoLabel : styles.statusInativoLabel}
-                >
-                  {formData.ativo ? 'Habilitado' : 'Desabilitado'}
-                </span>
-              </div>
-            </div>
+      <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
+        <div className={styles.switchContainerTopRight}>
+              <label className={styles.switch}>
+                <input type="checkbox" id="ativo" name="ativo" checked={formData.ativo} onChange={handleChange} disabled={loading} />
+                <span className={styles.slider}></span>
+              </label>
+            <span className={formData.ativo ? styles.statusAtivoLabel : styles.statusInativoLabel}>
+                {formData.ativo ? 'Habilitado' : 'Desabilitado'}
+              </span>
+        </div>
+
+        <div className={styles.formRow}>
+           <div className={styles.formGroupCode}>
+             <label htmlFor="cod_func">Código</label>
+             <input type="text" id="cod_func" name="cod_func" value={displayCode} className={styles.input} readOnly />
+           </div>
+          <div className={styles.formGroup} style={{ flex: '2' }}>
+            <label htmlFor="nome_completo">Funcionário</label>
+            <input type="text" id="nome_completo" name="nome_completo" value={formData.nome_completo} onChange={handleChange} className={styles.input} disabled={loading} maxLength={50} />
           </div>
-          
-          <div className={styles.formRow}>
-            <div className={styles.formGroupThird}>
-              <label htmlFor="sexo">Sexo</label>
-              <select
-                id="sexo"
-                name="sexo"
-                value={formData.sexo}
-                onChange={handleChange}
-                className={styles.select}
-                disabled={loading}
-              >
-                <option value="">Selecione o Sexo</option>
-                <option value="M">Masculino</option>
-                <option value="F">Feminino</option>
-              </select>
-            </div>
-            
-            <div className={styles.formGroupThird}>
-              <label htmlFor="data_nascimento">Data de Nascimento</label>
-              <input
-                type="date"
-                id="data_nascimento"
-                name="data_nascimento"
-                value={formData.data_nascimento}
-                onChange={handleChange}
-                className={styles.input}
-                disabled={loading}
-              />
-            </div>
+          <div className={styles.formGroup} style={{ flex: 1 }}>
+            <label htmlFor="sexo">Sexo *</label>
+            <select
+              id="sexo"
+              name="sexo"
+              value={formData.sexo}
+              onChange={handleChange}
+              className={styles.input}
+              required
+            >
+              <option value="">Selecione...</option>
+              <option value="M">MASCULINO</option>
+              <option value="F">FEMININO</option>
+            </select>
           </div>
-          
-          <div className={styles.formRow}>
-            <div className={styles.formGroupHalf}>
-              <label htmlFor="telefone">Telefone</label>
-              <input
-                type="tel"
-                id="telefone"
-                name="telefone"
-                value={formData.telefone}
-                onChange={handleChange}
-                className={styles.input}
-                disabled={loading}
-              />
-            </div>
-            
-            <div className={styles.formGroupHalf}>
-              <label htmlFor="email">E-mail</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={styles.input}
-                disabled={loading}
-              />
+        </div>
+
+        <div className={styles.formRow}>
+          <div className={styles.formGroup} style={{ flex: '2.5' }}>
+            <label htmlFor="endereco">Endereço</label>
+            <input type="text" id="endereco" name="endereco" value={formData.endereco} onChange={handleChange} className={styles.input} disabled={loading} maxLength={50} />
+          </div>
+          <div className={styles.formGroupSmall}>
+            <label htmlFor="numero">Número</label>
+            <input type="text" id="numero" name="numero" value={formData.numero} onChange={handleChange} className={styles.input} disabled={loading} maxLength={10} />
+          </div>
+          <div className={styles.formGroup} style={{ flex: '1.5' }}>
+            <label htmlFor="complemento">Complemento</label>
+            <input type="text" id="complemento" name="complemento" value={formData.complemento} onChange={handleChange} className={styles.input} disabled={loading} maxLength={40} />
+          </div>
+          <div className={styles.formGroup} style={{ flex: '1.5' }}>
+            <label htmlFor="bairro">Bairro</label>
+            <input type="text" id="bairro" name="bairro" value={formData.bairro} onChange={handleChange} className={styles.input} disabled={loading} maxLength={40} />
+          </div>
+        </div>
+
+        <div className={styles.formRow}>
+          <div className={styles.formGroupHalf}>
+            <label htmlFor="cep">CEP</label>
+            <input type="text" id="cep" name="cep" value={formData.cep} onChange={handleChange} className={styles.input} maxLength={20} />
+          </div>
+          <div className={styles.formGroupHalf}>
+            <label htmlFor="cidade_nome">Cidade</label>
+            <div className={styles.inputWithButton}>
+              <input type="text" id="cidade_nome" name="cidade_nome" value={formData.cidade_nome || ''} className={styles.input} readOnly placeholder="Selecione uma cidade" />
+              <button type="button" className={styles.searchButton} onClick={abrirModalCidade}>🔍</button>
             </div>
           </div>
         </div>
         
-        {/* Seção 2: Informações de Localidade */}
-        <div className={styles.formSection}>
-          <h2 className={styles.sectionTitle}>
-            Informações de Localidade
-          </h2>
-          
-          <div className={styles.formRow}>
-            <div className={styles.formGroupFull}>
-              <label htmlFor="cidade">Cidade</label>
-              <div className={styles.inputWithButton}>
-              <input
-                type="text"
-                  id="cidade_nome"
-                  name="cidade_nome"
-                  value={formData.cidade_nome || ''}
-                className={styles.input}
-                  readOnly
-                  placeholder="Selecione uma cidade"
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label htmlFor="cpf">CPF</label>
+            <input
+              type="text"
+              id="cpf"
+              name="cpf"
+              value={formData.cpf}
+              onChange={handleChange}
+              onBlur={handleCPFBlur}
+              onInput={(e) => e.target.setCustomValidity('')}
+              className={styles.input}
+              maxLength="14"
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="rg">RG</label>
+            <input type="text" id="rg" name="rg" value={formData.rg} onChange={handleChange} className={styles.input} maxLength="14" required />
+          </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="data_nascimento">Data de Nascimento</label>
+            <input type="date" id="data_nascimento" name="data_nascimento" value={formData.data_nascimento} onChange={handleChange} className={`${styles.input} ${styles.dateInputCustom}`} required disabled={loading} data-empty={!formData.data_nascimento} />
+          </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="data_admissao">Data de Admissão</label>
+            <input type="date" id="data_admissao" name="data_admissao" value={formData.data_admissao} onChange={handleChange} className={`${styles.input} ${styles.dateInputCustom}`} required disabled={loading} data-empty={!formData.data_admissao} />
+          </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="data_demissao">Data de Demissão</label>
+            <input type="date" id="data_demissao" name="data_demissao" value={formData.data_demissao} onChange={handleChange} className={`${styles.input} ${styles.dateInputCustom}`} disabled={loading} data-empty={!formData.data_demissao} />
+          </div>
+        </div>
+
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label htmlFor="cargo">Cargo</label>
+            <div className={styles.inputWithButton}>
+                <input
+                    type="text"
+                    id="cargo"
+                    name="cargo"
+                    value={formData.cargo}
+                    readOnly
+                    className={styles.input}
                 />
-                <button 
-                  type="button" 
-                  className={styles.searchButton}
-                  onClick={abrirSeletorCidade}
-                >
-                  🔍
+                <button type="button" onClick={abrirModalCargo} className={styles.searchButton}>
+                    <FaSearch />
                 </button>
             </div>
           </div>
-            </div>
-            
-          <div className={styles.formRow}>
-            <div className={styles.formCol}>
-              <label htmlFor="cep">CEP</label>
-              <input
-                type="text"
-                id="cep"
-                name="cep"
-                value={formData.cep}
-                onChange={handleChange}
-                className={styles.input}
-              />
-            </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="carga_horaria">Carga Horária</label>
+            <input type="text" id="carga_horaria" name="carga_horaria" value={formData.carga_horaria} onChange={handleChange} className={styles.input} disabled={loading} maxLength={30} />
           </div>
-          
-          <div className={styles.formRow}>
-            <div className={styles.formGroupHalf}>
-              <label htmlFor="endereco">Rua</label>
-              <input
-                type="text"
-                id="endereco"
-                name="endereco"
-                value={formData.endereco}
-                onChange={handleChange}
-                className={styles.input}
-                disabled={loading}
-              />
-            </div>
-          
-            <div className={styles.formGroupSmall} style={{marginRight: '0'}}>
-              <label htmlFor="numero">Número</label>
-              <input
-                type="text"
-                id="numero"
-                name="numero"
-                value={formData.numero}
-                onChange={handleChange}
-                className={styles.input}
-                disabled={loading}
-              />
-            </div>
-            
-            <div className={styles.formGroup} style={{flex: '1'}}>
-              <label htmlFor="bairro">Bairro</label>
-              <input
-                type="text"
-                id="bairro"
-                name="bairro"
-                value={formData.bairro}
-                onChange={handleChange}
-                className={styles.input}
-                disabled={loading}
-              />
-            </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="salario">Salário (R$)</label>
+            <input type="text" id="salario" name="salario" value={formData.salario} onChange={handleChange} className={styles.input} disabled={loading} maxLength={16} />
           </div>
         </div>
-        
-        {/* Seção 3: Informações de Identificação */}
-        <div className={styles.formSection}>
-          <h2 className={styles.sectionTitle}>
-            Informações de Identificação
-          </h2>
-          
-          <div className={styles.formRow}>
-            <div className={styles.formGroupHalf}>
-              <label htmlFor="cpf">CPF</label>
+      
+        {selectedCargo?.exige_cnh && (
+        <div className={styles.formRow}>
+            <div className={styles.formGroup}>
+              <label htmlFor="numero_cnh">Número da CNH</label>
               <input
-                type="text"
-                id="cpf"
-                name="cpf"
-                value={formData.cpf}
+                id="numero_cnh"
+                name="numero_cnh"
+                value={formData.numero_cnh}
                 onChange={handleChange}
+                onInput={(e) => e.target.setCustomValidity('')}
                 className={styles.input}
-                required
-                disabled={loading}
+                maxLength="11"
               />
-            </div>
-            
-            <div className={styles.formGroupHalf}>
-              <label htmlFor="rg">RG</label>
-              <input
-                type="text"
-                id="rg"
-                name="rg"
-                value={formData.rg}
-                onChange={handleChange}
-                className={styles.input}
-                disabled={loading}
-              />
-            </div>
           </div>
-        </div>
-        
-        {/* Seção 4: Informações Profissionais */}
-        <div className={styles.formSection}>
-          <h2 className={styles.sectionTitle}>
-            Informações Profissionais
-          </h2>
-          
-          <div className={styles.formRow}>
-            <div className={styles.formGroupHalf}>
-              <label htmlFor="cargo">Cargo</label>
-              <input
-                type="text"
-                id="cargo"
-                name="cargo"
-                value={formData.cargo}
+            <div className={styles.formGroup}>
+              <label htmlFor="categoria_cnh">Categoria</label>
+              <select
+                id="categoria_cnh"
+                name="categoria_cnh"
+                value={formData.categoria_cnh}
                 onChange={handleChange}
+                onInput={(e) => e.target.setCustomValidity('')}
                 className={styles.input}
-                required
-                disabled={loading}
-              />
+              >
+                <option value="">Selecione...</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+              </select>
             </div>
-            
-            <div className={styles.formGroupHalf}>
-              <label htmlFor="data_admissao">Data de Admissão</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="validade_cnh">Validade</label>
               <input
                 type="date"
-                id="data_admissao"
-                name="data_admissao"
-                value={formData.data_admissao}
+                id="validade_cnh"
+                name="validade_cnh"
+                value={formData.validade_cnh}
                 onChange={handleChange}
+                onInput={(e) => e.target.setCustomValidity('')}
                 className={styles.input}
-                required
-                disabled={loading}
               />
             </div>
           </div>
+        )}
+
+        <div className={styles.formRow}>
+          <div className={styles.formGroupHalf}>
+            <label htmlFor="email">E-mail</label>
+            <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} className={styles.input} disabled={loading} pattern=".+.@.+\..+" onInvalid={(e) => e.target.setCustomValidity('Email inválido.')} onInput={(e) => e.target.setCustomValidity('')} maxLength={50} />
+          </div>
+          <div className={styles.formGroupHalf}>
+            <label htmlFor="telefone">Telefone</label>
+            <input type="tel" id="telefone" name="telefone" value={formData.telefone} onChange={handleChange} className={styles.input} disabled={loading} maxLength={20} />
+          </div>
         </div>
-        
-        <div className={styles.buttonGroup}>
-          <button 
-            type="button" 
-            onClick={handleCancelar} 
-            className={styles.cancelButton}
-            disabled={loading}
-          >
-            Cancelar
-          </button>
-          <button 
-            type="submit" 
-            className={styles.submitButton}
-            disabled={loading}
-          >
-            {loading ? 'Salvando...' : (id ? 'Atualizar' : 'Cadastrar')}
-          </button>
+
+        <div className={styles.formFooter}>
+          <div className={styles.dateInfoContainer}>
+            {id ? (
+              <>
+                <span>Data Criação: {formatarDataParaDisplay(formData.data_criacao, 'datetime')}</span>
+                <span>Data Atualização: {formatarDataParaDisplay(formData.data_atualizacao, 'datetime')}</span>
+              </>
+            ) : (
+              <>
+                <span>Data Criação: {formatarDataParaDisplay(new Date().toISOString(), 'date')}</span>
+                <span>Data Atualização: N/A</span>
+              </>
+            )}
+          </div>
+          <div className={styles.buttonGroup}>
+            <button type="button" onClick={handleCancelar} className={styles.btnCancelar}>
+              Cancelar
+            </button>
+            <button type="submit" className={styles.submitButton} disabled={loading}>{loading ? 'Salvando...' : (id ? 'Atualizar' : 'Cadastrar')}</button>
+          </div>
         </div>
       </form>
 
-      {/* Modais para seleção/cadastro de cidades, estados e países */}
+     
+      {/* Modal de Seleção de Cidade */}
       {mostrarModalCidade && (
         <div className={styles.modalOverlay}>
           <div className={`${styles.modalSimples} ${styles.modalCidade}`}>
             <div className={styles.modalHeader}>
-              <h3>Selecionar Cidade</h3>
-              <button onClick={fecharModalCidade} className={styles.closeButton}>&times;</button>
+              <h3>Selecione uma Cidade</h3>
+              <button onClick={fecharModalCidade} className={styles.closeModal}>×</button>
             </div>
-            <div className={styles.modalContent}>
+            <div className={styles.modalBody}>
               <div className={styles.modalSearchContainer}>
                 <input
                   type="text"
-                  placeholder="Pesquisar cidade..."
                   value={pesquisaCidade}
                   onChange={handlePesquisaCidade}
+                  placeholder="Buscar cidade..."
                   className={styles.searchInput}
                 />
               </div>
+              
               <div className={styles.modalList}>
-                {carregandoCidades ? (
+                {carregandoCidade ? (
                   <p>Carregando cidades...</p>
                 ) : cidadesFiltradas.length === 0 ? (
-                  <p>Nenhuma cidade encontrada.</p>
+                  <p>Nenhuma cidade encontrada</p>
                 ) : (
-                  cidadesFiltradas.map((cidade) => (
-                    <div 
-                      key={cidade.cod_cid} 
+                  cidadesFiltradas.map(cidade => (
+                    <div
+                      key={cidade.cod_cid}
                       className={styles.modalItem}
                       onClick={() => selecionarCidade(cidade)}
                     >
-                      <span>{cidade.nome} - {cidade.estado_nome}/{cidade.estado_uf}</span>
+                      <span>{cidade.nome}</span>
                     </div>
                   ))
                 )}
               </div>
             </div>
             <div className={styles.modalFooterSimples}>
-              <button 
-                onClick={fecharModalCidade}
-                className={styles.btnCancelar}
-              >
+              <button onClick={fecharModalCidade} className={styles.btnCancelar}>
                 Cancelar
               </button>
-              <button 
-                onClick={abrirModalCadastroCidade}
-                className={styles.btnCadastrar}
-              >
-                Cadastrar Nova Cidade
+              <button onClick={abrirModalCadastroCidade} className={styles.btnCadastrar}>
+                Nova Cidade
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Modal de Cadastro de Cidade */}
+      {mostrarModalCadastroCidade && (
+        <div className={styles.modalOverlay}>
+          <div className={`${styles.modalSimples} ${styles.modalCadastroCidade}`}>
+            <div className={styles.modalHeader}>
+              <h3>Cadastrar Nova Cidade</h3>
+              <button onClick={fecharModalCadastroCidade} className={styles.closeModal}>×</button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.formGroup}>
+                <label>Nome da Cidade *</label>
+                <input
+                  type="text"
+                  value={nomeCidade}
+                  onChange={(e) => setNomeCidade(e.target.value)}
+                  className={styles.input}
+                  placeholder="Digite o nome da cidade"
+                  required
+                />
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>DDD</label>
+                <input
+                  type="text"
+                  value={dddCidade}
+                  onChange={(e) => setDddCidade(e.target.value)}
+                  className={styles.input}
+                  placeholder="Ex: 11, 45"
+                  maxLength={6}
+                />
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Estado *</label>
+                <div className={styles.inputWithButton}>
+                  <input
+                    type="text"
+                    value={estadoCidade}
+                    className={styles.input}
+                    placeholder="Selecione um estado"
+                    readOnly
+                    required
+                  />
+                  <button 
+                    type="button" 
+                    className={styles.searchButton} 
+                    onClick={abrirModalEstadoDoCadastroCidade}
+                  >
+                    🔍
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className={styles.modalFooterSimples}>
+              <button
+                onClick={fecharModalCadastroCidade}
+                className={styles.btnCancelar}
+                disabled={carregandoCidade}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSalvarCidade}
+                className={styles.btnCadastrar}
+                disabled={carregandoCidade || !nomeCidade || !codEstadoCidade}
+              >
+                {carregandoCidade ? 'Salvando...' : 'Cadastrar Cidade'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Modal de Seleção de Estado */}
       {mostrarModalEstado && (
         <div className={styles.modalOverlay}>
           <div className={`${styles.modalSimples} ${styles.modalEstado}`}>
             <div className={styles.modalHeader}>
-              <h3>Selecionar Estado</h3>
-              <button onClick={fecharModalEstado} className={styles.closeButton}>&times;</button>
+              <h3>Selecione um Estado</h3>
+              <button onClick={fecharModalEstado} className={styles.closeModal}>×</button>
             </div>
-            <div className={styles.modalContent}>
+            <div className={styles.modalBody}>
               <div className={styles.modalSearchContainer}>
                 <input
                   type="text"
-                  placeholder="Pesquisar estado..."
                   value={pesquisaEstado}
                   onChange={handlePesquisaEstado}
+                  placeholder="Buscar estado..."
                   className={styles.searchInput}
                 />
               </div>
+              
               <div className={styles.modalList}>
-                {carregandoEstados ? (
+                {carregandoEstado ? (
                   <p>Carregando estados...</p>
                 ) : estadosFiltrados.length === 0 ? (
-                  <p>Nenhum estado encontrado.</p>
+                  <p>Nenhum estado encontrado</p>
                 ) : (
-                  estadosFiltrados.map((estado) => (
-                    <div 
-                      key={estado.cod_est} 
+                  estadosFiltrados.map(estado => (
+                    <div
+                      key={estado.cod_est}
                       className={styles.modalItem}
                       onClick={() => selecionarEstado(estado)}
                     >
@@ -1104,49 +1115,120 @@ export default function CadastroFuncionario() {
               </div>
             </div>
             <div className={styles.modalFooterSimples}>
-              <button 
-                onClick={fecharModalEstado}
-                className={styles.btnCancelar}
-              >
+              <button onClick={fecharModalEstado} className={styles.btnCancelar}>
                 Cancelar
               </button>
-              <button 
-                onClick={abrirModalCadastroEstado}
-                className={styles.btnCadastrar}
-              >
-                Cadastrar Novo Estado
+              <button onClick={abrirModalCadastroEstado} className={styles.btnCadastrar}>
+                Novo Estado
               </button>
             </div>
           </div>
         </div>
       )}
-
+      
+      {/* Modal de Cadastro de Estado */}
+      {mostrarModalCadastroEstado && (
+        <div className={styles.modalOverlay}>
+          <div className={`${styles.modalSimples} ${styles.modalCadastroEstado}`}>
+            <div className={styles.modalHeader}>
+              <h3>Cadastrar Novo Estado</h3>
+              <button onClick={fecharModalCadastroEstado} className={styles.closeModal}>×</button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.formGroup}>
+                <label>Nome do Estado *</label>
+                <input
+                  type="text"
+                  value={nomeEstado}
+                  onChange={(e) => setNomeEstado(e.target.value)}
+                  className={styles.input}
+                  placeholder="Digite o nome do estado"
+                  required
+                />
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>UF *</label>
+                <input
+                  type="text"
+                  value={ufEstado}
+                  onChange={(e) => setUfEstado(e.target.value)}
+                  className={styles.input}
+                  placeholder="Ex: SP, RJ, MG"
+                  maxLength={2}
+                  required
+                />
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>País *</label>
+                <div className={styles.inputWithButton}>
+                  <input
+                    type="text"
+                    value={paisEstado}
+                    className={styles.input}
+                    placeholder="Selecione um país"
+                    readOnly
+                    required
+                  />
+                  <button 
+                    type="button" 
+                    className={styles.searchButton} 
+                    onClick={abrirModalPaisDoCadastroEstado}
+                  >
+                    🔍
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className={styles.modalFooterSimples}>
+              <button
+                onClick={fecharModalCadastroEstado}
+                className={styles.btnCancelar}
+                disabled={carregandoEstado}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSalvarEstado}
+                className={styles.btnCadastrar}
+                disabled={carregandoEstado || !nomeEstado || !ufEstado || !codPaisEstado}
+              >
+                {carregandoEstado ? 'Salvando...' : 'Cadastrar Estado'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Modal de Seleção de País */}
       {mostrarModalPais && (
         <div className={styles.modalOverlay}>
           <div className={`${styles.modalSimples} ${styles.modalPais}`}>
             <div className={styles.modalHeader}>
-              <h3>Selecionar País</h3>
-              <button onClick={fecharModalPais} className={styles.closeButton}>&times;</button>
+              <h3>Selecione um País</h3>
+              <button onClick={fecharModalPais} className={styles.closeModal}>×</button>
             </div>
-            <div className={styles.modalContent}>
+            <div className={styles.modalBody}>
               <div className={styles.modalSearchContainer}>
                 <input
                   type="text"
-                  placeholder="Pesquisar país..."
                   value={pesquisaPais}
                   onChange={handlePesquisaPais}
+                  placeholder="Buscar país..."
                   className={styles.searchInput}
                 />
               </div>
+              
               <div className={styles.modalList}>
-                {carregandoPaises ? (
+                {carregandoPais ? (
                   <p>Carregando países...</p>
                 ) : paisesFiltrados.length === 0 ? (
-                  <p>Nenhum país encontrado.</p>
+                  <p>Nenhum país encontrado</p>
                 ) : (
-                  paisesFiltrados.map((pais) => (
-                    <div 
-                      key={pais.cod_pais} 
+                  paisesFiltrados.map(pais => (
+                    <div
+                      key={pais.cod_pais}
                       className={styles.modalItem}
                       onClick={() => selecionarPais(pais)}
                     >
@@ -1157,245 +1239,230 @@ export default function CadastroFuncionario() {
               </div>
             </div>
             <div className={styles.modalFooterSimples}>
-              <button 
-                onClick={fecharModalPais}
-                className={styles.btnCancelar}
-              >
+              <button onClick={fecharModalPais} className={styles.btnCancelar}>
                 Cancelar
               </button>
-              <button 
-                onClick={abrirModalCadastroPais}
-                className={styles.btnCadastrar}
-              >
-                Cadastrar Novo País
+              <button onClick={abrirModalCadastroPais} className={styles.btnCadastrar}>
+                Novo País
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {mostrarModalCadastroCidade && (
+      
+      {/* Modal de Seleção de País (do cadastro de estado) */}
+      {mostrarModalPaisEstado && (
         <div className={styles.modalOverlay}>
-          <div className={`${styles.modalSimples} ${styles.modalCadastroCidade}`}>
+          <div className={`${styles.modalSimples} ${styles.modalPais}`}>
             <div className={styles.modalHeader}>
-              <h3>Cadastrar Nova Cidade</h3>
-              <button onClick={fecharModalCadastroCidade} className={styles.closeButton}>&times;</button>
+              <h3>Selecione um País</h3>
+              <button onClick={fecharModalPaisEstado} className={styles.closeModal}>×</button>
             </div>
-            <div className={styles.modalContent}>
-              <div className={styles.switchItem}>
-                <label>Ativo</label>
-                <div className={styles.switchWrapper}>
-                  <label className={styles.switch}>
-                    <input
-                      type="checkbox"
-                      checked={ativoCidade}
-                      onChange={() => setAtivoCidade(!ativoCidade)}
-                    />
-                    <span className={styles.slider}></span>
-                  </label>
-                </div>
-              </div>
-              <div className={styles.formGroup}>
-                <label>Nome da Cidade *</label>
+            <div className={styles.modalBody}>
+              <div className={styles.modalSearchContainer}>
                 <input
                   type="text"
-                  value={nomeCidade}
-                  onChange={(e) => setNomeCidade(e.target.value)}
-                  className={styles.formInput}
-                  placeholder="Nome da cidade"
+                  value={pesquisaPais}
+                  onChange={handlePesquisaPais}
+                  placeholder="Buscar país..."
+                  className={styles.searchInput}
                 />
               </div>
-              <div className={styles.formGroup}>
-                <label>Estado *</label>
-                <div className={styles.formInputWithButton}>
-                  <input
-                    type="text"
-                    value={estadoSelecionado ? `${estadoSelecionado.nome} (${estadoSelecionado.uf})` : ''}
-                    readOnly
-                    className={styles.formInput}
-                    placeholder="Selecione um estado"
-                  />
-                  <button 
-                    onClick={abrirModalEstado}
-                    className={styles.inputButton}
-                  >
-                    <FaSearch />
-                  </button>
-                </div>
+              
+              <div className={styles.modalList}>
+                {carregandoPais ? (
+                  <p>Carregando países...</p>
+                ) : paisesFiltrados.length === 0 ? (
+                  <p>Nenhum país encontrado</p>
+                ) : (
+                  paisesFiltrados.map(pais => (
+                    <div
+                      key={pais.cod_pais}
+                      className={styles.modalItem}
+                      onClick={() => selecionarPais(pais)}
+                    >
+                      <span>{pais.nome} ({pais.sigla})</span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
             <div className={styles.modalFooterSimples}>
-              <button 
-                onClick={fecharModalCadastroCidade}
-                className={styles.btnCancelar}
-                disabled={carregandoCidade}
-              >
+              <button onClick={fecharModalPaisEstado} className={styles.btnCancelar}>
                 Cancelar
               </button>
-              <button 
-                onClick={handleSalvarCidade}
-                className={styles.btnCadastrar}
-                disabled={carregandoCidade || !estadoSelecionado || !nomeCidade}
-              >
-                {carregandoCidade ? 'Salvando...' : 'Salvar'}
+              <button onClick={abrirModalCadastroPais} className={styles.btnCadastrar}>
+                Novo País
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {mostrarModalCadastroEstado && (
-        <div className={styles.modalOverlay}>
-          <div className={`${styles.modalSimples} ${styles.modalCadastroEstado}`}>
-            <div className={styles.modalHeader}>
-              <h3>Cadastrar Novo Estado</h3>
-              <button onClick={fecharModalCadastroEstado} className={styles.closeButton}>&times;</button>
-            </div>
-            <div className={styles.modalContent}>
-              <div className={styles.switchItem}>
-                <label>Ativo</label>
-                <div className={styles.switchWrapper}>
-                  <label className={styles.switch}>
-                    <input
-                      type="checkbox"
-                      checked={ativoEstado}
-                      onChange={() => setAtivoEstado(!ativoEstado)}
-                    />
-                    <span className={styles.slider}></span>
-                  </label>
-                </div>
-              </div>
-              <div className={styles.formGroup}>
-                <label>Nome do Estado *</label>
-                <input
-                  type="text"
-                  value={nomeEstado}
-                  onChange={(e) => setNomeEstado(e.target.value)}
-                  className={styles.formInput}
-                  placeholder="Nome do estado"
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>UF *</label>
-                <input
-                  type="text"
-                  value={ufEstado}
-                  onChange={(e) => setUfEstado(e.target.value.toUpperCase())}
-                  className={styles.formInput}
-                  placeholder="UF do estado"
-                  maxLength={2}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>País *</label>
-                <div className={styles.formInputWithButton}>
-                  <input
-                    type="text"
-                    value={paisSelecionado ? `${paisSelecionado.nome} (${paisSelecionado.sigla})` : ''}
-                    readOnly
-                    className={styles.formInput}
-                    placeholder="Selecione um país"
-                  />
-                  <button 
-                    onClick={abrirModalPaisDoCadastroEstado}
-                    className={styles.inputButton}
-                  >
-                    <FaSearch />
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className={styles.modalFooterSimples}>
-              <button 
-                onClick={fecharModalCadastroEstado}
-                className={styles.btnCancelar}
-                disabled={carregandoEstado}
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={handleSalvarEstado}
-                className={styles.btnCadastrar}
-                disabled={carregandoEstado || !paisSelecionado || !nomeEstado || !ufEstado}
-              >
-                {carregandoEstado ? 'Salvando...' : 'Salvar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      
+      {/* Modal de Cadastro de País */}
       {mostrarModalCadastroPais && (
         <div className={styles.modalOverlay}>
           <div className={`${styles.modalSimples} ${styles.modalCadastroPais}`}>
             <div className={styles.modalHeader}>
               <h3>Cadastrar Novo País</h3>
-              <button onClick={fecharModalCadastroPais} className={styles.closeButton}>&times;</button>
+              <button onClick={fecharModalCadastroPais} className={styles.closeModal}>×</button>
             </div>
-            <div className={styles.modalContent}>
+            <div className={styles.modalBody}>
               <div className={styles.formGroup}>
                 <label>Nome do País *</label>
                 <input
                   type="text"
                   value={nomePais}
                   onChange={(e) => setNomePais(e.target.value)}
-                  className={styles.formInput}
-                  placeholder="Nome do país"
+                  className={styles.input}
+                  placeholder="Digite o nome do país"
+                  required
                 />
               </div>
+              
               <div className={styles.formGroup}>
                 <label>Sigla *</label>
                 <input
                   type="text"
                   value={siglaPais}
-                  onChange={(e) => setSiglaPais(e.target.value.toUpperCase())}
-                  className={styles.formInput}
-                  placeholder="Sigla do país"
+                  onChange={(e) => setSiglaPais(e.target.value)}
+                  className={styles.input}
+                  placeholder="Ex: BRA, ARG"
                   maxLength={3}
+                  required
                 />
               </div>
+              
               <div className={styles.formGroup}>
                 <label>DDI</label>
                 <input
                   type="text"
                   value={ddiPais}
                   onChange={(e) => setDdiPais(e.target.value)}
-                  className={styles.formInput}
-                  placeholder="DDI do país (opcional)"
+                  className={styles.input}
+                  placeholder="Ex: +55, +1, +54"
+                  maxLength={5}
                 />
-              </div>
-              <div className={styles.switchItem}>
-                <label>Ativo</label>
-                <div className={styles.switchWrapper}>
-                  <label className={styles.switch}>
-                    <input
-                      type="checkbox"
-                      checked={ativoPais}
-                      onChange={() => setAtivoPais(!ativoPais)}
-                    />
-                    <span className={styles.slider}></span>
-                  </label>
-                </div>
               </div>
             </div>
             <div className={styles.modalFooterSimples}>
-              <button 
+              <button
                 onClick={fecharModalCadastroPais}
                 className={styles.btnCancelar}
                 disabled={carregandoPais}
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={handleSalvarPais}
                 className={styles.btnCadastrar}
                 disabled={carregandoPais || !nomePais || !siglaPais}
               >
-                {carregandoPais ? 'Salvando...' : 'Salvar'}
+                {carregandoPais ? 'Salvando...' : 'Cadastrar País'}
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {mostrarModalCargo && (
+          <div className={styles.modalOverlay}>
+            <div className={`${styles.modalSimples} ${styles.modalCidade}`} style={{ width: '600px', height: 'auto' }}>
+                  <div className={styles.modalHeader}>
+                      <h3>Selecionar Cargo</h3>
+                      <button onClick={fecharModalCargo} className={styles.closeModal}>×</button>
+                  </div>
+                  <div className={styles.modalBody}>
+                      <div className={styles.modalSearchContainer}>
+                          <input
+                              type="text"
+                              placeholder="Pesquisar cargo ou setor..."
+                              value={pesquisaCargo}
+                              onChange={handlePesquisaCargo}
+                              className={styles.searchInput}
+                          />
+                      </div>
+                      <div className={styles.modalList}>
+                          {carregandoCargo ? <p>Carregando...</p> : (
+                              cargosFiltrados.length === 0 ? <p>Nenhum cargo encontrado.</p> :
+                              cargosFiltrados.map((cargo) => (
+                                  <div key={cargo.cod_cargo} className={styles.modalItem} onClick={() => selecionarCargo(cargo)}>
+                                      <span><strong>{cargo.cargo}</strong> (Setor: {cargo.setor || 'N/A'})</span>
+                                  </div>
+                                  ))
+                          )}
+                      </div>
+                  </div>
+                  <div className={styles.modalFooterSimples}>
+                    <button onClick={fecharModalCargo} className={styles.btnCancelar}>Cancelar</button>
+                    <button onClick={abrirModalCadastroCargo} className={styles.btnCadastrar}>Novo Cargo</button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {mostrarModalCadastroCargo && (
+          <div className={styles.modalOverlay}>
+            <div className={`${styles.modalSimples} ${styles.modalCadastroCidade}`} style={{ width: '500px' }}>
+                  <div className={styles.modalHeader}>
+                      <h3>Novo Cargo</h3>
+                      <button onClick={fecharModalCadastroCargo} className={styles.closeModal}>×</button>
+                  </div>
+                  <div className={styles.modalBody}>
+                      <div className={styles.formGrid}>
+                        <div className={styles.formRow}>
+                          <div className={styles.formColumn}>
+                            <div className={styles.formGroup}>
+                              <label htmlFor="new_cargo_nome">Cargo</label>
+                              <input type="text" id="new_cargo_nome" value={novoCargo.cargo} onChange={handleNovoCargoChange} name="cargo" className={styles.input} />
+                            </div>
+                            <div className={styles.formGroup}>
+                              <label htmlFor="new_cargo_setor">Setor</label>
+                              <input type="text" id="new_cargo_setor" value={novoCargo.setor} onChange={handleNovoCargoChange} name="setor" className={styles.input} />
+                            </div>
+                          </div>
+                          <div className={styles.formColumn}>
+                            <div className={styles.formGroup}>
+                              <label htmlFor="new_cargo_salario">Salário Base</label>
+                              <input type="text" id="new_cargo_salario" value={novoCargo.salario_base} onChange={handleNovoCargoChange} name="salario_base" className={styles.input} />
+                            </div>
+                            <div className={styles.formGroup}>
+                              <label className={styles.radioLabel}>Exige CNH?</label>
+                              <div className={styles.radioGroup}>
+                                <label className={styles.radioOption}>
+                                  <input
+                                    type="radio"
+                                    name="exige_cnh"
+                                    value="true"
+                                    checked={novoCargo.exige_cnh === true}
+                                    onChange={handleNovoCargoChange}
+                                  />
+                                  Sim
+                                </label>
+                                <label className={styles.radioOption}>
+                                  <input
+                                    type="radio"
+                                    name="exige_cnh"
+                                    value="false"
+                                    checked={novoCargo.exige_cnh === false}
+                                    onChange={handleNovoCargoChange}
+                                  />
+                                  Não
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+                  <div className={styles.modalFooter}>
+                    <button type="button" onClick={fecharModalCadastroCargo} className={styles.cancelButton}>Cancelar</button>
+                    <button type="button" onClick={handleSalvarCargo} className={styles.submitButton} disabled={carregandoCargo}>
+                      {carregandoCargo ? 'Salvando...' : 'Salvar'}
+                    </button>
+                  </div>
+              </div>
+          </div>
       )}
     </div>
   );

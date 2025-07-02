@@ -1,34 +1,40 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import styles from './produtos.module.css';
+import { FaSearch, FaPlus, FaEdit, FaTrash, FaFilter } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 export default function ConsultaProdutos() {
   const [produtos, setProdutos] = useState([]);
-  const [mensagem, setMensagem] = useState(null);
-  const [carregando, setCarregando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
   const router = useRouter();
+  
+  const [pesquisa, setPesquisa] = useState('');
+  const [filtroStatus, setFiltroStatus] = useState('todos');
+  const [mostrarModalConfirmacao, setMostrarModalConfirmacao] = useState(false);
+  const [mostrarModalRelacionamento, setMostrarModalRelacionamento] = useState(false);
+  const [itemParaExcluir, setItemParaExcluir] = useState(null);
 
   useEffect(() => {
-    // Verificar se há mensagem na query (redirecionamento após cadastro/edição)
-    if (router.query.mensagem) {
-      exibirMensagem(router.query.mensagem, router.query.tipo === 'success');
-      
-      // Limpar a query após exibir a mensagem
-      router.replace('/produtos', undefined, { shallow: true });
-    }
-    
-    carregarProdutos();
-  }, [router]);
+    const timer = setTimeout(() => {
+      carregarProdutos();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [pesquisa, filtroStatus]);
 
   const carregarProdutos = async () => {
     setCarregando(true);
+    const params = new URLSearchParams({
+        pesquisa: pesquisa,
+        status: filtroStatus,
+    });
     try {
-      const res = await fetch('/api/produtos');
+      const res = await fetch(`/api/produtos?${params.toString()}`);
       const data = await res.json();
       setProdutos(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
-      exibirMensagem('Erro ao carregar produtos', false);
+      toast.error('Erro ao carregar produtos');
     } finally {
       setCarregando(false);
     }
@@ -38,125 +44,251 @@ export default function ConsultaProdutos() {
     router.push(`/produtos/cadastro?cod_prod=${produto.cod_prod}`);
   };
 
-  const handleDelete = async (cod_prod) => {
-    if (!confirm('Tem certeza que deseja excluir este produto?')) {
-      return;
-    }
+  const handleDelete = (produto) => {
+    setItemParaExcluir(produto);
+    setMostrarModalConfirmacao(true);
+  };
 
+  const confirmarExclusao = async () => {
+    if (!itemParaExcluir) return;
+    
     setCarregando(true);
+    setMostrarModalConfirmacao(false);
+    
     try {
-      const res = await fetch(`/api/produtos?cod_prod=${cod_prod}`, {
-        method: 'DELETE'
+      const res = await fetch(`/api/produtos?cod_prod=${itemParaExcluir.cod_prod}`, { 
+        method: 'DELETE' 
       });
       
       const data = await res.json();
       
-      if (res.ok) {
-        carregarProdutos();
-        exibirMensagem('Produto excluído com sucesso!', true);
-      } else {
-        exibirMensagem(`Erro: ${data.error || 'Falha ao excluir produto'}`, false);
+      if (res.status === 409 && data.hasRelationships) {
+        setMostrarModalRelacionamento(true);
+        return;
       }
+      
+      if (!res.ok) throw new Error(data.error);
+      
+      toast.success('Produto excluído com sucesso!');
+      await carregarProdutos();
+      setItemParaExcluir(null);
+      
     } catch (error) {
-      console.error('Erro ao excluir produto:', error);
-      exibirMensagem('Erro ao processar requisição', false);
+      toast.error(error.message);
     } finally {
       setCarregando(false);
     }
   };
 
-  const exibirMensagem = (texto, sucesso) => {
-    setMensagem({
-      texto,
-      tipo: sucesso ? 'success' : 'error'
-    });
+  const handleDesativar = async () => {
+    if (!itemParaExcluir) return;
     
-    // Remove a mensagem após 5 segundos
-    setTimeout(() => {
-      setMensagem(null);
-    }, 5000);
+    setCarregando(true);
+    setMostrarModalRelacionamento(false);
+    
+    try {
+      const dados = { ...itemParaExcluir, ativo: false };
+      
+      const res = await fetch(`/api/produtos?cod_prod=${itemParaExcluir.cod_prod}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      toast.success('Produto desativado com sucesso!');
+      await carregarProdutos();
+      setItemParaExcluir(null);
+      
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const cancelarExclusao = () => {
+    setMostrarModalConfirmacao(false);
+    setMostrarModalRelacionamento(false);
+    setItemParaExcluir(null);
   };
 
   const formatarValor = (valor) => {
-    if (!valor) return 'R$ 0,00';
+    if (valor === null || valor === undefined) return 'R$ 0,00';
     return `R$ ${parseFloat(valor).toFixed(2).replace('.', ',')}`;
   };
+
+  const userHasSearched = pesquisa !== '' || filtroStatus !== 'todos';
 
   return (
     <div className={styles.container}>
       <div className={styles.headerContainer}>
-        <button
-          onClick={() => router.push('/')}
-          className={styles.voltarButton}
-        >
-          Voltar
-        </button>
         <h1 className={styles.titulo}>Produtos</h1>
-      </div>
-      
-      {mensagem && (
-        <div className={`${styles.message} ${mensagem.tipo === 'success' ? styles.successMessage : styles.errorMessage}`}>
-          {mensagem.texto}
-        </div>
-      )}
-
-      <div className={styles.actionBar}>
         <button 
           onClick={() => router.push('/produtos/cadastro')}
-          className={styles.submitButton}
-          disabled={carregando}
+          className={styles.button}
         >
+          <FaPlus style={{ marginRight: '8px' }} />
           Cadastrar Novo Produto
         </button>
       </div>
-
-      <h2 className={styles.subtitulo}>Lista de Produtos</h2>
+      
+      <div className={styles.filtrosContainer}>
+          <div className={styles.filtroItem}>
+              <FaSearch className={styles.filtroIcon} />
+              <input
+                  type="text"
+                  placeholder="Pesquisar por nome, marca, categoria, cód. de barras..."
+                  value={pesquisa}
+                  onChange={(e) => setPesquisa(e.target.value)}
+                  className={styles.searchInput}
+              />
+          </div>
+          <div className={styles.filtroItem}>
+              <FaFilter className={styles.filtroIcon} />
+              <select
+                  value={filtroStatus}
+                  onChange={(e) => setFiltroStatus(e.target.value)}
+                  className={styles.selectFiltro}
+              >
+                  <option value="todos">Todos os Status</option>
+                  <option value="habilitado">Habilitado</option>
+                  <option value="desabilitado">Desabilitado</option>
+              </select>
+          </div>
+      </div>
       
       {carregando ? (
-        <p>Carregando...</p>
-      ) : produtos.length === 0 ? (
-        <p>Nenhum produto cadastrado.</p>
+        <div className={styles.loading}>Carregando...</div>
       ) : (
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Descrição</th>
-              <th>NCM</th>
-              <th>Unidade</th>
-              <th>Preço</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {produtos.map(produto => (
-              <tr key={produto.cod_prod}>
-                <td>{produto.cod_prod}</td>
-                <td>{produto.descricao}</td>
-                <td>{produto.ncm}</td>
-                <td>{produto.unidade}</td>
-                <td>{formatarValor(produto.preco_unitario)}</td>
-                <td>
-                  <button
-                    onClick={() => handleEdit(produto)}
-                    className={`${styles.actionButton} ${styles.editButton}`}
-                    disabled={carregando}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(produto.cod_prod)}
-                    className={`${styles.actionButton} ${styles.deleteButton}`}
-                    disabled={carregando}
-                  >
-                    Excluir
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        (produtos.length > 0 || userHasSearched) && (
+            <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                <thead>
+                    <tr>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Marca</th>
+                    <th>Categoria</th>
+                    <th>Estoque</th>
+                    <th className={styles.acoesHeader}>
+                      <div className={styles.acoesBotoes}>Ações</div>
+                    </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {produtos.length === 0 ? (
+                        <tr>
+                            <td colSpan="8" className={styles.nenhumResultado}>Nenhum produto encontrado.</td>
+                        </tr>
+                    ) : (
+                        produtos.map(produto => (
+                        <tr key={produto.cod_prod}>
+                            <td>{produto.cod_prod}</td>
+                            <td className={styles.nomeProdutoTd}>
+                              <div className={styles.nomeProdutoWrapper}>
+                                <span
+                                  className={`${styles.statusIndicator} ${produto.ativo ? styles.habilitado : styles.desabilitado}`}
+                                  title={produto.ativo ? 'Habilitado' : 'Desabilitado'}
+                                ></span>
+                                <span className={styles.nomeProdutoText}>
+                                  {produto.nome}
+                                </span>
+                              </div>
+                            </td>
+                            <td>{produto.nome_marca}</td>
+                            <td>{produto.nome_categoria}</td>
+                            <td>{produto.estoque}</td>
+                            <td>
+                                <div className={styles.acoesBotoes}>
+                                    <button onClick={() => handleEdit(produto)} className={`${styles.actionButton} ${styles.editButton}`} title="Editar">
+                                        <FaEdit />
+                                    </button>
+                                    <button onClick={() => handleDelete(produto)} className={`${styles.actionButton} ${styles.deleteButton}`} title="Excluir">
+                                        <FaTrash />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        ))
+                    )}
+                </tbody>
+                </table>
+            </div>
+        )
+      )}
+      
+      {/* Modal de Confirmação Inicial */}
+      {mostrarModalConfirmacao && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContentSmall}>
+            <div className={styles.modalHeader}>
+              <h3>Confirmar Exclusão</h3>
+              <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ddd' }} />
+            </div>
+            <div className={styles.modalBody}>
+              <p>Tem certeza que deseja excluir o produto "<strong>{itemParaExcluir?.nome}</strong>"?</p>
+            </div>
+            <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ddd' }} />
+            <div className={styles.modalFooter}>
+              <div className={styles.modalActions}>
+                <button 
+                  type="button" 
+                  onClick={cancelarExclusao} 
+                  className={`${styles.button} ${styles.cancelButton}`}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="button" 
+                  onClick={confirmarExclusao} 
+                  className={`${styles.button} ${styles.saveButton}`}
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Relacionamento */}
+      {mostrarModalRelacionamento && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContentSmall}>
+            <div className={styles.modalHeader}>
+              <h3>Confirmar Ação</h3>
+              <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ddd' }} />
+            </div>
+            <div className={styles.modalBody}>
+              <p>Não é possível excluir o produto "<strong>{itemParaExcluir?.nome}</strong>" pois está vinculado a outro registro.</p>
+              <p>Deseja desativar o produto ao invés de excluir?</p>
+            </div>
+            <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #ddd' }} />
+            <div className={styles.modalFooter}>
+              <div className={styles.modalActions}>
+                <button 
+                  type="button" 
+                  onClick={cancelarExclusao} 
+                  className={`${styles.button} ${styles.cancelButton}`}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleDesativar} 
+                  className={`${styles.button}`}
+                  style={{ backgroundColor: '#ffc107', color: 'white' }}
+                >
+                  Desativar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
-} 
+}

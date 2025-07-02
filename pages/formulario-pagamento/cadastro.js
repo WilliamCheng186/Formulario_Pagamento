@@ -259,7 +259,7 @@ export default function CadastroFormularioPagamento() {
       {carregando ? (
         <p>Carregando dados...</p>
       ) : (
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
           <div className={styles.formGroup}>
             <label htmlFor="descricao" className={styles.formLabel}>Descrição</label>
             <input
