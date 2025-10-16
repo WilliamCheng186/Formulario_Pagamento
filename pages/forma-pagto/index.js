@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import styles from './forma-pagto.module.css';
 import { FaSearch, FaPlus, FaEdit, FaTrash, FaFilter } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import FormaPagtoModal from '../../components/forma-pagto/FormaPagtoModal';
 
 export default function ConsultaFormasPagamento() {
   const [formasPagamento, setFormasPagamento] = useState([]);
@@ -14,6 +15,11 @@ export default function ConsultaFormasPagamento() {
   const [modalExclusao, setModalExclusao] = useState({ aberto: false, forma: null, hasRelationships: false });
   const [modalConfirmacao, setModalConfirmacao] = useState({ aberto: false, forma: null });
 
+  // Estados para o modal de cadastro/edição
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formaSelecionada, setFormaSelecionada] = useState(null);
+  const [nextCode, setNextCode] = useState(null);
+
   useEffect(() => {
     if (router.isReady) {
       const timer = setTimeout(() => {
@@ -22,6 +28,25 @@ export default function ConsultaFormasPagamento() {
       return () => clearTimeout(timer);
     }
   }, [pesquisa, filtroStatus, router.isReady]);
+
+  useEffect(() => {
+    fetchNextCode();
+  }, []);
+
+  const fetchNextCode = async () => {
+    try {
+      const res = await fetch('/api/forma-pagto?action=nextcode');
+      const data = await res.json();
+      if (res.ok) {
+        setNextCode(data.nextCode);
+      } else {
+        throw new Error(data.error || 'Falha ao buscar próximo código');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message);
+    }
+  };
 
   useEffect(() => {
     if (router.query.message) {
@@ -47,8 +72,43 @@ export default function ConsultaFormasPagamento() {
     }
   };
 
+  const handleOpenModal = (forma = null) => {
+    setFormaSelecionada(forma);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setFormaSelecionada(null);
+    setIsModalOpen(false);
+  };
+
+  const handleSave = async (formData, cod_forma) => {
+    const isEditando = !!cod_forma;
+    const url = isEditando ? `/api/forma-pagto?cod_forma=${cod_forma}` : '/api/forma-pagto';
+    const method = isEditando ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+        throw new Error(data.error || 'Erro ao salvar forma de pagamento');
+    }
+
+    toast.success(isEditando ? 'Forma de pagamento atualizada com sucesso!' : 'Forma de pagamento salva com sucesso!');
+    handleCloseModal();
+    carregarFormasPagamento();
+    if (!isEditando) {
+        fetchNextCode();
+    }
+  };
+
   const handleEdit = (forma) => {
-    router.push(`/forma-pagto/cadastro?id=${forma.cod_forma}`);
+    handleOpenModal(forma);
   };
 
   const handleDelete = (cod_forma) => {
@@ -138,7 +198,7 @@ export default function ConsultaFormasPagamento() {
     <div className={styles.container}>
       <div className={styles.headerContainer}>
         <h1 className={styles.titulo}>Formas de Pagamento</h1>
-        <button onClick={() => router.push('/forma-pagto/cadastro')} className={styles.button}>
+        <button onClick={() => handleOpenModal()} className={styles.button}>
           <FaPlus style={{ marginRight: '8px' }} />
           Cadastrar Nova Forma
         </button>
@@ -277,6 +337,14 @@ export default function ConsultaFormasPagamento() {
           </div>
         </div>
       )}
+      
+      <FormaPagtoModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSave}
+        formaPagto={formaSelecionada}
+        nextCode={nextCode}
+      />
     </div>
   );
 }

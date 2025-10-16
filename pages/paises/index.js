@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styles from './paises.module.css';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import PaisModal from '../../components/paises/PaisModal'; // Importar o novo modal
 
 export default function ConsultaPaisesPage() {
   const router = useRouter();
@@ -13,6 +14,23 @@ export default function ConsultaPaisesPage() {
   const [filtroSituacao, setFiltroSituacao] = useState('todos');
   const [modalExclusao, setModalExclusao] = useState({ aberto: false, pais: null, hasRelationships: false });
   const [modalConfirmacao, setModalConfirmacao] = useState({ aberto: false, pais: null });
+
+  // Novos estados para o modal de cadastro/edição
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [paisSelecionado, setPaisSelecionado] = useState(null);
+  const [nextCode, setNextCode] = useState(null);
+
+  const fetchNextCode = async () => {
+    try {
+      const res = await fetch('/api/paises?next-code=true');
+      if (!res.ok) throw new Error('Falha ao buscar próximo código');
+      const data = await res.json();
+      setNextCode(data.nextCode);
+    } catch (error) {
+      console.error('Erro ao buscar próximo código:', error);
+      // Tratar o erro como achar melhor, talvez exibindo uma mensagem.
+    }
+  };
 
   const carregarPaises = async () => {
     setLoading(true);
@@ -32,17 +50,66 @@ export default function ConsultaPaisesPage() {
 
   useEffect(() => {
     carregarPaises();
-    // Verificar se há mensagem da página de cadastro/edição
-    if (router.query.mensagem && router.query.tipo) {
-      exibirMensagem(router.query.mensagem, router.query.tipo === 'success');
-      // Limpar query params para não mostrar a mensagem novamente ao recarregar
-      router.replace('/paises', undefined, { shallow: true });
-    }
-  }, [router.query]);
+    fetchNextCode(); // Buscar o próximo código ao carregar a página
+    // O código que lia a mensagem da query string não é mais necessário da mesma forma
+    // if (router.query.mensagem && router.query.tipo) {
+    //   exibirMensagem(router.query.mensagem, router.query.tipo === 'success');
+    //   router.replace('/paises', undefined, { shallow: true });
+    // }
+  }, []); // Removido router.query da dependência para evitar recarregamentos
 
   const exibirMensagem = (texto, sucesso) => {
     setMensagem({ texto, tipo: sucesso ? 'success' : 'error' });
     setTimeout(() => setMensagem(null), 5000);
+  };
+
+  const handleOpenModal = (pais = null) => {
+    setPaisSelecionado(pais);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setPaisSelecionado(null);
+    setIsModalOpen(false);
+  };
+
+  const handleSave = async (formData, cod_pais) => {
+    const isEditingMode = !!cod_pais;
+    const payload = {
+      nome: formData.nome,
+      sigla: formData.sigla,
+      ddi: formData.ddi,
+      ativo: formData.ativo
+    };
+
+    let url = '/api/paises';
+    let method = 'POST';
+
+    if (isEditingMode) {
+      payload.cod_pais = cod_pais;
+      url = `/api/paises?cod_pais=${cod_pais}`;
+      method = 'PUT';
+    }
+
+    const res = await fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const responseData = await res.json();
+
+    if (res.ok) {
+      handleCloseModal();
+      exibirMensagem(isEditingMode ? 'País atualizado com sucesso!' : 'País cadastrado com sucesso!', true);
+      carregarPaises(); // Recarrega a lista
+      if (!isEditingMode) {
+        fetchNextCode(); // Busca o próximo código após um cadastro
+      }
+    } else {
+      // Lança o erro para ser capturado no componente do modal
+      throw new Error(responseData.error || 'Erro ao salvar país');
+    }
   };
 
   const handleDelete = (cod_pais) => {
@@ -158,11 +225,9 @@ export default function ConsultaPaisesPage() {
             <option value="inativos">Desabilitados</option>
           </select>
         </div>
-        <Link href="/paises/cadastro">
-          <button className={`${styles.button} ${styles.btnAdicionar}`}>
+        <button onClick={() => handleOpenModal()} className={`${styles.button} ${styles.btnAdicionar}`}>
             <FaPlus style={{ marginRight: '5px' }} /> Adicionar
           </button>
-        </Link>
       </div>
 
       {loading && <p>Carregando países...</p>}
@@ -196,11 +261,9 @@ export default function ConsultaPaisesPage() {
                     </span>
                   </td>
                   <td className={styles.actionsCellContainer}>
-                    <Link href={`/paises/cadastro?id=${pais.cod_pais}`} passHref>
-                      <button className={`${styles.button} ${styles.editarButtonLista}`}>
+                    <button onClick={() => handleOpenModal(pais)} className={`${styles.button} ${styles.editarButtonLista}`}>
                         <FaEdit /> Editar
                       </button>
-                    </Link>
                     <button 
                       onClick={() => handleDelete(pais.cod_pais)} 
                       className={`${styles.button} ${styles.excluirButtonLista}`}
@@ -272,6 +335,14 @@ export default function ConsultaPaisesPage() {
           </div>
         </div>
       )}
+
+      <PaisModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSave}
+        pais={paisSelecionado}
+        nextCode={nextCode}
+      />
     </div>
   );
 } 

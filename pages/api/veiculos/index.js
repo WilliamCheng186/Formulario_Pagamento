@@ -8,16 +8,30 @@ export default async function handle(req, res) {
   switch (method) {
     case 'GET':
       try {
-                const { ativo } = req.query;
-                let queryText = 'SELECT * FROM veiculos';
+                const { ativo, cod_trans } = req.query; // Adicionado cod_trans
+                let queryText = `
+                    SELECT v.*, t.nome as nome_transportadora 
+                    FROM veiculos v
+                    LEFT JOIN transportadoras t ON v.cod_trans = t.cod_trans
+                `;
                 const queryParams = [];
-          
+                let conditions = [];
+
                 if (ativo !== undefined && ativo !== 'todos') {
-                    queryText += ' WHERE ativo = $1';
+                    conditions.push(`v.ativo = $${queryParams.length + 1}`);
                     queryParams.push(ativo === 'true');
                 }
 
-                queryText += ' ORDER BY placa ASC';
+                if (cod_trans) {
+                    conditions.push(`v.cod_trans = $${queryParams.length + 1}`);
+                    queryParams.push(cod_trans);
+                }
+
+                if (conditions.length > 0) {
+                    queryText += ' WHERE ' + conditions.join(' AND ');
+                }
+
+                queryText += ' ORDER BY v.placa ASC';
 
                 const { rows } = await pool.query(queryText, queryParams);
                 res.status(200).json(rows);

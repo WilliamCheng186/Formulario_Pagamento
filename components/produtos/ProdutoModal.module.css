@@ -1,0 +1,266 @@
+/* Conteúdo de components/produtos/ProdutoModal.module.css */
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1060;
+    padding: 2rem;
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modalContent {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 1000px; /* Aumentado para o formulário de produto */
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slide-down 0.3s ease-out;
+}
+
+.subModalOverlay {
+    z-index: 1100; /* Garante que o submodal fique sobre o modal principal */
+}
+
+/* --- Estilos Migrados de produtos.module.css --- */
+
+.form {
+  background-color: #fff;
+  padding: 0; /* Removido padding para se ajustar ao modal */
+  border-radius: 8px;
+  max-width: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+
+.formHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.titulo {
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.formRow {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.formGroup {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.input, .select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  background-color: #fff !important;
+}
+
+.input:focus, .select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.input[disabled], .disabledInput {
+  background-color: #f8f9fa !important;
+  color: #495057;
+  cursor: not-allowed;
+}
+
+.inputComBotao {
+  display: flex;
+}
+
+.inputComBotao .input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.searchButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  background-color: #007bff;
+  border: 1px solid #007bff;
+  color: white;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.searchButton:hover {
+  background-color: #0056b3;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+.submitButton, .cancelButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.submitButton {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.submitButton:hover {
+  background-color: #218838;
+}
+
+.cancelButton {
+  background-color: #dc3545; /* Vermelho */
+  color: white;
+}
+
+.cancelButton:hover {
+  background-color: #c82333;
+}
+
+.statusSwitchContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.statusLabel {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.statusHabilitado {
+  color: #28a745;
+}
+
+.statusDesabilitado {
+  color: #dc3545;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #28a745;
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+.formFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding: 1rem 0 0 0;
+    border-top: 1px solid #e9ecef;
+}
+
+.dateInfoContainer {
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  color: #555;
+  font-size: 0.8rem;
+  gap: 4px;
+  text-align: left;
+}
+
+.dateInfoContainer span {
+  font-weight: 500;
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 1rem;
+} 

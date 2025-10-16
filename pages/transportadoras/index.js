@@ -3,6 +3,155 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styles from './transportadoras.module.css';
 import { FaEye, FaFilter, FaSearch, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import TransportadoraModal from '../../components/transportadoras/TransportadoraModal'; // Importar o novo modal
+import { toast } from 'react-toastify';
+import modalStyles from '../../components/CondPagtoModal/CondPagtoModal.module.css';
+
+
+export function TransportadorasComponent({ isSelectionMode = false, onSelect, onCancel }) {
+  const [transportadoras, setTransportadoras] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pesquisa, setPesquisa] = useState('');
+
+  // Estados para o modal de cadastro de transportadora
+  const [modalAberta, setModalAberta] = useState(false);
+  const [nextCode, setNextCode] = useState(null);
+
+  const fetchTransportadoras = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/transportadoras');
+      if (!res.ok) throw new Error('Falha ao buscar transportadoras.');
+      const data = await res.json();
+      setTransportadoras(Array.isArray(data) ? data : []);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransportadoras();
+  }, []);
+  
+  const fetchNextCode = async () => {
+    try {
+      const res = await fetch('/api/transportadoras?action=nextcode');
+      if (!res.ok) throw new Error('Falha ao buscar próximo código');
+      const data = await res.json();
+      setNextCode(data.nextCode);
+    } catch (error) {
+      toast.error('Não foi possível obter o próximo código da transportadora.');
+    }
+  };
+
+  const handleOpenModalNova = async () => {
+    await fetchNextCode();
+    setModalAberta(true);
+  };
+
+  const handleCloseModalNova = () => {
+    setModalAberta(false);
+  };
+
+  const handleSaveNova = async (formData) => {
+    try {
+      const res = await fetch('/api/transportadoras', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Erro ao cadastrar transportadora');
+      }
+      toast.success('Transportadora cadastrada com sucesso!');
+      handleCloseModalNova();
+      fetchTransportadoras(); // Recarrega a lista
+    } catch (error) {
+      toast.error(error.message);
+      throw error; // Propaga o erro para o modal lidar com o estado de loading
+    }
+  };
+
+  const transportadorasFiltradas = transportadoras.filter(t =>
+    t.nome.toLowerCase().includes(pesquisa.toLowerCase()) ||
+    String(t.cod_trans).includes(pesquisa)
+  );
+  
+  if (!isSelectionMode) {
+    return null; // A renderização principal cuidará disso
+  }
+
+  return (
+    <>
+      <TransportadoraModal
+        isOpen={modalAberta}
+        onClose={handleCloseModalNova}
+        onSave={handleSaveNova}
+        transportadora={null}
+        nextCode={nextCode}
+      />
+      <div className={modalStyles.modalOverlay} style={{ zIndex: 1050 }}>
+        <div className={modalStyles.modalContent} style={{ padding: '20px', width: '700px' }}>
+          <h3 className={modalStyles.modalTitle}>Selecione a Transportadora</h3>
+          <div className={modalStyles.filtrosContainer}>
+            <div className={modalStyles.filtroItem}>
+              <FaSearch className={modalStyles.filtroIcon} />
+              <input
+                type="text"
+                placeholder="Buscar por nome ou código..."
+                value={pesquisa}
+                onChange={(e) => setPesquisa(e.target.value)}
+                className={modalStyles.searchInput}
+              />
+            </div>
+          </div>
+          {loading ? (
+            <div className={modalStyles.loading}>Carregando...</div>
+          ) : (
+            <div className={modalStyles.tableContainerModal}>
+              <table className={modalStyles.table}>
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Status</th>
+                    <th>Nome/Razão Social</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transportadorasFiltradas.map((t) => (
+                    <tr key={t.cod_trans} className={modalStyles.selectableRow} onClick={() => onSelect(t)}>
+                      <td>{t.cod_trans}</td>
+                      <td>
+                        <span
+                          className={`${modalStyles.statusIndicator} ${t.ativo ? modalStyles.habilitado : modalStyles.desabilitado}`}
+                          title={t.ativo ? 'Habilitado' : 'Desabilitado'}
+                        ></span>
+                      </td>
+                      <td>{t.nome}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className={modalStyles.modalFooter} style={{ justifyContent: 'flex-end' }}>
+            <div className={modalStyles.buttonGroup}>
+              <button type="button" onClick={onCancel} className={`${modalStyles.button} ${modalStyles.cancelButton}`}>
+                Cancelar
+              </button>
+              <button type="button" onClick={handleOpenModalNova} className={`${modalStyles.button} ${modalStyles.newButton}`}>
+                <FaPlus style={{ marginRight: '8px' }} /> Nova Transportadora
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default function ConsultaTransportadoras() {
   const router = useRouter();
@@ -11,8 +160,11 @@ export default function ConsultaTransportadoras() {
   const [carregando, setCarregando] = useState(true);
   const [mensagem, setMensagem] = useState(null);
   const [tipoMensagem, setTipoMensagem] = useState('');
-  const [pesquisa, setPesquisa] = useState('');
-  const [filtroSituacao, setFiltroSituacao] = useState('todos');
+  
+  // Estados para o novo modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [transportadoraSelecionada, setTransportadoraSelecionada] = useState(null);
+  const [nextCode, setNextCode] = useState(null);
   
   // Estados para o modal de visualização
   const [mostrarModalDetalhes, setMostrarModalDetalhes] = useState(false);
@@ -26,6 +178,10 @@ export default function ConsultaTransportadoras() {
   const [mostrarModalRelacionamento, setMostrarModalRelacionamento] = useState(false);
   const [itemParaExcluir, setItemParaExcluir] = useState(null);
 
+  // Estados para o filtro
+  const [pesquisa, setPesquisa] = useState('');
+  const [filtroSituacao, setFiltroSituacao] = useState('todos');
+
   useEffect(() => {
     // Verificar se há mensagem na query (redirecionamento após cadastro/edição)
     if (router.query.mensagem) {
@@ -36,6 +192,7 @@ export default function ConsultaTransportadoras() {
     }
     
     fetchTransportadoras();
+    fetchNextCode(); // Carrega o próximo código ao montar a página
   }, [router]);
   
   // Aplicar filtros quando os critérios mudam
@@ -112,7 +269,7 @@ export default function ConsultaTransportadoras() {
       exibirMensagem('Código da transportadora não encontrado', 'error');
       return;
     }
-    router.push(`/transportadoras/cadastro?cod_trans=${transportadora.cod_trans}`);
+    handleOpenModalEditar(transportadora);
   };
 
   const handleDelete = (transportadora) => {
@@ -335,6 +492,66 @@ export default function ConsultaTransportadoras() {
     return valor;
   };
 
+  const fetchNextCode = async () => {
+    try {
+      const res = await fetch('/api/transportadoras?action=nextcode');
+      if (!res.ok) throw new Error('Falha ao buscar próximo código');
+      const data = await res.json();
+      setNextCode(data.nextCode);
+    } catch (error) {
+      console.error('Erro ao buscar próximo código:', error);
+      toast.error('Não foi possível obter o próximo código da transportadora.');
+    }
+  };
+
+  const handleOpenModalNovo = () => {
+    setTransportadoraSelecionada(null);
+    fetchNextCode(); // Garante que o código está atualizado
+    setIsModalOpen(true);
+  };
+  
+  const handleOpenModalEditar = async (transportadora) => {
+    // É importante buscar os dados completos para a edição
+    try {
+      const res = await fetch(`/api/transportadoras?cod_trans=${transportadora.cod_trans}`);
+      if (!res.ok) throw new Error('Falha ao carregar dados completos da transportadora.');
+      const dadosCompletos = await res.json();
+      setTransportadoraSelecionada(dadosCompletos);
+      setIsModalOpen(true);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setTransportadoraSelecionada(null);
+  };
+
+  const handleSave = async (formData, cod_trans) => {
+      const isEditing = !!cod_trans;
+      const url = isEditing ? `/api/transportadoras?cod_trans=${cod_trans}` : '/api/transportadoras';
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+          throw new Error(data.message || data.error || 'Erro ao salvar transportadora');
+      }
+
+      toast.success(isEditing ? 'Transportadora atualizada com sucesso!' : 'Transportadora cadastrada com sucesso!');
+      handleCloseModal();
+      fetchTransportadoras(); // Recarrega a lista
+      if (!isEditing) {
+          fetchNextCode();
+      }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.headerContainer}>
@@ -349,7 +566,7 @@ export default function ConsultaTransportadoras() {
 
       <div className={styles.actionBar} style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <button 
-          onClick={() => router.push('/transportadoras/cadastro')}
+          onClick={handleOpenModalNovo}
           className={styles.submitButton}
         >
           <FaPlus style={{ marginRight: '8px' }} /> Cadastrar Nova Transportadora
@@ -714,6 +931,16 @@ export default function ConsultaTransportadoras() {
             </div>
           </div>
         </div>
+      )}
+
+      {isModalOpen && (
+        <TransportadoraModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleSave}
+          transportadora={transportadoraSelecionada}
+          nextCode={nextCode}
+        />
       )}
     </div>
   );

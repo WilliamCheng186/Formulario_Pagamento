@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import styles from './veiculos.module.css'; // Usará seu próprio CSS
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaFilter } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import modalStyles from '../../components/CondPagtoModal/CondPagtoModal.module.css';
 
 // Componente para Veículos
-export function VeiculosComponent({ isSelectionMode = false, onSelect, onCancel }) {
+export function VeiculosComponent({ isSelectionMode = false, onSelect, onCancel, isCadastroMode = false, onSaveCallback, codTransportadora = null }) {
   const [veiculos, setVeiculos] = useState([]);
   const [pesquisa, setPesquisa] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('todos');
@@ -19,24 +20,40 @@ export function VeiculosComponent({ isSelectionMode = false, onSelect, onCancel 
   const [descricao, setDescricao] = useState('');
   const [ativo, setAtivo] = useState(true);
   const [itemParaExcluir, setItemParaExcluir] = useState(null);
+  const [nomeTransportadora, setNomeTransportadora] = useState('');
 
-  const carregarVeiculos = async () => {
+  const carregarVeiculos = useCallback(async () => {
     setLoading(true);
+    let url = '/api/veiculos';
+    if (isSelectionMode && codTransportadora) {
+      url += `?cod_trans=${codTransportadora}`;
+    }
+
     try {
-      const res = await fetch('/api/veiculos');
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Erro ao carregar veículos');
       const data = await res.json();
       setVeiculos(data);
+      if (data.length > 0 && data[0].nome_transportadora) {
+        setNomeTransportadora(data[0].nome_transportadora);
+      } else {
+        setNomeTransportadora('');
+      }
     } catch (error) {
       toast.error(error.message);
+      setVeiculos([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [isSelectionMode, codTransportadora]);
 
   useEffect(() => {
-    carregarVeiculos();
-  }, []);
+    if(isCadastroMode) {
+      abrirModalParaNovoVeiculo();
+    } else {
+      carregarVeiculos();
+    }
+  }, [isCadastroMode, carregarVeiculos]);
 
   const veiculosFiltrados = useMemo(() => {
     let filtradas = veiculos;
@@ -78,6 +95,10 @@ export function VeiculosComponent({ isSelectionMode = false, onSelect, onCancel 
   const fecharModal = () => {
     setMostrarModal(false);
     setVeiculoEditando(null);
+    // Se estiver em modo de cadastro, chamar o onCancel para fechar o componente
+    if (isCadastroMode && onCancel) {
+      onCancel();
+    }
   };
 
   const handleSalvar = async (e) => {
@@ -90,6 +111,10 @@ export function VeiculosComponent({ isSelectionMode = false, onSelect, onCancel 
       descricao,
       ativo,
     };
+
+    if (!veiculoEditando && codTransportadora) {
+      dados.cod_trans = codTransportadora;
+    }
 
     try {
       const method = veiculoEditando ? 'PUT' : 'POST';
@@ -105,7 +130,12 @@ export function VeiculosComponent({ isSelectionMode = false, onSelect, onCancel 
       toast.success(`Veículo ${veiculoEditando ? 'atualizado' : 'cadastrado'} com sucesso!`);
       
       fecharModal();
-      await carregarVeiculos();
+      
+      if (onSaveCallback) {
+        onSaveCallback(data); // Devolve o novo veículo para o componente pai
+      } else {
+        await carregarVeiculos();
+      }
       
       if (isSelectionMode && !veiculoEditando && onSelect) {
         onSelect(data);
@@ -219,7 +249,9 @@ export function VeiculosComponent({ isSelectionMode = false, onSelect, onCancel 
               {!isSelectionMode && (
                 <div className={styles.switchContainer}>
                   <label htmlFor="statusSwitch" className={styles.switchLabel}>
-                    {ativo ? 'Habilitado' : 'Desabilitado'}
+                    <span className={ativo ? styles.statusEnabled : styles.statusDisabled}>
+                      {ativo ? 'Habilitado' : 'Desabilitado'}
+                    </span>
                   </label>
                   <label className={styles.switch} htmlFor="statusSwitch">
                     <input
@@ -292,18 +324,21 @@ export function VeiculosComponent({ isSelectionMode = false, onSelect, onCancel 
       return <div className={styles.loading}>Carregando...</div>;
     }
     if (veiculosFiltrados.length === 0) {
+        if (codTransportadora) {
+            return <div className={styles.nenhumResultado}>Nenhum veículo encontrado para esta transportadora.</div>;
+        }
       return <div className={styles.nenhumResultado}>Nenhum veículo encontrado.</div>;
     }
     return (
-      <div className={isSelectionMode ? styles.tableContainerModal : styles.tableContainer}>
-        <table className={styles.table}>
+      <div className={isSelectionMode ? modalStyles.tableContainerModal : styles.tableContainer}>
+        <table className={isSelectionMode ? modalStyles.table : styles.table}>
           <thead>
             <tr>
               <th>Placa</th>
-              {!isSelectionMode && <th>Status</th>}
               <th>Modelo</th>
               <th>Descrição</th>
               {!isSelectionMode && <>
+                <th>Status</th>
                 <th>Criação</th>
                 <th>Atualização</th>
                 <th className={styles.acoesHeader}>Ações</th>
@@ -312,28 +347,26 @@ export function VeiculosComponent({ isSelectionMode = false, onSelect, onCancel 
           </thead>
           <tbody>
             {veiculosFiltrados.map((veiculo) => (
-              <tr key={veiculo.placa} className={isSelectionMode ? styles.selectableRow : ''} onClick={() => isSelectionMode && handleSelect(veiculo)}>
+              <tr key={veiculo.placa} className={isSelectionMode ? modalStyles.selectableRow : ''} onClick={() => isSelectionMode && handleSelect(veiculo)}>
                 <td>{veiculo.placa}</td>
-                {!isSelectionMode && (
-                  <td>
-                    <span
-                      className={`${styles.statusIndicator} ${veiculo.ativo ? styles.habilitado : styles.desabilitado}`}
-                      title={`${veiculo.ativo ? 'Habilitado' : 'Desabilitado'} (valor: ${veiculo.ativo})`}
-                      style={{
-                        display: 'inline-block',
-                        width: '10px',
-                        height: '10px',
-                        borderRadius: '50%',
-                        backgroundColor: veiculo.ativo ? '#28a745' : '#dc3545',
-                        boxShadow: `0 0 8px ${veiculo.ativo ? 'rgba(40, 167, 69, 0.7)' : 'rgba(220, 53, 69, 0.7)'}`
-                      }}
-                    ></span>
-                  </td>
-                )}
                 <td>{veiculo.modelo}</td>
                 <td>{veiculo.descricao || '-'}</td>
                 {!isSelectionMode && (
                   <>
+                    <td>
+                      <span
+                        className={`${styles.statusIndicator} ${veiculo.ativo ? styles.habilitado : styles.desabilitado}`}
+                        title={`${veiculo.ativo ? 'Habilitado' : 'Desabilitado'} (valor: ${veiculo.ativo})`}
+                        style={{
+                          display: 'inline-block',
+                          width: '10px',
+                          height: '10px',
+                          borderRadius: '50%',
+                          backgroundColor: veiculo.ativo ? '#28a745' : '#dc3545',
+                          boxShadow: `0 0 8px ${veiculo.ativo ? 'rgba(40, 167, 69, 0.7)' : 'rgba(220, 53, 69, 0.7)'}`
+                        }}
+                      ></span>
+                    </td>
                     <td>{formatarData(veiculo.data_criacao)}</td>
                     <td>{formatarData(veiculo.data_atualizacao)}</td>
                     <td className={styles.acoesBotoes}>
@@ -354,31 +387,40 @@ export function VeiculosComponent({ isSelectionMode = false, onSelect, onCancel 
     );
   };
 
+  if (isCadastroMode) {
+    return renderCadastroModal();
+  }
+
   if (isSelectionMode) {
     return (
-      <div className={styles.modalContent}>
-        {renderCadastroModal()}
-        <h2 style={{fontSize: "1.5rem", color: "#333"}}>Selecionar Veículo</h2>
-        <div className={styles.filtrosContainer} style={{padding: '0.5rem 0', boxShadow: 'none', backgroundColor: 'transparent'}}>
-          <div className={styles.filtroItem}>
-            <FaSearch className={styles.filtroIcon} />
-            <input
-              type="text"
-              placeholder="Buscar por placa, modelo ou descrição..."
-              value={pesquisa}
-              onChange={(e) => setPesquisa(e.target.value)}
-              className={styles.searchInput}
-            />
+      <div className={modalStyles.modalOverlay}>
+        <div className={modalStyles.modalContent} style={{ padding: '20px', width: '700px' }}>
+          {renderCadastroModal()}
+          <h3 className={modalStyles.modalTitle}>
+              Selecionar Veículo
+              {nomeTransportadora && <span style={{fontSize: '1rem', color: '#555', display: 'block'}}>Transportadora: {nomeTransportadora}</span>}
+          </h3>
+          <div className={modalStyles.filtrosContainer} style={{ padding: '0', boxShadow: 'none', backgroundColor: 'transparent', marginBottom: '1rem', marginTop: '1rem' }}>
+            <div className={modalStyles.filtroItem}>
+              <FaSearch className={modalStyles.filtroIcon} />
+              <input
+                type="text"
+                placeholder="Buscar por placa, modelo ou descrição..."
+                value={pesquisa}
+                onChange={(e) => setPesquisa(e.target.value)}
+                className={modalStyles.searchInput}
+              />
+            </div>
           </div>
-        </div>
-        {loading ? <div className={styles.loading}>Carregando...</div> : renderTable()}
-        <div className={styles.modalFooter} style={{borderTop: '1px solid #eee', marginTop: '1rem', paddingTop: '1rem', justifyContent: 'flex-end', gap: '0.5rem'}}>
-            <button type="button" onClick={onCancel} className={`${styles.button} ${styles.cancelButton}`}>
-                Cancelar
-            </button>
-            <button type="button" onClick={abrirModalParaNovoVeiculo} className={`${styles.button} ${styles.saveButton}`}>
-                Novo Veículo
-            </button>
+          {loading ? <div className={modalStyles.loading}>Carregando...</div> : renderTable()}
+          <div className={modalStyles.modalFooter} style={{ justifyContent: 'flex-end', gap: '0.5rem'}}>
+              <button type="button" onClick={onCancel} className={`${modalStyles.button} ${modalStyles.cancelButton}`}>
+                  Cancelar
+              </button>
+              <button type="button" onClick={abrirModalParaNovoVeiculo} className={`${modalStyles.button} ${modalStyles.newButton}`}>
+                  <FaPlus style={{ marginRight: '8px' }} /> Novo Veículo
+              </button>
+          </div>
         </div>
       </div>
     );

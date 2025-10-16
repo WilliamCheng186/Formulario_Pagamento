@@ -1,0 +1,273 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modalContent {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90vw;
+  max-width: 1200px;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column; /* Essencial para o layout vertical */
+  overflow: hidden;
+  animation: slide-down 0.3s ease-out;
+}
+
+.modalBody {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex-grow: 1; /* Faz o corpo crescer e ocupar o espaço */
+  scrollbar-gutter: stable;
+}
+
+.headerContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.titulo {
+    margin: 0;
+    font-size: 1.75rem;
+    color: #343a40;
+}
+
+.formFooter {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+.switchContainerTopRight {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dateInfoContainer {
+  margin-right: auto; /* Isso empurra o container de data para a esquerda */
+  display: flex;
+  flex-direction: column;
+  color: #555;
+  font-size: 0.8rem;
+  gap: 4px;
+  text-align: left;
+}
+
+.dateInfoContainer span {
+  font-weight: 500;
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 1rem;
+}
+
+.cancelButton {
+    background-color: #dc3545;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.cancelButton:hover {
+    background-color: #c82333;
+}
+
+.submitButton {
+    background-color: #28a745;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.submitButton:hover {
+    background-color: #218838;
+}
+
+/* Re-importando estilos do formulário para manter consistência */
+.form {
+    width: 100%;
+}
+.formRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 12px;
+    align-items: flex-start;
+}
+.formGroup {
+    flex: 1;
+    min-width: 200px;
+    margin-bottom: 0.5rem;
+}
+.formGroup label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+    font-size: 0.9rem;
+}
+.input,
+.select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    height: 42px;
+    box-sizing: border-box;
+}
+.inputWithButton {
+    display: flex;
+    align-items: stretch;
+}
+.inputWithButton .input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    flex-grow: 1;
+}
+.searchButton {
+    background-color: #2196F3;
+    color: white;
+    border: 1px solid #2196F3;
+    padding: 0 1rem;
+    cursor: pointer;
+    border-radius: 0 4px 4px 0;
+    margin-left: -1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: #4caf50;
+}
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+.inputGroup {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 0.5rem;
+}
+.inputGroup .input {
+  flex-grow: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.addButtonInline {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+    padding: 0 0.75rem;
+    margin-left: -1px;
+}
+.removeButton {
+    background-color: #fce8e6;
+    color: #c53929;
+    border: 1px solid #f8d7da;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+    padding: 0 0.75rem;
+    margin-left: -1px;
+}
+.buttonContainer {
+    display: flex;
+}
+.actionButton {
+     padding: 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    transition: all 0.2s ease;
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    color: #212529;
+} 

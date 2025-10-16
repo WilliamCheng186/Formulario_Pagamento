@@ -85,22 +85,8 @@ export default async function handler(req, res) {
             dias_vencimento: p.dias_vencimento,
             perc_pagto: p.perc_pagto,
             cod_forma_pagto: p.cod_forma_pagto,
-            forma_pagamento: {
-              descricao: p.forma_pagamento_descricao
-            }
+            descricao_forma_pagto: p.forma_pagamento_descricao,
           }));
-          
-          console.log('Retornando condição de pagamento para edição:', {
-            cod_pagto: condPagto.cod_pagto,
-            descricao: condPagto.descricao,
-            juros_perc: condPagto.juros_perc,
-            multa_perc: condPagto.multa_perc,
-            desconto_perc: condPagto.desconto_perc,
-            ativo: condPagto.ativo,
-            parcelas_count: condPagto.parcelas?.length || 0,
-            data_criacao: condPagto.data_criacao,
-            data_atualizacao: condPagto.data_atualizacao
-          });
           
           return res.status(200).json(condPagto);
         }

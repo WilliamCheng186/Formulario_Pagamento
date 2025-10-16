@@ -313,7 +313,7 @@ export function CondPagtoComponent({ isSelectionMode = false, onSelect, onCancel
 
   const renderCadastroModal = () => {
     return (
-        <Modal isOpen={mostrarModalCadastro} onClose={() => setMostrarModalCadastro(false)}>
+        <Modal isOpen={mostrarModalCadastro} onClose={() => setMostrarModalCadastro(false)} zIndex={1060}>
             <div className={styles.modalContentLargo}>
                 <form onSubmit={handleSalvar} autoComplete="off">
                     <div className={styles.modalBody}>
@@ -402,7 +402,7 @@ export function CondPagtoComponent({ isSelectionMode = false, onSelect, onCancel
   };
 
   const renderModalFormaPagamento = () => (
-    <Modal isOpen={mostrarModalFormaPagto} onClose={() => setMostrarModalFormaPagto(false)} zIndex={1001}>
+    <Modal isOpen={mostrarModalFormaPagto} onClose={() => setMostrarModalFormaPagto(false)} zIndex={1070}>
       <div className={styles.modalContentPequeno}>
         <div className={styles.modalHeader}>
           <h3>Selecionar Forma de Pagamento</h3>
@@ -441,7 +441,7 @@ export function CondPagtoComponent({ isSelectionMode = false, onSelect, onCancel
   );
 
   const renderModalNovaForma = () => (
-    <Modal isOpen={mostrarModalNovaForma} onClose={() => setMostrarModalNovaForma(false)} zIndex={1002}>
+    <Modal isOpen={mostrarModalNovaForma} onClose={() => setMostrarModalNovaForma(false)} zIndex={1080}>
       <div className={styles.modalContentPequeno}>
         <div className={styles.modalHeader}>
           <h3>Nova Forma de Pagamento</h3>
@@ -646,30 +646,38 @@ export function CondPagtoComponent({ isSelectionMode = false, onSelect, onCancel
   );
 
   const renderSelectionMode = () => (
-    <div className={styles.modalContent}>
-        <h2 style={{ fontSize: "1.5rem", color: "#333", marginBottom: "1rem" }}>Selecionar Condição de Pagamento</h2>
-        <div className={styles.filtrosContainer} style={{ padding: '0.5rem 0', boxShadow: 'none', backgroundColor: 'transparent' }}>
-          <div className={styles.filtroItem}>
-            <FaSearch className={styles.filtroIcon} />
-            <input
-              type="text"
-              placeholder="Buscar por nome ou código..."
-              value={pesquisa}
-              onChange={(e) => setPesquisa(e.target.value)}
-              className={styles.searchInput}
-            />
+    <div className={styles.modalOverlay} style={{ zIndex: 1050 }}>
+      <div className={styles.modalContent} style={{padding: '20px', width: '700px'}}>
+          <h3 className={styles.modalTitle}>Selecione a Condição de Pagamento</h3>
+          <div className={styles.filtrosContainer} style={{ padding: '0', boxShadow: 'none', backgroundColor: 'transparent', marginBottom: '1rem', marginTop: '1rem' }}>
+            <div className={styles.filtroItem}>
+              <FaSearch className={styles.filtroIcon} />
+              <input
+                type="text"
+                placeholder="Buscar por nome ou código..."
+                value={pesquisa}
+                onChange={(e) => setPesquisa(e.target.value)}
+                className={styles.searchInput}
+              />
+            </div>
+          </div>
+          {loading ? <div className={styles.loading}>Carregando...</div> : (
+            condicoesFiltradas.length > 0 
+              ? renderTable() 
+              : <div className={styles.nenhumResultado}>Nenhuma condição de pagamento encontrada.</div>
+          )}
+          <div className={styles.modalFooter} style={{ justifyContent: 'flex-end' }}>
+            <div className={styles.buttonGroup}>
+              <button type="button" onClick={onCancel} className={`${styles.button} ${styles.cancelButton}`}>
+                Cancelar
+              </button>
+              <button type="button" onClick={handleAddNew} className={`${styles.button} ${styles.saveButton}`}>
+                <FaPlus style={{ marginRight: '8px' }} /> Nova Condição
+              </button>
+            </div>
           </div>
         </div>
-        {loading ? <div className={styles.loading}>Carregando...</div> : renderTable()}
-        <div className={styles.modalFooter}>
-          <button type="button" onClick={onCancel} className={`${styles.button} ${styles.cancelButton}`}>
-            Cancelar
-          </button>
-          <button type="button" onClick={handleAddNew} className={`${styles.button} ${styles.saveButton}`}>
-            Nova Condição
-          </button>
-        </div>
-      </div>
+    </div>
   );
 
   const renderFullPageMode = () => (

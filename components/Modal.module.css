@@ -12,6 +12,17 @@
     overflow-y: auto;
   }
   
+  @keyframes slide-down {
+    from {
+      transform: translateY(-50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
   .modalContent {
     background: white;
     padding: 20px;
@@ -21,6 +32,7 @@
     max-width: 500px;
     width: 90%;
     margin: 2rem 0;
+    animation: slide-down 0.3s ease-out;
   }
   
   .modalContentCompact {
@@ -34,6 +46,7 @@
     max-height: 50vh;
     display: flex;
     flex-direction: column;
+    animation: slide-down 0.3s ease-out;
   }
   
   .closeButton {

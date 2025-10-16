@@ -1,0 +1,219 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 600px;
+  position: relative;
+  animation: slide-down 0.3s ease-out;
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+}
+
+.titulo {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0;
+}
+
+/* Reutilizando estilos de paises.module.css */
+.formCadastroPais {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.formRow {
+  display: flex;
+  gap: 1rem;
+}
+
+.formRow .formGroup {
+  flex: 1;
+}
+
+.input {
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.inputSmall {
+  max-width: 120px;
+}
+
+.inputError {
+  border-color: #dc3545;
+}
+
+.errorText {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.formFooter {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+}
+
+.button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: opacity 0.2s;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  background-color: #dc3545; /* Cor vermelha */
+  color: white;
+  border: 1px solid #dc3545;
+}
+.cancelButton:hover {
+  background-color: #c82333; /* Vermelho mais escuro no hover */
+  border-color: #bd2130;
+}
+
+.submitButtonGreen {
+  background-color: #28a745;
+  color: white;
+}
+.submitButtonGreen:hover {
+  background-color: #218838;
+}
+
+.message {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.successMessage {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.errorMessage {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Switch styles */
+.switchTopRight {
+  position: absolute;
+  top: 1.5rem;
+  right: 4.5rem; /* Ajuste para não sobrepor o botão de fechar */
+}
+
+.switchLabelWrapper {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.switchTextLabel {
+  margin-right: 10px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.statusEnabled {
+  color: #28a745;
+  font-weight: bold;
+}
+.statusDisabled {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.switchInput {
+  display: none;
+}
+
+.switchVisual {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: #dc3545;
+  border-radius: 34px;
+  transition: background-color 0.3s;
+}
+
+.switchVisual::before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.switchInput:checked + .switchVisual {
+  background-color: #28a745;
+}
+
+.switchInput:checked + .switchVisual::before {
+  transform: translateX(20px);
+} 

@@ -62,12 +62,17 @@ async function handleGet(req, res) {
         e.uf,
         e.nome as estado_nome,
         t.nome as nome_transportadora,
+        CASE 
+          WHEN f.cod_pagto IS NOT NULL THEN json_build_object('cod_pagto', f.cod_pagto, 'descricao', cp.descricao)
+          ELSE NULL
+        END as cond_pagto,
         COALESCE(emails.lista, '[]'::json) as emails,
         COALESCE(telefones.lista, '[]'::json) as telefones
       FROM fornecedores f
       LEFT JOIN cidades c ON f.cod_cid = c.cod_cid
       LEFT JOIN estados e ON c.cod_est = e.cod_est
       LEFT JOIN transportadoras t ON f.cod_trans = t.cod_trans
+      LEFT JOIN cond_pagto cp ON f.cod_pagto = cp.cod_pagto
       LEFT JOIN (
         SELECT cod_forn, json_agg(json_build_object('valor', email)) as lista 
         FROM fornecedor_emails 
@@ -107,9 +112,12 @@ async function handleGet(req, res) {
 async function handlePost(req, client) {
   const {
     nome, nome_fantasia, endereco, numero, bairro, complemento,
-    cod_cid, uf, cep, rg_ie, cpf_cnpj, tipo_pessoa, ativo, cod_pagto, cod_trans,
+    cod_cid, uf, cep, rg_ie, cpf_cnpj, tipo_pessoa, ativo, cod_pagto: raw_cod_pagto, cod_trans: raw_cod_trans,
     emails = [], telefones = []
   } = req.body;
+
+  const cod_pagto = raw_cod_pagto || null;
+  const cod_trans = raw_cod_trans || null;
 
   // Validações principais
   if (!nome || !cpf_cnpj) {
@@ -144,12 +152,15 @@ async function handlePost(req, client) {
 }
 
 async function handlePut(req, client) {
-  const { cod_forn } = req.query;
+  const { id: cod_forn } = req.query;
         const { 
     nome, nome_fantasia, endereco, numero, bairro, complemento,
-    cod_cid, uf, cep, rg_ie, cpf_cnpj, tipo_pessoa, ativo, cod_pagto, cod_trans,
+    cod_cid, uf, cep, rg_ie, cpf_cnpj, tipo_pessoa, ativo, cod_pagto: raw_cod_pagto, cod_trans: raw_cod_trans,
     emails = [], telefones = []
   } = req.body;
+
+  const cod_pagto = raw_cod_pagto || null;
+  const cod_trans = raw_cod_trans || null;
 
   if (!cod_forn) throw new Error('Código do fornecedor é obrigatório.');
 

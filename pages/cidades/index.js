@@ -1,8 +1,139 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 import styles from '../paises/paises.module.css';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import CidadeModal from '../../components/cidades/CidadeModal'; 
+import modalStyles from '../../components/cidades/CidadeModal.module.css';
+
+export function CidadesComponent({ isSelectionMode = false, onSelect, onCancel }) {
+  const [cidades, setCidades] = useState([]);
+  const [estados, setEstados] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filtroTexto, setFiltroTexto] = useState('');
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [cidadeSelecionada, setCidadeSelecionada] = useState(null);
+  const [nextCode, setNextCode] = useState(null);
+
+  const carregarDados = async () => {
+    setLoading(true);
+    try {
+      const [resCidades, resEstados] = await Promise.all([
+        fetch('/api/cidades?completo=true'), // Pedir dados completos para o display
+        fetch('/api/estados')
+      ]);
+      if (!resCidades.ok || !resEstados.ok) throw new Error('Falha ao carregar dados');
+      
+      const dataCidades = await resCidades.json();
+      const dataEstados = await resEstados.json();
+      
+      setCidades(dataCidades);
+      setEstados(Array.isArray(dataEstados) ? dataEstados : []);
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const fetchNextCode = async () => {
+    try {
+      const res = await fetch('/api/cidades?next-code=true');
+      const data = await res.json();
+      setNextCode(data.nextCode);
+    } catch (error) {
+      console.error('Erro ao buscar próximo código:', error);
+    }
+  };
+
+  useEffect(() => {
+    carregarDados();
+    if (!isSelectionMode) fetchNextCode();
+  }, [isSelectionMode]);
+
+  const handleOpenModal = (cidade = null) => {
+    setCidadeSelecionada(cidade);
+    setIsModalOpen(true);
+    if (!cidade) fetchNextCode();
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setCidadeSelecionada(null);
+  };
+
+  const handleSave = async (formData, cod_cid) => {
+    const isEditing = !!cod_cid;
+    const res = await fetch(`/api/cidades${isEditing ? `?cod_cid=${cod_cid}` : ''}`, {
+      method: isEditing ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    
+    handleCloseModal();
+    await carregarDados(); // Recarrega os dados para a lista de seleção
+    if(isSelectionMode && !isEditing) {
+        onSelect(data); // Seleciona a cidade recém-criada
+    }
+  };
+  
+  const cidadesFiltradas = useMemo(() => {
+    return cidades.filter(cidade => {
+        const termo = filtroTexto.toLowerCase();
+        return cidade.nome.toLowerCase().includes(termo) ||
+               (cidade.estado_uf && cidade.estado_uf.toLowerCase().includes(termo)) ||
+               (cidade.estado_nome && cidade.estado_nome.toLowerCase().includes(termo));
+    });
+  }, [cidades, filtroTexto]);
+
+  if (isSelectionMode) {
+    return (
+        <div className={modalStyles.modalOverlay} style={{ zIndex: 1050 }}>
+            <div className={modalStyles.modalContent} style={{width: '800px'}}>
+                <div className={modalStyles.modalHeader}>
+                  <h3>Selecione uma Cidade</h3>
+                </div>
+                <div className={modalStyles.modalBody}>
+                    <input 
+                      type="text" 
+                      placeholder="Buscar cidade ou UF..." 
+                      value={filtroTexto} 
+                      onChange={(e) => setFiltroTexto(e.target.value)} 
+                      className={styles.inputPesquisaLista} // Mantém o estilo de pesquisa
+                    />
+                    <div className={styles.tableContainer} style={{maxHeight: '400px', overflowY: 'auto'}}>
+                        <table className={styles.tableLista}>
+                          <thead><tr><th>Código</th><th>Cidade</th><th>Estado/UF</th></tr></thead>
+                          <tbody>
+                            {loading ? <tr><td colSpan="3">Carregando...</td></tr> : cidadesFiltradas.map(cidade => (
+                              <tr key={cidade.cod_cid} onClick={() => onSelect(cidade)} style={{cursor: 'pointer'}}>
+                                <td>{cidade.cod_cid}</td>
+                                <td>{cidade.nome}</td>
+                                <td>{cidade.estado_nome} ({cidade.estado_uf})</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div className={modalStyles.modalFooter}>
+                    <button onClick={onCancel} className={`${modalStyles.button} ${modalStyles.cancelButtonRed}`}>Cancelar</button>
+                    <button onClick={() => handleOpenModal()} className={`${modalStyles.button} ${modalStyles.submitButtonGreen}`}>
+                      Nova Cidade
+                    </button>
+                </div>
+                {/* O modal de cadastro aninhado permanece o mesmo */}
+                <CidadeModal isOpen={isModalOpen} onClose={handleCloseModal} onSave={handleSave} cidade={cidadeSelecionada} nextCode={nextCode} />
+            </div>
+        </div>
+    )
+  }
+
+  // Renderização normal da página
+  return <ConsultaCidadesPage />;
+}
 
 export default function ConsultaCidadesPage() {
   const router = useRouter();
@@ -14,6 +145,22 @@ export default function ConsultaCidadesPage() {
   const [filtroSituacao, setFiltroSituacao] = useState('todos');
   const [modalExclusao, setModalExclusao] = useState({ aberto: false, cidade: null, hasRelationships: false });
   const [modalConfirmacao, setModalConfirmacao] = useState({ aberto: false, cidade: null });
+
+  // Novos estados para o modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [cidadeSelecionada, setCidadeSelecionada] = useState(null);
+  const [nextCode, setNextCode] = useState(null);
+
+  const fetchNextCode = async () => {
+    try {
+      const res = await fetch('/api/cidades?next-code=true');
+      if (!res.ok) throw new Error('Falha ao buscar próximo código');
+      const data = await res.json();
+      setNextCode(data.nextCode);
+    } catch (error) {
+      console.error('Erro ao buscar próximo código da cidade:', error);
+    }
+  };
 
   const carregarDados = async () => {
     setLoading(true);
@@ -42,15 +189,57 @@ export default function ConsultaCidadesPage() {
 
   useEffect(() => {
     carregarDados();
-    if (router.query.mensagem && router.query.tipo) {
-      exibirMensagem(router.query.mensagem, router.query.tipo === 'success');
-      router.replace('/cidades', undefined, { shallow: true });
-    }
-  }, [router.query]);
+    fetchNextCode();
+    // Remover a lógica de mensagem da query
+  }, []);
 
   const exibirMensagem = (texto, sucesso) => {
     setMensagem({ texto, tipo: sucesso ? 'success' : 'error' });
     setTimeout(() => setMensagem(null), 5000);
+  };
+
+  const handleOpenModal = (cidade = null) => {
+    setCidadeSelecionada(cidade);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setCidadeSelecionada(null);
+    setIsModalOpen(false);
+  };
+
+  const handleSave = async (formData, cod_cid) => {
+    const isEditingMode = !!cod_cid;
+    const payload = { ...formData };
+    delete payload.estado_nome;
+    delete payload.pais_nome;
+
+    let url = '/api/cidades';
+    let method = 'POST';
+    
+    if (isEditingMode) {
+      url = `/api/cidades?cod_cid=${cod_cid}`;
+      method = 'PUT';
+    }
+    
+    const response = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    
+    const responseData = await response.json();
+    
+    if (!response.ok) {
+        throw new Error(responseData.error || 'Erro ao salvar a cidade');
+    }
+    
+    handleCloseModal();
+    exibirMensagem(isEditingMode ? 'Cidade atualizada com sucesso!' : 'Cidade cadastrada com sucesso!', true);
+    carregarDados();
+    if (!isEditingMode) {
+        fetchNextCode();
+    }
   };
 
   const getNomeEstado = (codEst) => {
@@ -176,11 +365,9 @@ export default function ConsultaCidadesPage() {
             <option value="inativos">Desabilitadas</option>
           </select>
         </div>
-        <Link href="/cidades/cadastro">
-          <button className={`${styles.button} ${styles.btnAdicionar}`}>
+        <button onClick={() => handleOpenModal()} className={`${styles.button} ${styles.btnAdicionar}`}>
             <FaPlus style={{ marginRight: '5px' }} /> Adicionar
           </button>
-        </Link>
       </div>
 
       {loading && <p>Carregando cidades...</p>}
@@ -214,11 +401,9 @@ export default function ConsultaCidadesPage() {
                     </span>
                   </td>
                   <td className={styles.actionsCellContainer}>
-                    <Link href={`/cidades/cadastro?id=${cidade.cod_cid}`} passHref>
-                      <button className={`${styles.button} ${styles.editarButtonLista}`}>
+                    <button onClick={() => handleOpenModal(cidade)} className={`${styles.button} ${styles.editarButtonLista}`}>
                         <FaEdit /> Editar
                       </button>
-                    </Link>
                     <button
                       onClick={() => handleDelete(cidade.cod_cid)}
                       className={`${styles.button} ${styles.excluirButtonLista}`}
@@ -290,6 +475,14 @@ export default function ConsultaCidadesPage() {
           </div>
         </div>
       )}
+
+      <CidadeModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSave}
+        cidade={cidadeSelecionada}
+        nextCode={nextCode}
+      />
     </div>
   );
 } 

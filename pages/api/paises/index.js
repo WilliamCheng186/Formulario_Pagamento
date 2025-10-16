@@ -7,9 +7,11 @@ export default async function handler(req, res) {
     case 'GET':
       try {
         if (req.query['next-code']) {
-          const result = await pool.query('SELECT MAX(cod_pais) as max_code FROM paises');
-          const maxCode = result.rows[0].max_code || 0;
-          return res.status(200).json({ nextCode: maxCode + 1 });
+          const result = await pool.query("SELECT nextval(pg_get_serial_sequence('paises', 'cod_pais')) as next_code");
+          const nextCode = result.rows[0].next_code;
+          // Devolve o valor para o contador, pois a consulta acima o consome
+          await pool.query('SELECT setval(pg_get_serial_sequence(\'paises\', \'cod_pais\'), $1, false)', [nextCode]);
+          return res.status(200).json({ nextCode: nextCode });
         }
 
         if (req.query.cod_pais) {

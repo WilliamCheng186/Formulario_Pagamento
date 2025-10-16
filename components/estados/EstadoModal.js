@@ -1,17 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import styles from '../paises/paises.module.css';
+import styles from './EstadoModal.module.css'; // Mudar para o novo arquivo de estilo
 import { FaSearch } from 'react-icons/fa';
 
-export default function CadastroEstadoPage() {
-  const router = useRouter();
-  const { id: queryId } = router.query;
-  const isEditingMode = !!queryId;
+export default function EstadoModal({ isOpen, onClose, onSave, estado, nextCode }) {
+  const isEditingMode = !!estado;
 
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState(null);
   const [paises, setPaises] = useState([]);
-  const [displayCode, setDisplayCode] = useState('...');
   const [errosCampos, setErrosCampos] = useState({});
   
   const [formData, setFormData] = useState({
@@ -20,10 +16,10 @@ export default function CadastroEstadoPage() {
     cod_pais: '',
     pais_nome: '',
     ativo: true,
-    data_criacao: null,
-    data_atualizacao: null
   });
+  const [displayCode, setDisplayCode] = useState('...');
 
+  // Estados para o modal de países
   const [paisesFiltradosModal, setPaisesFiltradosModal] = useState([]);
   const [modalPaisAberto, setModalPaisAberto] = useState(false);
   const [modalCadastroPaisAberto, setModalCadastroPaisAberto] = useState(false);
@@ -32,18 +28,6 @@ export default function CadastroEstadoPage() {
   const [formPaisModal, setFormPaisModal] = useState({ nome: '', sigla: '', ddi: '' });
   const [loadingPaisModal, setLoadingPaisModal] = useState(false);
   const [mensagemPaisModal, setMensagemPaisModal] = useState(null);
-
-  const fetchNextCode = async () => {
-    try {
-      const res = await fetch('/api/estados?next-code=true');
-      if (!res.ok) throw new Error('Falha ao buscar código');
-      const data = await res.json();
-      setDisplayCode(data.nextCode);
-    } catch (error) {
-      console.error('Erro ao buscar próximo código do estado:', error);
-      setDisplayCode('Erro');
-    }
-  };
 
   const exibirMensagem = (texto, sucesso, duracao = 5000) => {
     setMensagem({ texto, tipo: sucesso ? 'success' : 'error' });
@@ -72,39 +56,37 @@ export default function CadastroEstadoPage() {
   };
 
   useEffect(() => {
-    carregarListaDePaisesParaModal();
-  }, []);
+    // Carrega a lista de países uma vez quando o componente é montado (ou quando a prop isOpen muda de false para true)
+    if (isOpen) {
+        carregarListaDePaisesParaModal();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
-    if (isEditingMode) {
-      setLoading(true);
-      fetch(`/api/estados?cod_est=${queryId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.cod_est) {
-            setFormData({
-              nome: data.nome || '',
-              uf: data.uf || '',
-              cod_pais: data.cod_pais ? data.cod_pais.toString() : '',
-              pais_nome: data.pais_nome || 'País não encontrado',
-              ativo: data.ativo !== undefined ? data.ativo : true,
-              data_criacao: data.data_criacao,
-              data_atualizacao: data.data_atualizacao
-            });
-            setDisplayCode(data.cod_est);
-          } else {
-            exibirMensagem('Estado não encontrado para edição.', false);
-            router.push('/estados');
-          }
-        })
-        .catch(err => {
-          exibirMensagem('Erro ao carregar dados do estado.', false);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      fetchNextCode();
+    if (isOpen) {
+      if (isEditingMode) {
+        setFormData({
+          nome: estado.nome || '',
+          uf: estado.uf || '',
+          cod_pais: estado.cod_pais ? estado.cod_pais.toString() : '',
+          pais_nome: estado.pais_nome || 'País não encontrado',
+          ativo: estado.ativo !== undefined ? estado.ativo : true,
+        });
+        setDisplayCode(estado.cod_est);
+      } else {
+        setFormData({
+          nome: '',
+          uf: '',
+          cod_pais: '',
+          pais_nome: '',
+          ativo: true,
+        });
+        setDisplayCode(nextCode || '...');
+      }
+      setMensagem(null);
+      setErrosCampos({});
     }
-  }, [queryId, isEditingMode]);
+  }, [isOpen, isEditingMode, estado, nextCode]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -114,74 +96,35 @@ export default function CadastroEstadoPage() {
     }
     setFormData(prev => ({ ...prev, [name]: finalValue }));
     
-    // E1 - Limpar erro do campo quando o usuário começar a digitar
     if (errosCampos[name]) {
-      setErrosCampos(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setErrosCampos(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const validarCampos = () => {
     const novosErros = {};
-    
-    // E1 - Validar campos obrigatórios
-    if (!formData.nome || formData.nome.trim() === '') {
-      novosErros.nome = 'O nome do estado é obrigatório.';
-    }
-    if (!formData.uf || formData.uf.trim() === '') {
-      novosErros.uf = 'A UF é obrigatória.';
-    }
-    if (!formData.cod_pais) {
-      novosErros.pais_nome = 'O país é obrigatório.';
-    }
-    
+    if (!formData.nome || formData.nome.trim() === '') novosErros.nome = 'O nome do estado é obrigatório.';
+    if (!formData.uf || formData.uf.trim() === '') novosErros.uf = 'A UF é obrigatória.';
+    if (!formData.cod_pais) novosErros.pais_nome = 'O país é obrigatório.';
     setErrosCampos(novosErros);
     return Object.keys(novosErros).length === 0;
   };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // E1 - Validar campos obrigatórios
-    if (!validarCampos()) {
-      return;
-    }
+    if (!validarCampos()) return;
     
     setLoading(true);
     try {
-      const payload = { ...formData, cod_pais: parseInt(formData.cod_pais) };
-      delete payload.pais_nome;
-
-      const url = isEditingMode ? `/api/estados?cod_est=${queryId}` : '/api/estados';
-      const method = isEditingMode ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      const responseData = await res.json();
-      if (res.ok) {
-        exibirMensagem(isEditingMode ? 'Estado atualizado com sucesso!' : 'Estado cadastrado com sucesso!', true);
-        setTimeout(() => router.push('/estados'), 1500);
-      } else {
-        // E2 - Tratar erro específico de estado já cadastrado
-        if (res.status === 409) {
-          exibirMensagem(responseData.error, false);
-      } else {
-        throw new Error(responseData.error || 'Erro ao salvar estado');
-        }
-      }
+      await onSave(formData, estado ? estado.cod_est : null);
     } catch (error) {
-      exibirMensagem(error.message, false);
+        exibirMensagem(error.message, false);
     } finally {
       setLoading(false);
     }
   };
   
+  // Funções do Modal de País
   const exibirMensagemPaisModal = (texto, sucesso, duracao = 3000) => {
     setMensagemPaisModal({ texto, tipo: sucesso ? 'success' : 'error' });
     setTimeout(() => setMensagemPaisModal(null), duracao);
@@ -202,7 +145,6 @@ export default function CadastroEstadoPage() {
     }
     setLoadingPaisModal(true);
     try {
-      // Sempre criar país como ativo
       const paisData = { ...formPaisModal, ativo: true };
       const res = await fetch('/api/paises', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(paisData) });
       const novoPaisData = await res.json();
@@ -236,9 +178,11 @@ export default function CadastroEstadoPage() {
     setModalCadastroPaisAberto(true);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className={styles.container}>
-      <div className={styles.formContainer}>
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent} style={{maxWidth: '700px'}}>
         <div className={styles.headerContainer}>
           <h1 className={styles.titulo}>{isEditingMode ? `Editar Estado: ${formData.nome || '...'}` : 'Cadastrar Estado'}</h1>
         </div>
@@ -323,17 +267,11 @@ export default function CadastroEstadoPage() {
           </div>
           
           <div className={styles.formFooter}>
-            <div className={styles.dateInfoContainer}>
-              <>
-                <span>Data de Cadastro: {formData.data_criacao || 'N/A'}</span>
-                <span>Última Modificação: {formData.data_atualizacao || 'N/A'}</span>
-              </>
-            </div>
             <div className={styles.buttonGroup}>
               <button
                 type="button"
                 className={`${styles.button} ${styles.cancelButtonRed}`}
-                onClick={() => router.push('/estados')}
+                onClick={onClose}
                 disabled={loading}
               >
                 Cancelar
@@ -476,4 +414,4 @@ export default function CadastroEstadoPage() {
       )}
     </div>
   );
-}
+} 

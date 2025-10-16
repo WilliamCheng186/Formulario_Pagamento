@@ -1,0 +1,201 @@
+/* Overlay e Conteúdo do Modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 700px;
+  position: relative;
+  animation: slide-down 0.3s ease-out;
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modalHeader {
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.titulo {
+    font-size: 1.75rem;
+    color: #333;
+    margin: 0;
+}
+
+.form {
+    position: relative;
+}
+
+/* Switch de Status */
+.statusSwitchContainer {
+    position: absolute;
+    top: 0rem;
+    right: 0rem;
+    display: flex;
+    align-items: center;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #28a745;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #28a745;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.statusLabel {
+    margin-left: 12px;
+    font-weight: 500;
+}
+
+.statusHabilitado {
+    color: #28a745;
+}
+
+.statusDesabilitado {
+    color: #dc3545;
+}
+
+
+/* Linha e Grupos do Formulário */
+.formRow {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.input {
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+.input:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.codigo {
+  flex: 0 0 80px;
+  max-width: 60px; /* Forçando a largura máxima */
+}
+
+.descricao {
+  flex: 1;
+}
+
+/* Rodapé e Botões do Modal */
+.modalFooter {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.cancelButton, .submitButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancelButton {
+  background-color: #dc3545; /* Vermelho */
+  color: white;
+}
+.cancelButton:hover {
+  background-color: #c82333; /* Vermelho mais escuro */
+}
+
+.submitButton {
+  background-color: #28a745; /* Verde */
+  color: white;
+}
+.submitButton:hover {
+  background-color: #218838; /* Verde mais escuro */
+}
+.submitButton:disabled {
+  background-color: #a0c3e6;
+  cursor: not-allowed;
+} 

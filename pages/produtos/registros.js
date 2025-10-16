@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import styles from './registros.module.css';
-import { FaEye, FaPlus, FaTrash } from 'react-icons/fa';
+import styles from './registros.module.css'; // Estilos da página principal (se houver)
+import modalStyles from '../../components/CondPagtoModal/CondPagtoModal.module.css'; // Estilos do modal de referência
+import { FaEye, FaPlus, FaTrash, FaSearch } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
+import ProdutoModal from '../../components/produtos/ProdutoModal';
 
 const formatCurrency = (value) => {
   const number = parseFloat(value);
@@ -16,100 +18,203 @@ const formatCurrency = (value) => {
   });
 };
 
-export default function RegistrosProdutos() {
-  const [registros, setRegistros] = useState([]);
+export function ProdutosComponent({ isSelectionMode = false, onSelect, onCancel, initialSelection = [], selectionType = 'multiple' }) {
+  const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pesquisa, setPesquisa] = useState('');
+  const [selecionados, setSelecionados] = useState(new Set(initialSelection));
 
-  useEffect(() => {
-    async function fetchRegistros() {
-      try {
-        const res = await fetch('/api/entradas-produtos');
-        if (!res.ok) {
-          throw new Error('Falha ao buscar os registros de entrada.');
-        }
-        const data = await res.json();
-        setRegistros(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
+  // Estados para o modal de cadastro de produto
+  const [modalProdutoAberto, setModalProdutoAberto] = useState(false);
+  const [nextCode, setNextCode] = useState(null);
 
-    fetchRegistros();
-  }, []);
-
-  const handleDelete = async (id_nota) => {
-    if (window.confirm('Tem certeza que deseja excluir este registro? A operação não pode ser desfeita e o estoque será revertido.')) {
-      try {
-        const res = await fetch(`/api/entradas-produtos?id_nota=${id_nota}`, {
-          method: 'DELETE',
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.message || 'Falha ao excluir o registro.');
-        }
-
-        toast.success('Registro excluído com sucesso!');
-        setRegistros(registros.filter(r => r.id_nota !== id_nota));
-
-      } catch (err) {
-        console.error(err);
-        toast.error(err.message);
-      }
+  const fetchProdutos = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/produtos');
+      if (!res.ok) throw new Error('Falha ao buscar produtos.');
+      const data = await res.json();
+      setProdutos(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <p>Carregando registros...</p>;
-  if (error) return <p>Erro ao carregar registros: {error}</p>;
+  useEffect(() => {
+    fetchProdutos();
+  }, []);
+
+  const fetchNextCode = async () => {
+    try {
+      const res = await fetch('/api/produtos?action=nextcode');
+      const data = await res.json();
+      setNextCode(data.next_code);
+    } catch (err) {
+      toast.error('Falha ao buscar próximo código para o produto.');
+    }
+  };
+
+  const handleOpenModalNovoProduto = async () => {
+    await fetchNextCode();
+    setModalProdutoAberto(true);
+  };
+
+  const handleCloseModalNovoProduto = () => {
+    setModalProdutoAberto(false);
+  };
+
+  const handleSaveNovoProduto = async (formData) => {
+    try {
+      const res = await fetch('/api/produtos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Falha ao cadastrar o produto');
+      }
+      toast.success('Produto cadastrado com sucesso!');
+      handleCloseModalNovoProduto();
+      fetchProdutos(); // Recarrega a lista
+    } catch (error) {
+      console.error('Erro ao salvar produto:', error);
+      toast.error(error.message);
+      throw error;
+    }
+  };
+
+  const handleSelect = (codProd) => {
+    if (selectionType === 'single') {
+        const produtoSelecionado = produtos.find(p => p.cod_prod === codProd);
+        if (produtoSelecionado && onSelect) {
+            onSelect(produtoSelecionado);
+        }
+        return;
+    }
+    setSelecionados(prev => {
+      const novaSelecao = new Set(prev);
+      if (novaSelecao.has(codProd)) {
+        novaSelecao.delete(codProd);
+      } else {
+        novaSelecao.add(codProd);
+      }
+      return novaSelecao;
+    });
+  };
+
+  const handleConfirmarSelecao = () => {
+    if (onSelect) {
+      const produtosSelecionados = produtos.filter(p => selecionados.has(p.cod_prod));
+      onSelect(produtosSelecionados);
+    }
+  };
+  
+  const produtosFiltrados = produtos.filter(p =>
+    p.nome.toLowerCase().includes(pesquisa.toLowerCase()) ||
+    String(p.cod_prod).includes(pesquisa)
+  );
+
+  if (!isSelectionMode) {
+    // Renderização original da página de registros
+    return <div>Página de Registros de Produtos</div>;
+  }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>Registro de Entradas de Produtos</h1>
-        <Link href="/entradas-produtos" className={styles.addButton}>
-          <FaPlus /> Nova Entrada
-        </Link>
-      </div>
-
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>ID da Nota</th>
-            <th>Data da Emissão</th>
-            <th>Fornecedor</th>
-            <th>Total de Itens</th>
-            <th>Valor Total da Nota</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {registros.map((registro) => (
-            <tr key={registro.id_nota}>
-              <td>{registro.id_nota}</td>
-              <td>{format(new Date(registro.data_emissao), 'dd/MM/yyyy')}</td>
-              <td>{registro.fornecedor}</td>
-              <td>{registro.total_itens}</td>
-              <td>R$ {formatCurrency(registro.valor_total_nota)}</td>
-              <td className={styles.actions}>
-                <button className={styles.actionButton} title="Visualizar Detalhes">
-                  <FaEye />
-                </button>
-                <button onClick={() => handleDelete(registro.id_nota)} className={`${styles.actionButton} ${styles.deleteButton}`} title="Excluir Registro">
-                  <FaTrash />
-                </button>
-              </td>
-            </tr>
-          ))}
-          {registros.length === 0 && (
-            <tr>
-              <td colSpan="6">Nenhum registro de entrada encontrado.</td>
-            </tr>
+    <>
+      <ProdutoModal
+        isOpen={modalProdutoAberto}
+        onClose={handleCloseModalNovoProduto}
+        onSave={handleSaveNovoProduto}
+        produto={null}
+        nextCode={nextCode}
+      />
+      <div className={modalStyles.modalOverlay} style={{ zIndex: 1050 }}>
+        <div className={modalStyles.modalContent} style={{ padding: '20px', width: '700px' }}>
+          <h3 className={modalStyles.modalTitle}>Selecione o Produto</h3>
+          <div className={modalStyles.filtrosContainer} style={{ padding: '0', boxShadow: 'none', backgroundColor: 'transparent', marginBottom: '1rem', marginTop: '1rem' }}>
+            <div className={modalStyles.filtroItem}>
+              <FaSearch className={modalStyles.filtroIcon} />
+              <input
+                type="text"
+                placeholder="Buscar por nome ou código..."
+                value={pesquisa}
+                onChange={(e) => setPesquisa(e.target.value)}
+                className={modalStyles.searchInput}
+              />
+            </div>
+          </div>
+          {loading ? <div className={modalStyles.loading}>Carregando...</div> : (
+            produtosFiltrados.length > 0
+              ? (
+                <div className={modalStyles.tableContainerModal}>
+                  <table className={modalStyles.table}>
+                    <thead>
+                      <tr>
+                        {selectionType === 'multiple' && (<th style={{ width: '50px' }}></th>)}
+                        <th>Código</th>
+                        <th>Status</th>
+                        <th>Descrição</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {produtosFiltrados.map((produto) => (
+                        <tr key={produto.cod_prod} onClick={() => handleSelect(produto.cod_prod)}>
+                          {selectionType === 'multiple' && (
+                            <td>
+                                <input
+                                type="checkbox"
+                                checked={selecionados.has(produto.cod_prod)}
+                                onChange={(e) => {
+                                    e.stopPropagation(); // Previne o duplo disparo do evento
+                                    handleSelect(produto.cod_prod);
+                                }}
+                                className={styles.checkbox}
+                                />
+                            </td>
+                          )}
+                          <td>{produto.cod_prod}</td>
+                          <td>
+                            <span
+                              className={`${modalStyles.statusIndicator} ${produto.ativo ? modalStyles.habilitado : modalStyles.desabilitado}`}
+                              title={produto.ativo ? 'Habilitado' : 'Desabilitado'}
+                            ></span>
+                          </td>
+                          <td>{produto.nome}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+              : <div className={modalStyles.nenhumResultado}>Nenhum produto encontrado.</div>
           )}
-        </tbody>
-      </table>
-    </div>
+          <div className={modalStyles.modalFooter} style={{ justifyContent: selectionType === 'multiple' ? 'space-between' : 'flex-end' }}>
+            {selectionType === 'multiple' && (
+                <div>
+                    <strong>{selecionados.size}</strong> produto(s) selecionado(s)
+                </div>
+            )}
+            <div className={modalStyles.buttonGroup}>
+              <button type="button" onClick={onCancel} className={`${modalStyles.button} ${modalStyles.cancelButton}`}>
+                Cancelar
+              </button>
+              <button type="button" onClick={handleOpenModalNovoProduto} className={`${modalStyles.button} ${modalStyles.newButton}`}>
+                <FaPlus style={{ marginRight: '8px' }} /> Novo Produto
+              </button>
+              {selectionType === 'multiple' && (
+                <button type="button" onClick={handleConfirmarSelecao} className={`${modalStyles.button} ${modalStyles.saveButton}`}>
+                    Confirmar
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 } 

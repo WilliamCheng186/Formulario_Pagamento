@@ -10,49 +10,11 @@ export default async function handler(req, res) {
         
         // Buscar próximo código disponível
         if (req.query['next-code']) {
-          // Debug: Listar todos os estados existentes (incluindo inativos)
-          const allStates = await pool.query('SELECT cod_est, nome, ativo FROM estados ORDER BY cod_est');
-          console.log('DEBUG - TODOS os estados na tabela (incluindo inativos):', allStates.rows);
-          
-          // Debug: Verificar o valor atual da sequência
-          const seqInfo = await pool.query('SELECT last_value, is_called FROM estados_cod_est_seq');
-          console.log('DEBUG - Info da sequência:', seqInfo.rows[0]);
-          
-          // Se não há registros na tabela, resetar sequência para 1
-          if (allStates.rows.length === 0) {
-            console.log('DEBUG - Nenhum registro encontrado, resetando sequência para 1');
-            await pool.query("SELECT setval('estados_cod_est_seq', 1, false)");
-            return res.status(200).json({ nextCode: 1 });
-          }
-          
-          // Se há registros, verificar se a sequência está muito à frente
-          const maxExistingCode = Math.max(...allStates.rows.map(s => s.cod_est));
-          const currentSeqValue = seqInfo.rows[0].last_value;
-          
-          console.log('DEBUG - Maior código existente:', maxExistingCode);
-          console.log('DEBUG - Valor atual da sequência:', currentSeqValue);
-          
-          // Se a sequência está muito à frente dos registros existentes, ajustar
-          if (currentSeqValue > maxExistingCode + 1) {
-            console.log('DEBUG - Ajustando sequência para próximo código lógico:', maxExistingCode + 1);
-            await pool.query("SELECT setval('estados_cod_est_seq', $1, true)", [maxExistingCode]);
-            return res.status(200).json({ nextCode: maxExistingCode + 1 });
-          }
-          
-          try {
-            // Pegar o último valor da sequência SERIAL
-            const result = await pool.query(`
-              SELECT last_value + 1 as next_code 
-              FROM estados_cod_est_seq
-            `);
-            const nextCode = parseInt(result.rows[0].next_code);
-            console.log('DEBUG - Próximo código da sequência:', nextCode);
+          const result = await pool.query("SELECT nextval(pg_get_serial_sequence('estados', 'cod_est')) as next_code");
+          const nextCode = result.rows[0].next_code;
+          // Devolve o valor para o contador, pois a consulta acima o consome
+          await pool.query('SELECT setval(pg_get_serial_sequence(\'estados\', \'cod_est\'), $1, false)', [nextCode]);
             return res.status(200).json({ nextCode: nextCode });
-          } catch (error) {
-            // Se der erro (sequência nunca usada), usar 1
-            console.log('DEBUG - Sequência nunca usada, usando código 1');
-            return res.status(200).json({ nextCode: 1 });
-          }
         }
         
         // Se buscar um estado específico

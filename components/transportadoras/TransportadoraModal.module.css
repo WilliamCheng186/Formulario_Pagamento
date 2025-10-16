@@ -1,0 +1,124 @@
+/* TransportadoraModal.module.css */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1060;
+}
+
+.modalContent {
+  background: white;
+  padding: 0; /* Removido para controle granular */
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-width: 1200px;
+  animation: slide-down 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  max-height: 95vh;
+}
+
+.modalHeader {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0;
+}
+
+.modalBody {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Adicionaremos mais estilos do fornecedores.module.css conforme necessário */
+.headerContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.titulo {
+    margin: 0;
+    font-size: 1.75rem;
+    color: #343a40;
+}
+
+.formFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 1rem;
+}
+
+.cancelButton {
+    background-color: #dc3545;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.cancelButton:hover {
+    background-color: #c82333;
+}
+
+.submitButton {
+    background-color: #28a745;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.submitButton:hover {
+    background-color: #218838;
+}
+
+.modalFooter {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+  display: flex;
+  justify-content: flex-end; /* Alinha os botões à direita */
+}
+
+/* Classe específica para modais de seleção dentro do componente */
+.modalContentSelecao {
+  composes: modalContent; /* Herda todos os estilos de modalContent */
+  max-width: 900px; /* Sobrescreve apenas a largura máxima */
+  max-height: 80vh;
+} 

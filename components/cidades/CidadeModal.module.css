@@ -1,0 +1,279 @@
+/* Estilos base do Modal (copiado de PaisModal.module.css) */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 700px; /* Tamanho padrão */
+  position: relative;
+  animation: slide-down 0.3s ease-out;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+.modalHeader h1, .modalHeader h3 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #343a40;
+    font-weight: 500;
+}
+
+.modalBody {
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 20px;
+    margin-top: auto;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Reutilizando estilos gerais de formulário */
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+.formGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+.formRow {
+  display: flex;
+  gap: 1.25rem;
+}
+.formRow .formGroup {
+  flex: 1;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  height: 42px;
+  box-sizing: border-box;
+}
+.input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+  outline: none;
+}
+.inputSmall {
+  max-width: 120px;
+}
+.inputError {
+  border-color: #dc3545;
+}
+.errorText {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Input com botão de busca */
+.inputWithButton {
+  display: flex;
+  align-items: center;
+}
+.inputWithButton .input {
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.searchButtonLupa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  height: 42px;
+  border: 1px solid #007bff;
+  background-color: #007bff;
+  color: white;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.searchButtonLupa:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+.inputWithButton .input:focus + .searchButtonLupa {
+  border-color: #007bff;
+}
+
+/* Switch */
+.switchTopRight {
+  position: absolute;
+  top: 2.2rem;
+  right: 2rem;
+}
+.switchLabelWrapper {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.switchTextLabel {
+  margin-right: 10px;
+  font-size: 0.9rem;
+  color: #555;
+}
+.statusEnabled {
+  color: #28a745;
+  font-weight: bold;
+}
+.statusDisabled {
+  color: #dc3545;
+  font-weight: bold;
+}
+.switchInput {
+  display: none;
+}
+.switchVisual {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: #dc3545;
+  border-radius: 34px;
+  transition: background-color 0.3s;
+}
+.switchVisual::before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+.switchInput:checked + .switchVisual {
+  background-color: #28a745;
+}
+.switchInput:checked + .switchVisual::before {
+  transform: translateX(20px);
+}
+
+/* Rodapé e Botões */
+.formFooter {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+}
+.button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: opacity 0.2s;
+}
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.cancelButtonRed {
+  background-color: #dc3545;
+  color: white;
+}
+.cancelButtonRed:hover {
+  background-color: #c82333;
+}
+.submitButtonGreen {
+  background-color: #28a745;
+  color: white;
+}
+.submitButtonGreen:hover {
+  background-color: #218838;
+}
+
+/* Mensagens */
+.message {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  text-align: center;
+}
+.successMessage {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+.errorMessage {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Estilos para modais aninhados */
+.inputPesquisaModal {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+}
+.modalListContainer {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+.modalListItem {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f5f5f5;
+}
+.modalListItem:last-child {
+    border-bottom: none;
+}
+.modalListItem:hover {
+    background-color: #f0f0f0;
+} 

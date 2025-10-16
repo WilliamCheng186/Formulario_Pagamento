@@ -37,13 +37,25 @@
 .formGroup {
   display: flex;
   flex-direction: column;
+  /* flex: 1; */ /* REMOVIDO: Impedia larguras customizadas via flex-basis */
+  min-width: 0; /* Adicionado para garantir que o flex-item possa encolher corretamente */
 }
 
+/* Removendo as classes de largura fixa que não funcionaram */
+/* 
+.fieldCodigo { flex: 0 0 120px; }
+.fieldProduto { flex: 1 1 auto; min-width: 150px; }
+.fieldUnidade { flex: 0 0 70px; }
+.fieldQuantidade { flex: 0 0 80px; }
+.fieldValor { flex: 0 0 100px; }
+.fieldBotao { flex: 0 0 auto; }
+*/
+
 .formGroup label {
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
   font-weight: 500;
   color: #495057;
+  font-size: 0.875rem; /* Rótulos um pouco menores */
 }
 
 .input, .select {
@@ -107,7 +119,24 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
+  /* margin-top e margin-bottom removidos para serem controlados pelo container */
+}
+
+.tableContainer {
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin: 1rem 0;
+  overflow-x: auto; /* Habilita o scroll horizontal */
+  position: relative; /* Necessário para o posicionamento sticky */
+}
+
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  position: sticky; /* Mantém o cabeçalho fixo no topo */
+  top: 0;
+  z-index: 1;
 }
 
 .table th, .table td {
@@ -183,97 +212,229 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
-.topModalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); /* Um pouco mais escuro para diferenciar */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1050; /* Z-index maior */
-}
-
 .modalContent {
-  background-color: white;
-  padding: 2rem;
+  background: white;
+  padding: 0;
   border-radius: 8px;
-  width: 80%;
-  max-width: 800px;
-  max-height: 90vh;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 95vw;
+  max-width: 1500px; /* Aumentado para acomodar melhor o layout */
   display: flex;
   flex-direction: column;
+  max-height: 95vh;
+  overflow: hidden; /* Garante que o conteúdo não vaze */
 }
 
-.modalHeader {
-  padding: 15px 20px;
-  background-color: #f7f7f7;
-  border-bottom: 1px solid #e0e0e0;
+.form {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* Permite que o form cresça para preencher o modalContent */
+  min-height: 0; /* Correção crucial para permitir que o flex item encolha */
+}
+
+.modalBody {
+  padding: 2rem; /* Aumentar o padding geral */
+  overflow-y: auto;
+  flex-grow: 1;
+  background-color: #fff; /* Fundo branco unificado */
+}
+
+.headerContainer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+  background-color: #fff;
+  flex-shrink: 0; /* Impede que o header encolha */
 }
 
-.modalHeader h2 {
+.titulo {
   margin: 0;
-  font-size: 1.25rem;
-  color: #333;
+  font-size: 1.5rem;
+  color: #343a40;
 }
 
-.modalFooter {
-  padding: 15px 20px;
-  border-top: 1px solid #e0e0e0;
+.formFooter {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between; /* Alinha os grupos nas extremidades */
   align-items: center;
-  gap: 10px;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e9ecef;
+  background-color: #f8f9fa; /* Um fundo sutil para o rodapé */
+  flex-shrink: 0;
 }
 
-.actionButton {
-  display: inline-flex;
+.dateInfoContainer {
+  font-size: 0.8rem;
+  color: #6c757d;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Removido .section */
+
+.formRow {
+  display: flex;
+  gap: 1rem; /* Espaçamento padrão entre campos */
+  margin-bottom: 1.5rem; /* Espaçamento entre as linhas */
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.formRow:last-child {
+  margin-bottom: 0;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  /* A propriedade flex: 1 foi removida para permitir larguras customizadas */
+}
+
+/* Novas classes para controle de largura dos campos de produto */
+.fieldCodigo { flex: 0 0 120px; }
+.fieldProduto { flex: 1 1 auto; min-width: 150px; }
+.fieldUnidade { flex: 0 0 70px; }
+.fieldQuantidade { flex: 0 0 80px; }
+.fieldValor { flex: 0 0 100px; }
+.fieldBotao { flex: 0 0 auto; }
+
+.formGroup label {
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  color: #495057;
+  font-size: 0.875rem; /* Rótulos um pouco menores */
+}
+
+.formGroup input,
+.formGroup .textarea {
+  padding: 0.6rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.95rem; /* Fonte dos inputs um pouco maior */
+}
+
+.formGroup input:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+}
+
+.inputWithButton {
+  display: flex;
+  align-items: stretch; /* ADICIONADO: Garante que o input e o botão tenham a mesma altura */
+}
+
+.inputWithButton input {
+  flex-grow: 1; /* Faz o input crescer e ocupar o espaço */
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.searchButton {
+  border: 1px solid #007bff;
+  border-left: none;
+  background-color: #007bff;
+  color: white;
+  padding: 0 0.75rem;
+  cursor: pointer;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
-  min-width: 110px;
-  color: white;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.searchButton:hover {
+  background-color: #0056b3;
+}
+
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.table th, .table td {
+  border: 1px solid #dee2e6;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.radioGroup {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    padding-top: 0.5rem;
+}
+
+.radioGroup label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: normal;
+}
+
+.button {
+  padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  border-radius: 6px;
   font-size: 0.9rem;
-  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
   transition: background-color 0.2s;
-  background-color: #218838; /* Verde mais escuro */
+  min-width: 120px; /* Garante que os botões tenham o mesmo tamanho */
+  text-align: center;
 }
 
-.actionButton svg {
-  margin-right: 8px;
-}
-
-.newButton {
+.primary {
   background-color: #28a745; /* Verde */
+  color: white;
 }
 
-.newButton:hover {
-  background-color: #218838; /* Verde mais escuro */
+.primary:hover {
+  background-color: #218838;
 }
 
-.cancelButton {
+.secondary {
   background-color: #dc3545; /* Vermelho */
+  color: white;
 }
 
-.cancelButton:hover {
-  background-color: #c82333; /* Vermelho mais escuro */
+.secondary:hover {
+  background-color: #c82333;
+}
+
+.danger {
+  background-color: #dc3545;
+  color: white;
+}
+.danger:hover {
+  background-color: #c82333;
 }
 
 .searchContainer {
@@ -424,4 +585,58 @@
   flex-direction: column;
   align-items: flex-end;
   margin-top: 1.5rem;
+} 
+
+.totalsContainer {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+} 
+
+.table th.stickyColumn,
+.table td.stickyColumn {
+  position: -webkit-sticky; /* Para Safari */
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background-color: #f8f9fa; /* Cor de fundo para a coluna fixa, um pouco diferente pra destacar */
+  border-left: 1px solid #dee2e6; /* Borda para separar visualmente */
+}
+
+.table th.stickyColumn {
+  z-index: 3; /* Garante que o header fique sobre o body */
+  background-color: #e9ecef; /* Cor do header */
+}
+
+.table tr:nth-child(even) td.stickyColumn {
+  background-color: #f2f2f2; /* Cor para linhas pares, se houver */
+}
+
+.table tr:hover td.stickyColumn {
+  background-color: #e2e6ea; /* Cor no hover para acompanhar o resto da linha */
+} 
+
+.fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+    transition: opacity 0.3s ease;
+}
+
+.fieldset:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.headerFieldset {
+    margin-bottom: 1.5rem;
+} 
+
+.textAlignRight {
+  text-align: right;
+}
+
+.productTable {
+  margin-top: 1rem;
 } 

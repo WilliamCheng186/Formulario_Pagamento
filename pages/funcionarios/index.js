@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import styles from './funcionarios.module.css';
 import { FaEye, FaFilter, FaSearch, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import FuncionarioModal from '../../components/funcionarios/FuncionarioModal'; // 1. Importar o modal
+import { toast } from 'react-toastify';
 
 export default function ConsultaFuncionarios() {
   const [funcionarios, setFuncionarios] = useState([]);
@@ -12,9 +14,24 @@ export default function ConsultaFuncionarios() {
   const [filtroStatus, setFiltroStatus] = useState('todos');
   const [termoBusca, setTermoBusca] = useState('');
   const [mostrarModalDetalhes, setMostrarModalDetalhes] = useState(false);
-  const [funcionarioSelecionado, setFuncionarioSelecionado] = useState(null);
   
+  // 2. Novos estados para o modal de cadastro/edição
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [funcionarioSelecionado, setFuncionarioSelecionado] = useState(null);
+  const [nextCode, setNextCode] = useState(null);
+
   const router = useRouter();
+
+  const fetchNextCode = async () => {
+    try {
+      const res = await fetch('/api/funcionarios/next-code');
+      if (!res.ok) throw new Error('Falha ao buscar próximo código');
+      const data = await res.json();
+      setNextCode(data.nextCode);
+    } catch (error) {
+      toast.error('Erro ao buscar próximo código do funcionário.');
+    }
+  };
 
   useEffect(() => {
     // Verificar se há mensagem na query (redirecionamento após cadastro/edição)
@@ -26,6 +43,7 @@ export default function ConsultaFuncionarios() {
     }
     
     carregarFuncionarios();
+    fetchNextCode();
   }, [router]);
 
   useEffect(() => {
@@ -81,7 +99,9 @@ export default function ConsultaFuncionarios() {
   };
 
   const handleEditar = (funcionario) => {
-    router.push(`/funcionarios/cadastro?id=${funcionario.cod_func}`);
+    // router.push(`/funcionarios/cadastro?id=${funcionario.cod_func}`); // Lógica antiga
+    setFuncionarioSelecionado(funcionario);
+    setIsModalOpen(true);
   };
 
   const handleExcluir = async (cod_func) => {
@@ -155,6 +175,41 @@ export default function ConsultaFuncionarios() {
     }, 5000);
   };
 
+  // 3. Funções para controlar o modal
+  const handleOpenModalNovo = () => {
+    setFuncionarioSelecionado(null);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setFuncionarioSelecionado(null);
+  };
+
+  const handleSave = async (formData, cod_func) => {
+    const isEditing = !!cod_func;
+    const method = isEditing ? 'PUT' : 'POST';
+    const body = JSON.stringify({ ...formData, cod_func: isEditing ? cod_func : undefined });
+
+    const res = await fetch('/api/funcionarios', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Falha ao salvar funcionário');
+    }
+
+    toast.success(data.message || 'Funcionário salvo com sucesso!');
+    handleCloseModal();
+    carregarFuncionarios();
+    if (!isEditing) {
+      fetchNextCode();
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.headerContainer}>
@@ -172,7 +227,7 @@ export default function ConsultaFuncionarios() {
 
       <div className={styles.actionBar} style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <button 
-          onClick={() => router.push('/funcionarios/cadastro')}
+          onClick={handleOpenModalNovo} // 4. Modificar o botão
           className={styles.submitButton}
         >
           <FaPlus style={{ marginRight: '8px' }} /> Cadastrar Novo Funcionário
@@ -269,7 +324,7 @@ export default function ConsultaFuncionarios() {
         </table>
       )}
 
-      {/* Modal de Detalhes */}
+      {/* Modal de Detalhes - MANTIDO */}
       {mostrarModalDetalhes && funcionarioSelecionado && (
         <div className={styles.modalOverlay} onClick={() => setMostrarModalDetalhes(false)}>
           <div className={`${styles.modalSimples} ${styles.modalDetalhes}`} onClick={e => e.stopPropagation()}>
@@ -408,6 +463,15 @@ export default function ConsultaFuncionarios() {
           </div>
         </div>
       )}
+
+      {/* NOVO MODAL DE CADASTRO/EDIÇÃO */}
+      <FuncionarioModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSave}
+        funcionario={funcionarioSelecionado}
+        nextCode={nextCode}
+      />
     </div>
   );
 } 

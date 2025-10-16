@@ -230,7 +230,9 @@ export function UnidadesMedidaComponent({ isSelectionMode = false, onSelect, onC
               {!isSelectionMode && (
                 <div className={styles.switchContainer}>
                   <label htmlFor="statusSwitch" className={styles.switchLabel}>
-                    {ativo ? 'Habilitado' : 'Desabilitado'}
+                    <span className={ativo ? styles.statusEnabled : styles.statusDisabled}>
+                      {ativo ? 'Habilitado' : 'Desabilitado'}
+                    </span>
                   </label>
                   <label className={styles.switch} htmlFor="statusSwitch">
                     <input
@@ -366,7 +368,7 @@ export function UnidadesMedidaComponent({ isSelectionMode = false, onSelect, onC
 
   if (isSelectionMode) {
     return (
-      <div className={styles.modalContent} style={{ width: '90vw', maxWidth: '500px' }}>
+      <div className={styles.modalContent} style={{ width: '90vw', maxWidth: '700px' }}>
         {renderCadastroModal()}
         <h2 style={{fontSize: "1.5rem", color: "#333"}}>Selecionar Unidade de Medida</h2>
         <div className={styles.filtrosContainer} style={{padding: '0.5rem 0', boxShadow: 'none', backgroundColor: 'transparent'}}>

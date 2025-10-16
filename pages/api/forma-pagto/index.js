@@ -7,9 +7,11 @@ export default async function handler(req, res) {
     case 'GET':
       try {
         if (query.action === 'nextcode') {
-          const result = await pool.query('SELECT MAX(cod_forma) as max_code FROM forma_pagto');
-          const nextCode = (result.rows[0].max_code || 0) + 1;
-          return res.status(200).json({ nextCode });
+          const result = await pool.query("SELECT nextval(pg_get_serial_sequence('forma_pagto', 'cod_forma')) as next_code");
+          const nextCode = result.rows[0].next_code;
+          // Devolve o valor para o contador, pois a consulta acima o consome
+          await pool.query('SELECT setval(pg_get_serial_sequence(\'forma_pagto\', \'cod_forma\'), $1, false)', [nextCode]);
+          return res.status(200).json({ nextCode: nextCode });
         }
 
         // Se tem cod_forma na query, buscar apenas essa forma específica

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import styles from './produtos.module.css';
 import { FaSearch, FaPlus, FaEdit, FaTrash, FaFilter } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import ProdutoModal from '../../components/produtos/ProdutoModal'; // Importando o novo modal
 
 export default function ConsultaProdutos() {
   const [produtos, setProdutos] = useState([]);
@@ -14,6 +15,11 @@ export default function ConsultaProdutos() {
   const [mostrarModalConfirmacao, setMostrarModalConfirmacao] = useState(false);
   const [mostrarModalRelacionamento, setMostrarModalRelacionamento] = useState(false);
   const [itemParaExcluir, setItemParaExcluir] = useState(null);
+
+  // Estados para o novo modal de produto
+  const [modalAberto, setModalAberto] = useState(false);
+  const [produtoSelecionado, setProdutoSelecionado] = useState(null);
+  const [nextCode, setNextCode] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -40,8 +46,64 @@ export default function ConsultaProdutos() {
     }
   };
 
+  const fetchNextCode = async () => {
+      try {
+        const res = await fetch('/api/produtos?action=nextcode');
+        const data = await res.json();
+        setNextCode(data.next_code);
+        return data.next_code;
+      } catch (err) {
+        console.error('Erro ao buscar o próximo código do produto.', err);
+        toast.error('Falha ao buscar próximo código.');
+        return null;
+      }
+  };
+  
+  const handleOpenModalNovo = async () => {
+    setProdutoSelecionado(null);
+    await fetchNextCode();
+    setModalAberto(true);
+  };
+
+  const handleOpenModalEditar = (produto) => {
+    setProdutoSelecionado(produto);
+    setModalAberto(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalAberto(false);
+    setProdutoSelecionado(null);
+  };
+
+  const handleSave = async (formData, cod_prod) => {
+    const isEdit = !!cod_prod;
+    const method = isEdit ? 'PUT' : 'POST';
+    const url = isEdit ? `/api/produtos?cod_prod=${cod_prod}` : '/api/produtos';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await res.json();
+      
+      if (res.ok) {
+        toast.success(isEdit ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
+        handleCloseModal();
+        carregarProdutos(); // Recarrega a lista
+      } else {
+        throw new Error(data.error || 'Falha ao salvar o produto');
+      }
+    } catch (error) {
+        console.error('Erro ao salvar produto:', error);
+        throw error; // Lança o erro para ser pego pelo modal
+    }
+  };
+
   const handleEdit = (produto) => {
-    router.push(`/produtos/cadastro?cod_prod=${produto.cod_prod}`);
+    handleOpenModalEditar(produto);
   };
 
   const handleDelete = (produto) => {
@@ -124,10 +186,19 @@ export default function ConsultaProdutos() {
 
   return (
     <div className={styles.container}>
+      
+      <ProdutoModal
+        isOpen={modalAberto}
+        onClose={handleCloseModal}
+        onSave={handleSave}
+        produto={produtoSelecionado}
+        nextCode={nextCode}
+      />
+
       <div className={styles.headerContainer}>
         <h1 className={styles.titulo}>Produtos</h1>
         <button 
-          onClick={() => router.push('/produtos/cadastro')}
+          onClick={handleOpenModalNovo}
           className={styles.button}
         >
           <FaPlus style={{ marginRight: '8px' }} />
@@ -169,6 +240,7 @@ export default function ConsultaProdutos() {
                 <thead>
                     <tr>
                     <th>Código</th>
+                    <th>Status</th>
                     <th>Nome</th>
                     <th>Marca</th>
                     <th>Categoria</th>
@@ -187,12 +259,14 @@ export default function ConsultaProdutos() {
                         produtos.map(produto => (
                         <tr key={produto.cod_prod}>
                             <td>{produto.cod_prod}</td>
+                            <td>
+                              <span
+                                className={`${styles.statusIndicator} ${produto.ativo ? styles.habilitado : styles.desabilitado}`}
+                                title={produto.ativo ? 'Habilitado' : 'Desabilitado'}
+                              ></span>
+                            </td>
                             <td className={styles.nomeProdutoTd}>
                               <div className={styles.nomeProdutoWrapper}>
-                                <span
-                                  className={`${styles.statusIndicator} ${produto.ativo ? styles.habilitado : styles.desabilitado}`}
-                                  title={produto.ativo ? 'Habilitado' : 'Desabilitado'}
-                                ></span>
                                 <span className={styles.nomeProdutoText}>
                                   {produto.nome}
                                 </span>

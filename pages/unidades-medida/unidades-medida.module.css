@@ -246,6 +246,17 @@
     z-index: 1000;
 }
 
+@keyframes slide-down {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 .modalSimples {
     background: white;
     border-radius: 8px;
@@ -253,6 +264,7 @@
     width: 90%;
     max-width: 500px;
     overflow: hidden;
+    animation: slide-down 0.3s ease-out;
 }
 
 .modalHeader {
@@ -280,6 +292,16 @@
     font-size: 0.9rem;
     color: #555;
     cursor: pointer;
+}
+
+.statusEnabled {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.statusDisabled {
+    color: #dc3545;
+    font-weight: bold;
 }
 
 .switch {
@@ -384,7 +406,7 @@ input:checked + .slider:before {
 }
 
 .cancelButton {
-    background-color: #dc3545;
+    background-color: #dc3545; /* Vermelho */
     color: white;
 }
 

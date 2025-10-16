@@ -1,916 +1,828 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import styles from './EntradaProdutoForm.module.css';
-import { FaSearch, FaPlus, FaTrash, FaEdit } from 'react-icons/fa';
+import { FaSearch, FaPlus, FaTrash } from 'react-icons/fa';
+import FornecedorModal from './fornecedores/FornecedorModal';
+import { ProdutosComponent } from '../pages/produtos/registros';
+import { CondPagtoComponent } from './CondPagtoModal';
+import { TransportadorasComponent } from '../pages/transportadoras';
+import { VeiculosComponent } from '../pages/veiculos';
 import { toast } from 'react-toastify';
-import Modal from './Modal';
-import { MarcasComponent } from '../pages/marcas/index';
-import { CategoriasComponent } from '../pages/categorias/index';
-import { UnidadesMedidaComponent } from '../pages/unidades-medida/index';
-import CadastroProduto from './CadastroProduto';
+import { addDays, format, parseISO } from 'date-fns';
 
-export default function EntradaProdutoForm() {
-  const router = useRouter();
+// Função para formatar e desformatar moeda
+  const formatCurrency = (valueInCents) => {
+    const number = Number(valueInCents) / 100;
+    if (isNaN(number)) return '0,00';
+    return number.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
 
-  const formatCurrency = (value) => {
-    const number = parseFloat(value);
-    if (isNaN(number)) {
-      return '0,00';
+const parseCurrency = (valueString) => {
+    if (typeof valueString !== 'string') {
+        valueString = String(valueString || '0');
     }
-    return number.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+    const digitsOnly = valueString.replace(/\D/g, '');
+    return parseInt(digitsOnly, 10) || 0;
+};
+
+export default function EntradaProdutoForm({ show, onClose, onSave, notaParaEditar }) {
+  const initialState = {
+    numeroNota: '',
+    modelo: '',
+    serie: '',
+    idFornecedor: '',
+    nomeFornecedor: '',
+    dataEmissao: new Date().toISOString().split('T')[0],
+    dataChegada: new Date().toISOString().split('T')[0],
+    tipoFrete: 'CIF',
+    valorFrete: '0,00',
+    valorSeguro: '0,00',
+    outrasDespesas: '0,00',
+    idCondPagamento: '',
+    nomeCondPagto: '',
+    idTransportadora: '',
+    nomeTransportadora: '',
+    placaVeiculo: '',
+    modeloVeiculo: '',
+    observacao: '',
+    data_criacao: null,
+    data_atualizacao: null
   };
 
-  const [fornecedores, setFornecedores] = useState([]);
+  const initialProdutoState = {
+    idProduto: '',
+    nomeProduto: '',
+    unidade: '',
+    quantidade: '1',
+    preco: '0,00',
+    desconto: '0,00'
+  };
+
+  // Estados para o formulário principal
+  const [formData, setFormData] = useState(initialState);
   const [produtos, setProdutos] = useState([]);
-  const [loading, setLoading] = useState({ fornecedores: true, produtos: true });
+  const [produtoAtual, setProdutoAtual] = useState(initialProdutoState);
 
-  const [fornecedorSelecionado, setFornecedorSelecionado] = useState(null);
-  const [dataEmissao, setDataEmissao] = useState(new Date().toISOString().split('T')[0]);
-  const [produtoSelecionado, setProdutoSelecionado] = useState(null);
-  const [quantidade, setQuantidade] = useState(1);
-  const [itensNota, setItensNota] = useState([]);
-  const [transportadoraSelecionada, setTransportadoraSelecionada] = useState(null);
-  const [valorFrete, setValorFrete] = useState('');
-  const [veiculoSelecionado, setVeiculoSelecionado] = useState(null);
-  
-  // Estados para o Modal de Fornecedor
-  const [modalFornecedorAberto, setModalFornecedorAberto] = useState(false);
-  const [fornecedoresModal, setFornecedoresModal] = useState([]);
-  const [pesquisaFornecedor, setPesquisaFornecedor] = useState('');
-  const [loadingModal, setLoadingModal] = useState(false);
+  const isEditMode = useMemo(() => !!notaParaEditar, [notaParaEditar]);
 
-  // Estados para o Modal de Transportadora
-  const [modalTransportadoraAberto, setModalTransportadoraAberto] = useState(false);
-  const [transportadorasModal, setTransportadorasModal] = useState([]);
-  const [pesquisaTransportadora, setPesquisaTransportadora] = useState('');
-  const [loadingModalTransportadora, setLoadingModalTransportadora] = useState(false);
+  const carregarNotaParaEdicao = useCallback(async () => {
+    if (!notaParaEditar || !isEditMode) return;
 
-  // Estados para o Modal de Veículo
-  const [modalVeiculoAberto, setModalVeiculoAberto] = useState(false);
-  const [veiculosModal, setVeiculosModal] = useState([]);
-  const [pesquisaVeiculo, setPesquisaVeiculo] = useState('');
-  const [loadingModalVeiculo, setLoadingModalVeiculo] = useState(false);
+    const { numeroNota, modelo, serie, idFornecedor } = notaParaEditar;
+    const url = `/api/entradas-produtos?numeroNota=${numeroNota}&modelo=${modelo}&serie=${serie}&idFornecedor=${idFornecedor}`;
 
-  // Estados para o modal de cadastro rápido de veículo
-  const [modalNovoVeiculoAberto, setModalNovoVeiculoAberto] = useState(false);
-  const [novoVeiculoForm, setNovoVeiculoForm] = useState({ placa: '', modelo: '', descricao: '' });
-  const [loadingNovoVeiculo, setLoadingNovoVeiculo] = useState(false);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Falha ao carregar os dados completos da nota para edição.');
+      }
+      const dadosCompletos = await response.json();
+      
+      const { produtos: produtosDaNota, ...dadosDaNota } = dadosCompletos;
 
-  // Estados para o modal de cadastro rápido de produto
-  const [modalNovoProdutoAberto, setModalNovoProdutoAberto] = useState(false);
-  
-  // Estados para o Modal de Produto
-  const [modalProdutoAberto, setModalProdutoAberto] = useState(false);
-  const [pesquisaProduto, setPesquisaProduto] = useState('');
-  
-  // Estados para as linhas de entrada de produto
-  const [linhasEntrada, setLinhasEntrada] = useState([{ id: Date.now(), produto: null, quantidade: 1, preco_compra: '', precoEditavel: false }]);
-  const [activeModalIndex, setActiveModalIndex] = useState(null);
-
-  useEffect(() => {
-    const { newSupplierId } = router.query;
-
-    if (newSupplierId) {
-      const fetchNewSupplier = async () => {
+      // Buscar detalhes completos da condição de pagamento para gerar as parcelas
+      if (dadosDaNota.idCondPagamento) {
         try {
-          const res = await fetch(`/api/fornecedores?cod_forn=${newSupplierId}`);
-          if (!res.ok) {
-            throw new Error('Fornecedor recém-cadastrado não encontrado');
+          const condRes = await fetch(`/api/cond-pagto?cod_pagto=${dadosDaNota.idCondPagamento}`);
+          if (condRes.ok) {
+            const condData = await condRes.json();
+            setCondicaoPagamentoSelecionada(condData);
           }
-          const supplier = await res.json();
-          if (supplier) {
-            setFornecedorSelecionado(supplier);
-            const { pathname, query } = router;
-            delete query.newSupplierId;
-            router.replace({ pathname, query }, undefined, { shallow: true });
-          }
-        } catch (error) {
-          toast.error(error.message);
+        } catch (err) {
+            toast.warn('Não foi possível carregar os detalhes da condição de pagamento.');
         }
-      };
-      fetchNewSupplier();
+      }
+
+      setFormData({
+        ...initialState,
+        ...dadosDaNota,
+        valorFrete: formatCurrency(dadosDaNota.valorFrete),
+        valorSeguro: formatCurrency(dadosDaNota.valorSeguro),
+        outrasDespesas: formatCurrency(dadosDaNota.outrasDespesas),
+        dataEmissao: dadosDaNota.dataEmissao ? new Date(dadosDaNota.dataEmissao).toISOString().split('T')[0] : '',
+        dataChegada: dadosDaNota.dataChegada ? new Date(dadosDaNota.dataChegada).toISOString().split('T')[0] : '',
+      });
+
+      const produtosFormatados = produtosDaNota.map(p => ({
+        idProduto: p.idProduto,
+        nomeProduto: p.nomeProduto,
+        unidade: p.unidade,
+        quantidade: String(p.quantidade),
+        preco: formatCurrency(p.precoUnitario),
+        desconto: formatCurrency(p.descontoUnitario * p.quantidade),
+        precoUN: p.precoUnitario,
+        descontoUN: p.descontoUnitario,
+        precoLiquidoUN: p.precoUnitario - p.descontoUnitario,
+        precoTotal: (p.precoUnitario - p.descontoUnitario) * p.quantidade,
+      }));
+      
+      setProdutos(produtosFormatados);
+
+    } catch (error) {
+      toast.error(error.message);
+      onClose(); // Fecha o modal se houver erro ao carregar
     }
-  }, [router.query.newSupplierId]);
+  }, [notaParaEditar, isEditMode, onClose]);
 
   useEffect(() => {
-    // A busca de dados agora é feita sob demanda ao abrir os modais.
-  }, []);
-
-  // Abre o modal e busca os fornecedores
-  const handleOpenFornecedorModal = async () => {
-    setModalFornecedorAberto(true);
-    setLoadingModal(true);
-    try {
-      const res = await fetch('/api/fornecedores');
-      const data = await res.json();
-      setFornecedoresModal(Array.isArray(data) ? data : []);
-    } catch (error) {
-      toast.error("Falha ao buscar fornecedores.");
-      console.error("Erro ao buscar fornecedores:", error);
-    } finally {
-      setLoadingModal(false);
-    }
-  };
-
-  // Abre o modal e busca as transportadoras
-  const handleOpenTransportadoraModal = async () => {
-    setModalTransportadoraAberto(true);
-    setLoadingModalTransportadora(true);
-    try {
-      const res = await fetch('/api/transportadoras');
-      const data = await res.json();
-      setTransportadorasModal(Array.isArray(data) ? data : []);
-    } catch (error) {
-      toast.error("Falha ao buscar transportadoras.");
-      console.error("Erro ao buscar transportadoras:", error);
-    } finally {
-      setLoadingModalTransportadora(false);
-    }
-  };
-
-  const handleOpenVeiculoModal = async () => {
-    if (!transportadoraSelecionada) {
-      toast.info('Por favor, selecione uma transportadora primeiro.');
-      return;
-    }
-    setModalVeiculoAberto(true);
-    setLoadingModalVeiculo(true);
-    try {
-      const res = await fetch(`/api/transportadoras_veiculos?cod_trans=${transportadoraSelecionada.cod_trans}`);
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Falha ao buscar veículos.');
+    if (show) {
+      if (isEditMode) {
+        carregarNotaParaEdicao();
+      } else {
+        // MODO DE CADASTRO
+        setFormData({
+          ...initialState,
+          dataEmissao: new Date().toISOString().split('T')[0],
+          dataChegada: new Date().toISOString().split('T')[0],
+          data_criacao: new Date().toISOString()
+        });
+        setProdutos([]);
       }
-      setVeiculosModal(Array.isArray(data) ? data : []);
-    } catch (error) {
-      toast.error(error.message);
-      console.error("Erro ao buscar veículos:", error);
-    } finally {
-      setLoadingModalVeiculo(false);
+      // Reseta estados comuns
+      setProdutoAtual(initialProdutoState);
+      setCondicaoPagamentoSelecionada(null);
+      setParcelasGeradas([]);
+      setIsHeaderLocked(isEditMode);
+      setIsProductsLocked(isEditMode);
     }
-  };
+  }, [show, isEditMode, carregarNotaParaEdicao]);
 
-  const handleOpenNovoVeiculoModal = () => {
-    setNovoVeiculoForm({ placa: '', modelo: '', descricao: '' }); // Limpa o formulário
-    setModalNovoVeiculoAberto(true);
-  };
+  const handleCancelarNota = async () => {
+    if (!notaParaEditar) return;
 
-  const handleCloseNovoVeiculoModal = () => {
-    setModalNovoVeiculoAberto(false);
-  };
+    if (window.confirm('Tem certeza que deseja cancelar esta nota de compra? Esta ação não pode ser desfeita.')) {
+      try {
+        const { numeroNota, modelo, serie, idFornecedor } = notaParaEditar;
+        const url = `/api/entradas-produtos?numeroNota=${numeroNota}&modelo=${modelo}&serie=${serie}&idFornecedor=${idFornecedor}&action=cancel`;
+        
+        const response = await fetch(url, { method: 'PUT' });
+        const result = await response.json();
 
-  const handleNovoVeiculoFormChange = (e) => {
-    const { name, value } = e.target;
-    setNovoVeiculoForm(prev => ({ ...prev, [name]: value.toUpperCase() })); // Placa em maiúsculo
-  };
+        if (!response.ok) {
+          throw new Error(result.message || 'Erro ao cancelar a nota de compra.');
+        }
 
-  const handleSalvarNovoVeiculo = async () => {
-    if (!novoVeiculoForm.placa) {
-      toast.error('O campo Placa é obrigatório.');
-      return;
-    }
-    if (!transportadoraSelecionada) {
-        toast.error('Nenhuma transportadora selecionada para associar o veículo.');
-        return;
-    }
-
-    setLoadingNovoVeiculo(true);
-    try {
-      const res = await fetch('/api/veiculos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...novoVeiculoForm,
-          cod_trans: transportadoraSelecionada.cod_trans
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Erro ao salvar o veículo.');
+        toast.success('Nota de compra cancelada com sucesso!');
+        onSave(); // Reutiliza a função onSave para fechar o modal e atualizar a lista
+      } catch (error) {
+        toast.error(error.message);
       }
-      toast.success('Veículo cadastrado com sucesso!');
-      
-      // Adiciona o novo veículo à lista do modal de seleção e o seleciona automaticamente
-      setVeiculosModal(prev => [...prev, data]);
-      handleSelectVeiculo(data);
-      
-      handleCloseNovoVeiculoModal();
-
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setLoadingNovoVeiculo(false);
     }
   };
 
-  const handleFreteChange = (e) => {
-    let value = e.target.value;
-    // Remove tudo que não é dígito
-    value = value.replace(/\D/g, '');
+  // Estados de controle dos modais
+  const [isFornecedorModalOpen, setIsFornecedorModalOpen] = useState(false);
+  const [isProdutoModalOpen, setIsProdutoModalOpen] = useState(false);
+  const [isCondPagtoModalOpen, setIsCondPagtoModalOpen] = useState(false);
+  const [isTransportadoraModalOpen, setIsTransportadoraModalOpen] = useState(false);
+  const [isVeiculoModalOpen, setIsVeiculoModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-    // Converte para número e divide por 100 para ter as casas decimais
-    const numberValue = Number(value) / 100;
+  const [isHeaderLocked, setIsHeaderLocked] = useState(false);
+  const [isProductsLocked, setIsProductsLocked] = useState(false);
 
-    // Formata como moeda brasileira
-    const formattedValue = numberValue.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
+  const isHeaderComplete = useMemo(() => {
+    return formData.numeroNota?.trim() !== '' && !!formData.idFornecedor;
+  }, [formData.numeroNota, formData.idFornecedor]);
+
+  // Estados para totais
+  const totalProdutos = useMemo(() => {
+    // Soma o valor total de cada produto (sem rateio)
+    return produtos.reduce((acc, produto) => {
+      return acc + (produto.precoTotal || 0);
+    }, 0);
+  }, [produtos]);
+
+  const totalPagar = useMemo(() => {
+    const frete = parseCurrency(formData.valorFrete);
+    const seguro = parseCurrency(formData.valorSeguro);
+    const outrasDespesas = parseCurrency(formData.outrasDespesas);
+    
+    // totalProdutos agora é a soma dos valores dos itens, então podemos usá-lo diretamente
+    return totalProdutos + frete + seguro + outrasDespesas;
+  }, [totalProdutos, formData.valorFrete, formData.valorSeguro, formData.outrasDespesas]);
+
+  const totalItem = useMemo(() => {
+    const quantidade = parseFloat(produtoAtual.quantidade) || 0;
+    const preco = parseCurrency(produtoAtual.preco);
+    const desconto = parseCurrency(produtoAtual.desconto);
+    // Multiplicar primeiro para manter a precisão
+    return Math.round(quantidade * preco) - desconto;
+  }, [produtoAtual.quantidade, produtoAtual.preco, produtoAtual.desconto]);
+
+  const produtosComRateio = useMemo(() => {
+    const totalDespesas = parseCurrency(formData.valorFrete) + parseCurrency(formData.valorSeguro) + parseCurrency(formData.outrasDespesas);
+    if (totalDespesas === 0) {
+      return produtos.map(p => ({ ...p, rateio: 0, custoFinal: p.precoTotal }));
+    }
+
+    const valorTotalProdutos = produtos.reduce((acc, p) => acc + p.precoTotal, 0);
+    if (valorTotalProdutos === 0) {
+      return produtos.map(p => ({ ...p, rateio: 0, custoFinal: p.precoTotal }));
+    }
+
+    return produtos.map(p => {
+      const proporcao = p.precoTotal / valorTotalProdutos;
+      const rateio = totalDespesas * proporcao;
+      const custoFinal = p.precoTotal + rateio;
+      const quantidade = parseFloat(p.quantidade) || 1; // Evita divisão por zero
+      const custoFinalUN = custoFinal / quantidade;
+      return { ...p, rateio, custoFinal, custoFinalUN };
     });
+  }, [produtos, formData.valorFrete, formData.valorSeguro, formData.outrasDespesas]);
 
-    setValorFrete(formattedValue);
-  };
+  useEffect(() => {
+    if (formData.tipoFrete === 'CIF') {
+      setFormData(prev => ({
+        ...prev,
+        valorFrete: '0,00',
+        valorSeguro: '0,00'
+      }));
+    }
+  }, [formData.tipoFrete]);
 
-  // Abre o modal e busca os produtos
-  const handleOpenProdutoModal = async (index) => {
-    if (!fornecedorSelecionado) {
-      toast.info('Por favor, selecione um fornecedor primeiro.');
+  const [condicaoPagamentoSelecionada, setCondicaoPagamentoSelecionada] = useState(null);
+  const [parcelasGeradas, setParcelasGeradas] = useState([]);
+
+
+  useEffect(() => {
+      const gerarParcelas = () => {
+          if (!condicaoPagamentoSelecionada || !condicaoPagamentoSelecionada.parcelas || !formData.dataEmissao) {
+              setParcelasGeradas([]);
+              return;
+          }
+
+          const novasParcelas = condicaoPagamentoSelecionada.parcelas.map((p, index) => {
+              const valorBase = totalPagar; // já em centavos
+              const valorParcela = (valorBase * (parseFloat(p.perc_pagto) / 100)); // resultado em centavos
+
+              // Adiciona T00:00:00 para evitar problemas de fuso horário ao parsear
+              const dataBase = parseISO(`${formData.dataEmissao}T00:00:00`);
+              const dataVencimento = addDays(dataBase, parseInt(p.dias_vencimento, 10) || 0);
+
+              return {
+                  num_parcela: index + 1,
+                  cod_forma_pagto: p.cod_forma_pagto,
+                  forma_pagto_descricao: p.descricao_forma_pagto,
+                  data_vencimento: format(dataVencimento, 'dd/MM/yyyy'),
+                  valor_parcela: valorParcela, // valor em centavos
+              };
+          });
+          setParcelasGeradas(novasParcelas);
+      };
+
+      gerarParcelas();
+  }, [condicaoPagamentoSelecionada, totalPagar, formData.dataEmissao]);
+
+
+  if (!show) {
+    return null;
+  }
+  
+  const handleSelectFornecedor = async (fornecedor) => {
+    setFormData(prev => ({
+      ...prev,
+      idFornecedor: fornecedor.cod_forn,
+      nomeFornecedor: fornecedor.nome
+    }));
+
+    if (!fornecedor.cod_forn) {
+      setCondicaoPagamentoSelecionada(null);
+      setFormData(prev => ({ ...prev, idCondPagamento: '', nomeCondPagto: '' }));
+      setIsFornecedorModalOpen(false);
       return;
     }
 
-    setModalProdutoAberto(true);
-    setLoading(prevState => ({ ...prevState, produtos: true }));
     try {
-      const res = await fetch(`/api/produtos?cod_forn=${fornecedorSelecionado.cod_forn}`);
-      const data = await res.json();
-      setProdutos(Array.isArray(data) ? data : []);
+      setLoading(true);
+      const res = await fetch(`/api/fornecedores?cod_forn=${fornecedor.cod_forn}`);
+      if (!res.ok) throw new Error('Falha ao buscar detalhes do fornecedor.');
+      
+      const fornecedorCompleto = await res.json();
+      
+      if (fornecedorCompleto && fornecedorCompleto.cond_pagto) {
+        await handleSelectCondPagto(fornecedorCompleto.cond_pagto);
+      } else {
+        setCondicaoPagamentoSelecionada(null);
+        setFormData(prev => ({ ...prev, idCondPagamento: '', nomeCondPagto: '' }));
+      }
+
     } catch (error) {
-      toast.error("Falha ao buscar produtos.");
-      console.error("Erro ao buscar produtos:", error);
+      toast.error(error.message);
+      setCondicaoPagamentoSelecionada(null);
+      setFormData(prev => ({ ...prev, idCondPagamento: '', nomeCondPagto: '' }));
     } finally {
-      setLoading(prevState => ({ ...prevState, produtos: false }));
+      setLoading(false);
+      setIsFornecedorModalOpen(false);
     }
-    setActiveModalIndex(index);
-  };
-
-  const handleSelectFornecedor = (fornecedor) => {
-    setFornecedorSelecionado(fornecedor);
-    setModalFornecedorAberto(false);
-  };
-
-  const handleSelectTransportadora = (transportadora) => {
-    setTransportadoraSelecionada(transportadora);
-    setModalTransportadoraAberto(false);
-    setVeiculoSelecionado(null); // Limpa o veículo ao trocar de transportadora
-  };
-
-  const handleSelectVeiculo = (veiculo) => {
-    setVeiculoSelecionado(veiculo);
-    setModalVeiculoAberto(false);
   };
 
   const handleSelectProduto = (produto) => {
-    const novasLinhas = [...linhasEntrada];
-    novasLinhas[activeModalIndex].produto = produto;
-    novasLinhas[activeModalIndex].preco_compra = produto.preco_compra || '0';
-    novasLinhas[activeModalIndex].precoEditavel = false;
-    setLinhasEntrada(novasLinhas);
-    setModalProdutoAberto(false);
-    setActiveModalIndex(null);
+    setProdutoAtual(prev => ({
+      ...prev,
+      idProduto: produto.cod_prod,
+      nomeProduto: produto.nome,
+      unidade: produto.sigla_unidade,
+      preco: produto.preco_compra?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0,00',
+    }));
+    setIsProdutoModalOpen(false);
   };
-
-  const handleLinhaChange = (index, field, value) => {
-    const novasLinhas = [...linhasEntrada];
-    if (field === 'quantidade' || field === 'preco_compra') {
-      novasLinhas[index][field] = value;
-    }
-    setLinhasEntrada(novasLinhas);
-  };
-
-  const handleTogglePrecoEditavel = (index) => {
-    const novasLinhas = [...linhasEntrada];
-    novasLinhas[index].precoEditavel = true;
-    setLinhasEntrada(novasLinhas);
-  };
-
-  const handleAddLinha = () => {
-    setLinhasEntrada([...linhasEntrada, { id: Date.now(), produto: null, quantidade: 1, preco_compra: '', precoEditavel: false }]);
-  };
-
-  const handleRemoveItem = (cod_prod) => {
-    setItensNota(itensNota.filter(item => item.cod_prod !== cod_prod));
-  };
-
-  const handleRemoveLinha = (index) => {
-    if (linhasEntrada.length > 1) {
-      const novasLinhas = linhasEntrada.filter((_, i) => i !== index);
-      setLinhasEntrada(novasLinhas);
-    } else {
-      toast.info('A última linha não pode ser removida.');
-    }
-  };
-
-  const renderFornecedorModal = () => {
-    const fornecedoresFiltrados = fornecedoresModal.filter(f =>
-      (f.nome && f.nome.toLowerCase().includes(pesquisaFornecedor.toLowerCase()))
-    );
-
-    return (
-      <div className={styles.modalOverlay}>
-        <div className={styles.modalContent}>
-          <div className={styles.modalHeader}>
-            <h2>Selecionar Fornecedor</h2>
-          </div>
-          <div className={styles.searchContainer}>
-            <input
-              type="text"
-              placeholder="Buscar por nome..."
-              value={pesquisaFornecedor}
-              onChange={(e) => setPesquisaFornecedor(e.target.value)}
-              className={styles.searchInput}
-            />
-          </div>
-          <div className={styles.listContainer}>
-            {loadingModal ? <p>Carregando...</p> : (
-              <table className={styles.modalTable}>
-                <thead>
-                  <tr>
-                    <th>Cód.</th>
-                    <th>Nome</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {fornecedoresFiltrados.length > 0 ? fornecedoresFiltrados.map(fornecedor => (
-                    <tr key={fornecedor.cod_forn} onClick={() => handleSelectFornecedor(fornecedor)}>
-                      <td>{fornecedor.cod_forn}</td>
-                      <td>{fornecedor.nome}</td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan="2">Nenhum fornecedor encontrado.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-          <div className={styles.modalFooter}>
-            <Link href="/fornecedores/cadastro?redirect=/entradas-produtos" className={`${styles.actionButton} ${styles.newButton}`}>
-              <FaPlus /> Novo
-            </Link>
-            <button onClick={() => setModalFornecedorAberto(false)} className={`${styles.actionButton} ${styles.cancelButton}`}>
-              Cancelar
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTransportadoraModal = () => {
-    const transportadorasFiltradas = transportadorasModal.filter(t =>
-      (t.nome && t.nome.toLowerCase().includes(pesquisaTransportadora.toLowerCase()))
-    );
-
-    return (
-      <div className={styles.modalOverlay}>
-        <div className={styles.modalContent}>
-          <div className={styles.modalHeader}>
-            <h2>Selecionar Transportadora</h2>
-          </div>
-          <div className={styles.searchContainer}>
-            <input
-              type="text"
-              placeholder="Buscar por nome..."
-              value={pesquisaTransportadora}
-              onChange={(e) => setPesquisaTransportadora(e.target.value)}
-              className={styles.searchInput}
-            />
-          </div>
-          <div className={styles.listContainer}>
-            {loadingModalTransportadora ? <p>Carregando...</p> : (
-              <table className={styles.modalTable}>
-                <thead>
-                  <tr>
-                    <th>Cód.</th>
-                    <th>Nome</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transportadorasFiltradas.length > 0 ? transportadorasFiltradas.map(transportadora => (
-                    <tr key={transportadora.cod_trans} onClick={() => handleSelectTransportadora(transportadora)}>
-                      <td>{transportadora.cod_trans}</td>
-                      <td>{transportadora.nome}</td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan="2">Nenhuma transportadora encontrada.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-           <div className={styles.modalFooter}>
-            <button onClick={() => setModalTransportadoraAberto(false)} className={`${styles.actionButton} ${styles.cancelButton}`}>
-              Cancelar
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderVeiculoModal = () => {
-    const veiculosFiltrados = veiculosModal.filter(v =>
-      (v.placa && v.placa.toLowerCase().includes(pesquisaVeiculo.toLowerCase())) ||
-      (v.modelo && v.modelo.toLowerCase().includes(pesquisaVeiculo.toLowerCase()))
-    );
-
-    return (
-      <div className={styles.modalOverlay}>
-        <div className={styles.modalContent}>
-          <div className={styles.modalHeader}>
-            <h2>Selecionar Veículo</h2>
-          </div>
-          <div className={styles.searchContainer}>
-            <input
-              type="text"
-              placeholder="Buscar por placa ou modelo..."
-              value={pesquisaVeiculo}
-              onChange={(e) => setPesquisaVeiculo(e.target.value)}
-              className={styles.searchInput}
-            />
-          </div>
-          <div className={styles.listContainer}>
-            {loadingModalVeiculo ? <p>Carregando...</p> : (
-              <table className={styles.modalTable}>
-                <thead>
-                  <tr>
-                    <th>Placa</th>
-                    <th>Modelo</th>
-                    <th>Descrição</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {veiculosFiltrados.length > 0 ? veiculosFiltrados.map(veiculo => (
-                    <tr key={veiculo.placa} onClick={() => handleSelectVeiculo(veiculo)}>
-                      <td>{veiculo.placa}</td>
-                      <td>{veiculo.modelo}</td>
-                      <td>{veiculo.descricao}</td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan="3">Nenhum veículo encontrado.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-          <div className={styles.modalFooter}>
-            <button onClick={handleOpenNovoVeiculoModal} className={`${styles.actionButton} ${styles.newButton}`}>
-                <FaPlus /> Novo Veículo
-            </button>
-            <button onClick={() => setModalVeiculoAberto(false)} className={`${styles.actionButton} ${styles.cancelButton}`}>
-              Cancelar
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderNovoVeiculoModal = () => {
-    return (
-      <div className={styles.modalOverlay}>
-        <div className={styles.modalContent} style={{ maxWidth: '500px' }}>
-          <div className={styles.modalHeader}>
-            <h2>Novo Veículo</h2>
-          </div>
-          <div className={styles.modalBody}>
-            <div className={styles.formGroup}>
-              <label htmlFor="placa">Placa</label>
-              <input type="text" name="placa" value={novoVeiculoForm.placa} onChange={handleNovoVeiculoFormChange} className={styles.input} />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="modelo">Modelo</label>
-              <input type="text" name="modelo" value={novoVeiculoForm.modelo} onChange={handleNovoVeiculoFormChange} className={styles.input} />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="descricao">Descrição</label>
-              <textarea name="descricao" value={novoVeiculoForm.descricao} onChange={handleNovoVeiculoFormChange} className={styles.textarea}></textarea>
-            </div>
-          </div>
-          <div className={styles.modalFooter}>
-            <button onClick={handleCloseNovoVeiculoModal} disabled={loadingNovoVeiculo} className={`${styles.actionButton} ${styles.cancelButton}`}>
-              Cancelar
-            </button>
-            <button onClick={handleSalvarNovoVeiculo} disabled={loadingNovoVeiculo} className={`${styles.actionButton} ${styles.saveButton}`}>
-              {loadingNovoVeiculo ? 'Salvando...' : 'Salvar'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const handleOpenNovoProdutoModal = () => {
-    if (!fornecedorSelecionado) {
-      toast.warn('Primeiro selecione um fornecedor para associar o novo produto.');
+  
+  const handleSelectCondPagto = async (cond) => {
+    if (!cond) {
+      setCondicaoPagamentoSelecionada(null);
+      setFormData(prev => ({ ...prev, idCondPagamento: '', nomeCondPagto: '' }));
+      setIsCondPagtoModalOpen(false);
       return;
     }
-    setModalNovoProdutoAberto(true);
-  };
 
-  const handleCloseNovoProdutoModal = () => {
-    setModalNovoProdutoAberto(false);
-  };
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/cond-pagto?cod_pagto=${cond.cod_pagto}`);
+      if (!res.ok) throw new Error('Falha ao buscar detalhes da condição de pagamento.');
+      
+      const condicaoCompleta = await res.json();
+      
+      setFormData(prev => ({ ...prev, idCondPagamento: condicaoCompleta.cod_pagto, nomeCondPagto: condicaoCompleta.descricao }));
+      setCondicaoPagamentoSelecionada(condicaoCompleta);
 
-  const handleSalvarNovoProduto = (novoProduto) => {
-    if (activeModalIndex !== null) {
-      handleSelectProduto(novoProduto);
+    } catch (error) {
+      toast.error(error.message);
+      setCondicaoPagamentoSelecionada(null);
+      setFormData(prev => ({ ...prev, idCondPagamento: '', nomeCondPagto: '' }));
+    } finally {
+      setLoading(false);
+      setIsCondPagtoModalOpen(false);
     }
-    handleCloseNovoProdutoModal();
   };
 
-  const renderNovoProdutoModal = () => (
-    <Modal 
-      isOpen={modalNovoProdutoAberto} 
-      onClose={handleCloseNovoProdutoModal} 
-      title="Cadastrar Novo Produto"
-      zIndex={1002}
-      width="1000px"
-      showCloseButton={false}
-    >
-      <CadastroProduto 
-        isModal={true} 
-        onSave={handleSalvarNovoProduto} 
-        onCancel={handleCloseNovoProdutoModal}
-        codFornecedorContexto={fornecedorSelecionado?.cod_forn}
-      />
-    </Modal>
-  );
+  const handleSelectTransportadora = (transportadora) => {
+    setFormData(prev => ({
+      ...prev,
+      idTransportadora: transportadora ? transportadora.cod_trans : '',
+      nomeTransportadora: transportadora ? transportadora.nome : ''
+    }));
+    setIsTransportadoraModalOpen(false);
+  };
 
-  const renderProdutoModal = () => {
-    const produtosFiltrados = produtos.filter(p =>
-      (p.nome && p.nome.toLowerCase().includes(pesquisaProduto.toLowerCase())) ||
-      (p.cod_prod && p.cod_prod.toString().toLowerCase().includes(pesquisaProduto.toLowerCase())) ||
-      (p.referencia && p.referencia.toLowerCase().includes(pesquisaProduto.toLowerCase()))
-    );
+  const handleSelectVeiculo = (veiculo) => {
+    setFormData(prev => ({
+      ...prev,
+      placaVeiculo: veiculo ? veiculo.placa : '',
+      modeloVeiculo: veiculo ? veiculo.modelo : ''
+    }));
+    setIsVeiculoModalOpen(false);
+  };
+
+  const handleProdutoAtualChange = (e) => {
+    const { name, value } = e.target;
+    setProdutoAtual(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAdicionarProduto = () => {
+    if (!produtoAtual.idProduto || !produtoAtual.quantidade || !produtoAtual.preco) {
+      toast.warn("Preencha o produto, quantidade e preço para adicionar.");
+      return;
+    }
+    const quantidade = parseFloat(produtoAtual.quantidade);
+    if (!quantidade || quantidade <= 0) {
+      toast.warn("A quantidade deve ser maior que zero.");
+      return;
+    }
+
+    const precoUN_cents = parseCurrency(produtoAtual.preco);
+    const descontoTotal_cents = parseCurrency(produtoAtual.desconto);
+    
+    const descontoUN_cents = descontoTotal_cents / quantidade;
+    const precoLiquidoUN_cents = precoUN_cents - descontoUN_cents;
+    
+    const novoProduto = {
+      ...produtoAtual,
+      precoUN: precoUN_cents,
+      descontoUN: descontoUN_cents,
+      precoLiquidoUN: precoLiquidoUN_cents,
+      precoTotal: totalItem
+    };
+    
+    setProdutos(prev => [...prev, novoProduto]);
+    setProdutoAtual(initialProdutoState); // Limpa para o próximo item
+    setIsHeaderLocked(true);
+  };
+
+  const handleExcluirProduto = (index) => {
+    setProdutos(currentProdutos => {
+      const novosProdutos = currentProdutos.filter((_, i) => i !== index);
+      if (novosProdutos.length === 0) {
+        setIsHeaderLocked(false);
+      }
+      return novosProdutos;
+    });
+  };
+
+  const handleFinancialSectionChange = (e) => {
+    if (produtos.length > 0) {
+      setIsHeaderLocked(true);
+      setIsProductsLocked(true);
+    }
+    handleInputChange(e);
+  };
+
+  const handleMonetaryFinancialChange = (e, setState) => {
+    if (produtos.length > 0) {
+        setIsHeaderLocked(true);
+        setIsProductsLocked(true);
+    }
+    handleMonetaryInputChange(e, setState);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleMonetaryInputChange = (e, setState) => {
+    const { name, value } = e.target;
+    const cents = parseCurrency(value);
+    setState(prev => ({ ...prev, [name]: formatCurrency(cents) }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validação
+    if (!formData.numeroNota || !formData.idFornecedor || produtos.length === 0) {
+      toast.warn('Preencha o número da nota, o fornecedor e adicione pelo menos um produto.');
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      codFornecedor: formData.idFornecedor,
+      valorFrete: parseCurrency(formData.valorFrete),
+      valorSeguro: parseCurrency(formData.valorSeguro),
+      outrasDespesas: parseCurrency(formData.outrasDespesas),
+      totalProdutos: totalProdutos,
+      totalPagar: totalPagar,
+      produtos: produtos,
+      idCondPagamento: formData.idCondPagamento || null,
+      idTransportadora: formData.idTransportadora || null,
+      placaVeiculo: formData.placaVeiculo || null,
+    };
+    delete payload.idFornecedor;
+
+    const url = isEditMode ? `/api/entradas-produtos/${notaParaEditar.idNotaCompra}` : '/api/entradas-produtos';
+    const method = isEditMode ? 'PUT' : 'POST';
+
+    try {
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || `Erro ao ${isEditMode ? 'atualizar' : 'salvar'} a nota de compra.`);
+      }
+
+      toast.success(result.message);
+      onSave(); // Fecha o modal e atualiza a lista na página principal
+
+    } catch (error) {
+      toast.error(error.message);
+      console.error(`Falha ao ${isEditMode ? 'atualizar' : 'enviar'} nota de compra:`, error);
+    }
+  };
+
+  const handleClose = () => {
+    setFormData(initialState);
+    setProdutos([]);
+    setProdutoAtual(initialProdutoState);
+    setCondicaoPagamentoSelecionada(null);
+    setParcelasGeradas([]);
+    setIsHeaderLocked(false);
+    setIsProductsLocked(false);
+    onClose();
+  };
+
+  const today = new Date().toISOString().split('T')[0];
 
     return (
-      <Modal
-        isOpen={modalProdutoAberto}
-        onClose={() => setModalProdutoAberto(false)}
-        title="Selecionar Produto"
-        zIndex={1001}
-        showCloseButton={false}
-      >
-        <div className={styles.searchContainerModal}>
-          <input
-            type="text"
-            placeholder="Pesquisar por Cód, Nome ou Referência..."
-            value={pesquisaProduto}
-            onChange={(e) => setPesquisaProduto(e.target.value)}
-            className={styles.searchInput}
-          />
+      <div className={styles.modalOverlay}>
+        <div className={styles.modalContent}>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.headerContainer}>
+            <h1 className={styles.titulo}>{isEditMode ? 'Editar Nota de Compra' : 'Cadastro Nota de Compra'}</h1>
+          </div>
+          
+          <div className={styles.modalBody}>
+            <fieldset className={`${styles.fieldset} ${styles.headerFieldset}`} disabled={isEditMode || isHeaderLocked}>
+              <div className={styles.formRow}>
+                  <div className={styles.formGroup} style={{ flex: '0 0 7%' }}>
+                      <label>Modelo</label>
+                      <input type="text" name="modelo" className={styles.input} value={formData.modelo} onChange={handleInputChange} />
+                  </div>
+                  <div className={styles.formGroup} style={{ flex: '0 0 7%' }}>
+                      <label>Série</label>
+                      <input type="text" name="serie" className={styles.input} value={formData.serie} onChange={handleInputChange} />
+                  </div>
+                  <div className={styles.formGroup} style={{ flex: '1 0 10%' }}>
+                      <label>Número *</label>
+                      <input type="text" name="numeroNota" className={styles.input} value={formData.numeroNota} onChange={handleInputChange} />
+                  </div>
+                  <div className={styles.formGroup} style={{ flex: '0 0 8%' }}>
+                      <label>Cód. Fornecedor</label>
+                      <div className={styles.inputWithButton}>
+            <input
+              type="text"
+                            name="idFornecedor"
+                            className={styles.input}
+                            value={formData.idFornecedor}
+                            readOnly
+                        />
+                        <button type="button" onClick={() => setIsFornecedorModalOpen(true)} className={styles.searchButton}><FaSearch /></button>
+                    </div>
+                </div>
+                <div className={styles.formGroup} style={{ flex: '1 1 auto' }}>
+                    <label>Fornecedor</label>
+                    <input type="text" name="nomeFornecedor" className={styles.input} value={formData.nomeFornecedor} disabled />
+                </div>
+                <div className={styles.formGroup} style={{ flex: '0 0 10%' }}>
+                    <label>Data Emissão *</label>
+                    <input type="date" name="dataEmissao" className={styles.input} value={formData.dataEmissao} onChange={handleInputChange} max={today} />
+                </div>
+                <div className={styles.formGroup} style={{ flex: '0 0 10%' }}>
+                    <label>Data Chegada *</label>
+                    <input type="date" name="dataChegada" className={styles.input} value={formData.dataChegada} onChange={handleInputChange} />
+          </div>
+          </div>
+            </fieldset>
+            
+            <fieldset className={styles.fieldset} disabled={isEditMode || isProductsLocked}>
+              <div className={styles.formRow} style={{ flexWrap: 'nowrap', alignItems: 'flex-end' }}>
+              <div className={styles.formGroup} style={{ flex: '0 0 130px' }}>
+                <label>Cód. Produto *</label>
+                <div className={styles.inputWithButton}>
+                    <input
+                        type="text"
+                        name="idProduto"
+                        className={styles.input}
+                        value={produtoAtual.idProduto}
+                        readOnly
+                    />
+                    <button type="button" className={styles.searchButton} onClick={() => setIsProdutoModalOpen(true)}>
+                        <FaSearch />
+            </button>
+          </div>
         </div>
-        
-        <div className={styles.listContainer}>
-          {loading.produtos ? <div className={styles.loading}>Carregando...</div> : (
+              <div className={styles.formGroup} style={{ flex: '1 1 auto' }}>
+                <label>Produto</label>
+                <input type="text" name="nomeProduto" value={produtoAtual.nomeProduto} disabled />
+              </div>
+              <div className={styles.formGroup} style={{ flex: '0 0 80px' }}>
+                <label>Unidade</label>
+                <input type="text" name="unidade" value={produtoAtual.unidade} disabled />
+              </div>
+              <div className={styles.formGroup} style={{ flex: '0 0 90px' }}>
+                <label>Quantidade *</label>
+                <input type="number" name="quantidade" value={produtoAtual.quantidade} onChange={handleProdutoAtualChange} style={{ textAlign: 'right' }} />
+      </div>
+              <div className={styles.formGroup} style={{ flex: '0 0 110px' }}>
+                <label>Preço *</label>
+                <input type="text" name="preco" value={produtoAtual.preco} onChange={(e) => handleMonetaryInputChange(e, setProdutoAtual)} style={{ textAlign: 'right' }} />
+          </div>
+              <div className={styles.formGroup} style={{ flex: '0 0 110px' }}>
+                <label>R$ Desconto</label>
+                <input type="text" name="desconto" value={produtoAtual.desconto} onChange={(e) => handleMonetaryInputChange(e, setProdutoAtual)} style={{ textAlign: 'right' }} />
+          </div>
+              <div className={styles.formGroup} style={{ flex: '0 0 110px' }}>
+                <label>Total</label>
+                <input type="text" name="totalItem" value={formatCurrency(totalItem)} disabled style={{ textAlign: 'right' }} />
+          </div>
+              <div className={styles.formGroup} style={{ flex: '0 0 auto' }}>
+                <button type="button" onClick={handleAdicionarProduto} className={`${styles.button} ${styles.primary}`}>
+                  <FaPlus /> Adicionar
+            </button>
+          </div>
+        </div>
+            <div className={styles.tableContainer}>
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Cód.</th>
+                    <th>Código</th>
                     <th>Produto</th>
-                    <th>Referência</th>
-                    <th>Estoque</th>
+                    <th>Unidade</th>
+                    <th style={{ textAlign: 'right' }}>Qtd</th>
+                    <th style={{ textAlign: 'right' }}>Preço UN</th>
+                    <th style={{ textAlign: 'right' }}>Desc UN</th>
+                    <th style={{ textAlign: 'right' }}>Líquido UN</th>
+                    <th style={{ textAlign: 'right' }}>Total</th>
+                    <th style={{ textAlign: 'right' }}>Rateio</th>
+                    <th style={{ textAlign: 'right' }}>Custo Final UN</th>
+                    <th style={{ textAlign: 'right' }} className={styles.stickyColumn}>Custo Final</th>
                   </tr>
                 </thead>
                 <tbody>
-                 {produtosFiltrados.map(produto => (
-                    <tr key={produto.cod_prod} onClick={() => handleSelectProduto(produto)}>
-                      <td>{produto.cod_prod}</td>
-                      <td>{produto.nome}</td>
-                      <td>{produto.referencia}</td>
-                      <td>{produto.estoque}</td>
+                  {produtosComRateio.map((p, index) => (
+                    <tr key={index}>
+                      <td>{p.idProduto}</td>
+                      <td>{p.nomeProduto}</td>
+                      <td>{p.unidade}</td>
+                      <td style={{ textAlign: 'right' }}>{p.quantidade}</td>
+                      <td style={{ textAlign: 'right' }}>{formatCurrency(p.precoUN)}</td>
+                      <td style={{ textAlign: 'right' }}>{formatCurrency(p.descontoUN)}</td>
+                      <td style={{ textAlign: 'right' }}>{formatCurrency(p.precoLiquidoUN)}</td>
+                      <td style={{ textAlign: 'right' }}>{formatCurrency(p.precoTotal)}</td>
+                      <td style={{ textAlign: 'right' }}>{formatCurrency(p.rateio)}</td>
+                      <td style={{ textAlign: 'right' }}>{formatCurrency(p.custoFinalUN)}</td>
+                      <td style={{ textAlign: 'right' }} className={styles.stickyColumn}>{formatCurrency(p.custoFinal)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+          </div>
+            <button type="button" onClick={() => handleExcluirProduto(produtos.length - 1)} className={`${styles.button} ${styles.danger}`} disabled={produtos.length === 0}>
+              <FaTrash /> Excluir Produto
+            </button>
+            </fieldset>
+            
+            <fieldset className={styles.fieldset} disabled={isEditMode || !isHeaderComplete}>
+            <div className={styles.formRow} style={{ justifyContent: 'space-between' }}>
+              <div className={styles.formGroup} style={{ flexBasis: 'auto', minWidth: '200px' }}>
+                <label>Tipo Frete</label>
+                <div className={styles.radioGroup}>
+                  <label><input type="radio" name="tipoFrete" value="CIF" checked={formData.tipoFrete === 'CIF'} onChange={handleFinancialSectionChange} /> CIF</label>
+                  <label><input type="radio" name="tipoFrete" value="FOB" checked={formData.tipoFrete === 'FOB'} onChange={handleFinancialSectionChange} /> FOB</label>
+          </div>
+        </div>
+              <div className={styles.totalsContainer}>
+                <div className={styles.formGroup}>
+                  <label>Valor Frete</label>
+                  <input type="text" name="valorFrete" value={formData.valorFrete} onChange={(e) => handleMonetaryFinancialChange(e, setFormData)} disabled={formData.tipoFrete === 'CIF'} style={{ textAlign: 'right' }} />
+      </div>
+                <div className={styles.formGroup}>
+                  <label>Valor Seguro</label>
+                  <input type="text" name="valorSeguro" value={formData.valorSeguro} onChange={(e) => handleMonetaryFinancialChange(e, setFormData)} disabled={formData.tipoFrete === 'CIF'} style={{ textAlign: 'right' }} />
+          </div>
+            <div className={styles.formGroup}>
+                  <label>Outras Despesas</label>
+                  <input type="text" name="outrasDespesas" value={formData.outrasDespesas} onChange={(e) => handleMonetaryFinancialChange(e, setFormData)} style={{ textAlign: 'right' }} />
+            </div>
+            <div className={styles.formGroup}>
+                  <label>Total Produtos</label>
+                  <input type="text" name="totalProdutos" value={formatCurrency(totalProdutos)} disabled style={{ textAlign: 'right' }} />
+            </div>
+            <div className={styles.formGroup}>
+                  <label>Total a Pagar</label>
+                  <input type="text" name="totalPagar" value={formatCurrency(totalPagar)} disabled style={{ textAlign: 'right' }} />
+                </div>
+              </div>
+            </div>
+
+            {/* --- CONDIÇÃO DE PAGAMENTO, TRANSPORTADORA E VEÍCULO --- */}
+            <div className={styles.formRow} style={{alignItems: 'flex-end', gap: '1rem'}}>
+              {/* Condição de Pagamento */}
+              <div className={styles.formGroup} style={{ flex: '0 0 130px' }}>
+                <label>Cód. Cond. Pagto *</label>
+                <input
+                    type="text"
+                    name="idCondPagamento"
+                    className={styles.input}
+                    value={formData.idCondPagamento}
+                    readOnly
+                />
+              </div>
+              <div className={styles.formGroup} style={{ flex: 1 }}>
+                <label>Condição de Pagamento</label>
+                <input type="text" name="nomeCondPagto" className={styles.input} value={formData.nomeCondPagto} disabled />
+              </div>
+              
+              {/* Transportadora */}
+              <div className={styles.formGroup} style={{ flex: '0 0 130px' }}>
+                <label>Cód. Transportadora</label>
+                <div className={styles.inputWithButton}>
+                  <input type="text" name="idTransportadora" className={styles.input} value={formData.idTransportadora} readOnly />
+                  <button type="button" onClick={() => setIsTransportadoraModalOpen(true)} className={styles.searchButton}><FaSearch /></button>
+                </div>
+              </div>
+              <div className={styles.formGroup} style={{ flex: 1 }}>
+                <label>Transportadora</label>
+                <input type="text" name="nomeTransportadora" className={styles.input} value={formData.nomeTransportadora} disabled />
+              </div>
+              
+              {/* Veículo */}
+              <div className={styles.formGroup} style={{ flex: '0 0 130px' }}>
+                <label>Placa Veículo</label>
+                <div className={styles.inputWithButton}>
+                  <input type="text" name="placaVeiculo" className={styles.input} value={formData.placaVeiculo} readOnly />
+                  <button type="button" onClick={() => setIsVeiculoModalOpen(true)} className={styles.searchButton}><FaSearch /></button>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Parcela</th>
+                    <th>Cód. Forma Pagto</th>
+                    <th>Forma de Pagamento</th>
+                    <th>Data Vencimento</th>
+                    <th style={{ textAlign: 'right' }}>Valor Parcela</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parcelasGeradas.map((parcela) => (
+                    <tr key={parcela.num_parcela}>
+                        <td>{parcela.num_parcela}</td>
+                        <td>{parcela.cod_forma_pagto}</td>
+                        <td>{parcela.forma_pagto_descricao}</td>
+                        <td>{parcela.data_vencimento}</td>
+                        <td style={{ textAlign: 'right' }}>{formatCurrency(parcela.valor_parcela)}</td>
                     </tr>
                  ))}
                 </tbody>
               </table>
-            )}
-        </div>
-        <div className={styles.modalFooter}>
-           <button onClick={() => setModalProdutoAberto(false)} className={`${styles.actionButton} ${styles.cancelButton}`}>
-             Cancelar
-           </button>
-           <button onClick={handleOpenNovoProdutoModal} className={`${styles.actionButton} ${styles.newButton}`}>
-             <FaPlus /> Novo Produto
-           </button>
-         </div>
-      </Modal>
-    );
-  };
+            </div>
 
-  const handleAddItens = () => {
-    const itensParaAdicionar = linhasEntrada
-      .filter(linha => linha.produto && linha.quantidade > 0)
-      .map(linha => ({
-        ...linha.produto,
-        quantidade: linha.quantidade,
-        preco_compra: linha.preco_compra,
-        subtotal: parseFloat(linha.preco_compra) * linha.quantidade,
-      }));
-
-    if (itensParaAdicionar.length === 0) {
-      toast.error('Adicione pelo menos um item à nota.');
-      return;
-    }
-
-    const itensAtualizados = [...itensNota];
-    itensParaAdicionar.forEach(novoItem => {
-      const indexExistente = itensAtualizados.findIndex(item => item.cod_prod === novoItem.cod_prod);
-      if (indexExistente > -1) {
-        itensAtualizados[indexExistente].quantidade += novoItem.quantidade;
-        itensAtualizados[indexExistente].subtotal += novoItem.subtotal;
-      } else {
-        itensAtualizados.push(novoItem);
-      }
-    });
-
-    setItensNota(itensAtualizados);
-    setLinhasEntrada([{ id: Date.now(), produto: null, quantidade: 1, preco_compra: '', precoEditavel: false }]);
-    toast.success(`${itensParaAdicionar.length} item(ns) adicionado(s) à nota.`);
-  };
-
-  const parseCurrency = (value) => {
-    if (typeof value !== 'string') return 0;
-    const number = parseFloat(value.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
-    return isNaN(number) ? 0 : number;
-  };
-
-  const subtotalItens = useMemo(() => {
-    return itensNota.reduce((acc, item) => acc + (item.subtotal || 0), 0);
-  }, [itensNota]);
-
-  const valorFreteNumerico = useMemo(() => parseCurrency(valorFrete), [valorFrete]);
-
-  const valorTotalNota = useMemo(() => {
-    return subtotalItens + valorFreteNumerico;
-  }, [subtotalItens, valorFreteNumerico]);
-
-  const handleSalvarEntrada = async () => {
-    // Validações
-    if (!fornecedorSelecionado) {
-      toast.error('Por favor, selecione um fornecedor.');
-      return;
-    }
-    if (itensNota.length === 0) {
-      toast.error('Adicione pelo menos um item à nota.');
-      return;
-    }
-
-    const dadosEntrada = {
-      fornecedor_id: fornecedorSelecionado.cod_forn,
-      data_emissao: dataEmissao,
-      transportadora_id: transportadoraSelecionada?.cod_transp || null,
-      valor_frete: valorFreteNumerico,
-      itens: itensNota,
-    };
-
-    try {
-      const res = await fetch('/api/entradas-produtos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dadosEntrada),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Falha ao salvar a entrada.');
-      }
-
-      const result = await res.json();
-      toast.success(result.message);
-      
-      // Redireciona para a página de registros
-      router.push('/produtos/registros');
-
-    } catch (error) {
-      console.error('Erro ao salvar entrada:', error);
-      toast.error(error.message);
-    }
-  };
-
-  return (
-    <div className={styles.formContainer}>
-      {/* Cabeçalho da Nota */}
-      <fieldset className={styles.fieldset}>
-        <legend>Dados da Nota Fiscal</legend>
-        <div className={styles.row}>
-          <div className={`${styles.formGroup} ${styles.mainField}`}>
-            <label htmlFor="fornecedor">Fornecedor</label>
-            <div className={styles.inputComBotao}>
-              <input
-                type="text"
-                id="fornecedor"
-                className={styles.input}
-                value={fornecedorSelecionado?.nome || ''}
-                placeholder="Selecione um fornecedor..."
-                readOnly
-              />
-              <button type="button" onClick={handleOpenFornecedorModal} className={styles.searchButton}><FaSearch /></button>
+            {/* --- OBSERVAÇÃO E RODAPÉ --- */}
+            <div className={styles.formGroup}>
+              <label>Observação</label>
+              <textarea name="observacao" rows="3" className={styles.textarea} value={formData.observacao} onChange={handleInputChange}></textarea>
+            </div>
+            </fieldset>
+          </div>
+          
+          <div className={styles.formFooter}>
+            <div className={styles.dateInfoContainer}>
+              <span>Data de Criação: {formData.data_criacao ? new Date(formData.data_criacao).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'N/A'}</span>
+              <span>Data de Modificação: {formData.data_atualizacao ? new Date(formData.data_atualizacao).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'N/A'}</span>
+              <span>Usuário Últ. Alt.: N/A</span>
+            </div>
+            <div className={styles.buttonGroup}>
+              {isEditMode ? (
+                <>
+                  <button type="button" onClick={handleClose} className={`${styles.button} ${styles.secondary}`}>Fechar</button>
+                  <button type="button" onClick={handleCancelarNota} className={`${styles.button} ${styles.danger}`}>Cancelar Nota</button>
+                </>
+              ) : (
+                <>
+                  <button type="button" onClick={handleClose} className={`${styles.button} ${styles.secondary}`}>Sair</button>
+                  <button type="submit" className={`${styles.button} ${styles.primary}`}>Salvar</button>
+                </>
+              )}
             </div>
           </div>
-          <div className={`${styles.formGroup} ${styles.sideField}`}>
-            <label htmlFor="data_emissao">Data de Emissão</label>
-            <input 
-              type="date" 
-              id="data_emissao" 
-              className={styles.input} 
-              value={dataEmissao}
-              onChange={(e) => setDataEmissao(e.target.value)}
+        </form>
+        
+        {isFornecedorModalOpen && (
+            <FornecedorModal
+                isSelectionMode={true}
+                onSelect={handleSelectFornecedor}
+                onCancel={() => setIsFornecedorModalOpen(false)}
+                show={isFornecedorModalOpen}
+                onClose={() => setIsFornecedorModalOpen(false)}
             />
-          </div>
-        </div>
-        <div className={styles.row}>
-          <div className={`${styles.formGroup} ${styles.mainField}`}>
-            <label htmlFor="transportadora">Transportadora</label>
-            <div className={styles.inputComBotao}>
-              <input
-                type="text"
-                id="transportadora"
-                className={styles.input}
-                value={transportadoraSelecionada?.nome || ''}
-                placeholder="Selecione uma transportadora..."
-                readOnly
-              />
-              <button type="button" onClick={handleOpenTransportadoraModal} className={styles.searchButton}><FaSearch /></button>
-            </div>
-          </div>
-          <div className={`${styles.formGroup} ${styles.sideField}`}>
-            <label htmlFor="veiculo">Veículo</label>
-            <div className={styles.inputComBotao}>
-              <input
-                type="text"
-                id="veiculo"
-                className={styles.input}
-                value={veiculoSelecionado ? `${veiculoSelecionado.placa} - ${veiculoSelecionado.modelo}` : ''}
-                placeholder="Selecione um veículo..."
-                readOnly
-              />
-              <button type="button" onClick={handleOpenVeiculoModal} className={styles.searchButton}><FaSearch /></button>
-            </div>
-          </div>
-          <div className={`${styles.formGroup} ${styles.sideField}`}>
-            <label>Valor do Frete</label>
-            <div className={styles.formGroup} style={{ maxWidth: '200px' }}>
-              <input
-                type="text"
-                className={styles.input}
-                value={valorFrete}
-                onChange={handleFreteChange}
-                placeholder="R$ 0,00"
-              />
-            </div>
-          </div>
-        </div>
-      </fieldset>
+        )}
 
-      {/* Adicionar Produtos */}
-      <fieldset className={styles.fieldset}>
-        <legend>Adicionar Produto à Nota</legend>
-        {linhasEntrada.map((linha, index) => (
-          <div key={linha.id} className={`${styles.row} ${styles.produtoRow}`}>
-            <div className={`${styles.formGroup} ${styles.produtoField}`}>
-              <label htmlFor={`produto-${linha.id}`}>Produto</label>
-              <div className={styles.inputComBotao}>
-                 <input
-                  type="text"
-                  id={`produto-${linha.id}`}
-                  className={styles.input}
-                  value={linha.produto?.nome || ''}
-                  placeholder="Selecione um produto..."
-                  readOnly
-                 />
-                <button type="button" onClick={() => handleOpenProdutoModal(index)} className={styles.searchButton}><FaSearch /></button>
-              </div>
-            </div>
-            <div className={`${styles.formGroup} ${styles.referenciaField}`}>
-              <label>Referência</label>
-              <input type="text" value={linha.produto?.referencia || ''} className={styles.input} readOnly />
-            </div>
-             <div className={`${styles.formGroup} ${styles.unidadeField}`}>
-              <label>Unidade</label>
-              <input type="text" value={linha.produto?.sigla_unidade || ''} className={styles.input} readOnly />
-            </div>
-            <div className={`${styles.formGroup} ${styles.precoField}`}>
-              <label>Preço de Compra</label>
-              <div className={styles.inputComBotao}>
-                <input
-                  type="number"
-                  value={linha.preco_compra}
-                  onChange={e => handleLinhaChange(index, 'preco_compra', e.target.value)}
-                  className={styles.input}
-                  readOnly={!linha.precoEditavel}
-                  placeholder="R$ 0,00"
-                />
-                <button type="button" onClick={() => handleTogglePrecoEditavel(index)} className={styles.searchButton} title="Editar Preço">
-                  <FaEdit />
-                </button>
-              </div>
-            </div>
-            <div className={`${styles.formGroup} ${styles.quantidadeField}`}>
-              <label htmlFor={`quantidade-${linha.id}`}>Quantidade</label>
-              <input 
-                type="number" 
-                id={`quantidade-${linha.id}`}
-                value={linha.quantidade} 
-                onChange={e => handleLinhaChange(index, 'quantidade', e.target.value)} 
-                className={styles.input} 
-                min="1"
-              />
-            </div>
-            <div className={`${styles.formGroup} ${styles.deleteButtonContainer}`}>
-                <label>&nbsp;</label> 
-                <button type="button" onClick={() => handleRemoveLinha(index)} className={styles.deleteRowButton} title="Remover Linha">
-                  <FaTrash />
-                </button>
-            </div>
-          </div>
-        ))}
+        {isProdutoModalOpen && (
+            <ProdutosComponent
+                isSelectionMode={true}
+                selectionType="single"
+                onSelect={handleSelectProduto}
+                onCancel={() => setIsProdutoModalOpen(false)}
+                // Poderíamos passar o cod_forn para filtrar, se a API suportar
+            />
+        )}
 
-        <div className={styles.addActionsContainer}>
-          <button type="button" className={styles.addLinhaButton} onClick={handleAddLinha}>
-            <FaPlus /> Adicionar Nova Linha
-          </button>
-          <button type="button" className={styles.addButton} onClick={handleAddItens}>
-            Adicionar Itens à Nota
-          </button>
-        </div>
-      </fieldset>
+        {isCondPagtoModalOpen && (
+          <CondPagtoComponent
+            isSelectionMode={true}
+            onSelect={handleSelectCondPagto}
+            onCancel={() => setIsCondPagtoModalOpen(false)}
+          />
+        )}
 
-      {/* Tabela de Itens */}
-      <fieldset className={styles.fieldset}>
-        <legend>Itens da Nota</legend>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Cód.</th>
-              <th>Produto</th>
-              <th>UN</th>
-              <th>Qtd.</th>
-              <th>Vlr. Compra</th>
-              <th>Subtotal</th>
-              <th></th> 
-            </tr>
-          </thead>
-          <tbody>
-            {itensNota.map(item => (
-              <tr key={item.cod_prod}>
-                <td>{item.cod_prod}</td>
-                <td>{item.nome}</td>
-                <td>{item.sigla_unidade}</td>
-                <td>{item.quantidade}</td>
-                <td>R$ {formatCurrency(item.preco_compra)}</td>
-                <td>R$ {formatCurrency(item.subtotal)}</td>
-                <td>
-                  <button onClick={() => handleRemoveItem(item.cod_prod)} className={styles.deleteButton}>
-                    <FaTrash />
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {itensNota.length === 0 && (
-              <tr>
-                <td colSpan="7" style={{ textAlign: 'center' }}>Nenhum produto adicionado à nota.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        <div className={styles.totalsWrapper}>
-          <div className={styles.totalContainer}>
-            <strong>Subtotal dos Itens:</strong>
-            <span>R$ {formatCurrency(subtotalItens)}</span>
-          </div>
-          <div className={styles.totalContainer}>
-            <strong>Frete:</strong>
-            <span>R$ {formatCurrency(valorFreteNumerico)}</span>
-          </div>
-          <div className={styles.totalContainer}>
-            <strong>Valor Total da Nota:</strong>
-            <span>R$ {formatCurrency(valorTotalNota)}</span>
-          </div>
-        </div>
-      </fieldset>
-      
-      <div className={styles.actions}>
-        <button type="button" className={styles.cancelButton} onClick={() => router.push('/produtos/registros')}>Cancelar</button>
-        <button type="button" className={styles.saveButton} onClick={handleSalvarEntrada}>Salvar Entrada</button>
+        {isTransportadoraModalOpen && (
+          <TransportadorasComponent
+            isSelectionMode={true}
+            onSelect={handleSelectTransportadora}
+            onCancel={() => setIsTransportadoraModalOpen(false)}
+          />
+        )}
+
+        {isVeiculoModalOpen && (
+          <VeiculosComponent
+            isSelectionMode={true}
+            onSelect={handleSelectVeiculo}
+            onCancel={() => setIsVeiculoModalOpen(false)}
+            codTransportadora={formData.idTransportadora}
+          />
+        )}
+
       </div>
-
-      {modalFornecedorAberto && renderFornecedorModal()}
-      {modalTransportadoraAberto && renderTransportadoraModal()}
-      {modalVeiculoAberto && renderVeiculoModal()}
-      {modalNovoVeiculoAberto && renderNovoVeiculoModal()}
-      {modalNovoProdutoAberto && renderNovoProdutoModal()}
-      {modalProdutoAberto && renderProdutoModal()}
     </div>
   );
 } 

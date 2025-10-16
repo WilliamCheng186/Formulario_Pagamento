@@ -201,12 +201,26 @@
 }
 
 .cancelButton {
-    background-color: #dc3545; /* Vermelho */
+    background-color: #dc3545;
     color: white;
 }
 
-.cancelButton:hover {
-    background-color: #c82333;
+.statusIndicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.habilitado {
+  background-color: #28a745; /* Verde para habilitado */
+  box-shadow: 0 0 8px rgba(40, 167, 69, 0.7);
+}
+
+.desabilitado {
+  background-color: #dc3545; /* Vermelho para desabilitado */
+  box-shadow: 0 0 8px rgba(220, 53, 69, 0.7);
 }
 
 .saveButton {
@@ -339,14 +353,23 @@
 
 .modalContentLargo {
     background: white;
-    padding: 2rem;
+    padding: 0; /* Movido para os filhos (body/footer) */
     border-radius: 8px;
     width: 90vw;
-    max-width: 900px; /* Largura aumentada */
+    max-width: 900px;
+    max-height: 90vh; /* Altura máxima para o modal */
+    display: flex; /* Habilita flexbox */
+    flex-direction: column; /* Organiza os filhos verticalmente */
+}
+
+.modalBody {
+    padding: 2rem; /* Adiciona o espaçamento interno aqui */
+    overflow-y: auto; /* Habilita a rolagem APENAS no corpo */
+    flex: 1; /* Faz o corpo expandir para ocupar o espaço disponível */
 }
 
 .tableContainerModal {
-    max-height: 40vh; /* Ajuste de altura para o novo layout */
+    max-height: 400px;
     overflow-y: auto;
     margin-top: 1rem;
 }
@@ -511,4 +534,53 @@
 
 .switchInput:checked + .switchVisual::after {
   transform: translateX(20px);
+}
+
+/* Adicionado para corrigir posicionamento e animação do modal */
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  width: 80vw;
+  max-width: 900px;
+  animation: slide-down 0.3s ease-out;
+}
+
+.modalTitle {
+    font-size: 1.5rem;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+} 
+
+.newButton {
+    background-color: #007bff;
+    color: white;
 } 
